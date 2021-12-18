@@ -1,0 +1,24 @@
+﻿<Application x:Class="VideoCollection.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:VideoCollection"
+             xmlns:views="clr-namespace:VideoCollection.Views"
+             xmlns:viewmodels="clr-namespace:VideoCollection.ViewModels"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Dark.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Indigo.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#303030"/>
+            <DataTemplate DataType="{x:Type viewmodels:ShowsViewModel}">
+                <views:ShowsView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewmodels:MoviesViewModel}">
+                <views:MoviesView/>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

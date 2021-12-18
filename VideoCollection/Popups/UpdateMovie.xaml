@@ -1,0 +1,73 @@
+﻿<Window x:Class="VideoCollection.Popups.UpdateMovie"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoCollection.Popups"
+        mc:Ignorable="d"
+        WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="500"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <Label Foreground="White">Movies:</Label>
+            <ListView x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Height="32" Source="{Binding Thumbnail}"/>
+                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
+        <StackPanel Grid.Row="0" Grid.Column="1">
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White">Movie Title</Label>
+                <TextBox x:Name="txtMovieName" Width="200" FontSize="12" Foreground="White"></TextBox>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White">Thumbnail</Label>
+                <Button x:Name="btnChooseImage" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnChooseImage_Click" VerticalAlignment="Top">Choose Image</Button>
+                <Image x:Name="imgThumbnail" Height="153" Width="272"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White">Movie File</Label>
+                <TextBox x:Name="txtFile" Width="200" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
+            </StackPanel>
+
+            <Label Foreground="White">Categories:</Label>
+            <ItemsControl x:Name="icCategories" Height="100">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <StackPanel x:Name="buttons" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
+            <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnOK_Click">OK</Button>
+            <Button x:Name="btnApply" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnApply_Click">Apply</Button>
+        </StackPanel>
+    </Grid>
+</Window>

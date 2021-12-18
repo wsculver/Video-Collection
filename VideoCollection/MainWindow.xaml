@@ -1,0 +1,18 @@
+﻿<Window x:Class="VideoCollection.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoCollection"
+        mc:Ignorable="d"
+        Title="Video Collection" Height="450" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Height="55">
+            <Button x:Name="btnShows" Width="100" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Shows" Margin="0,0,20,0" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="16" FontWeight="Bold">SHOWS</Button>
+            <Button x:Name="btnMovies" Width="100" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Movies" Margin="20,0,0,0" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="16" FontWeight="Bold">MOVIES</Button>
+        </StackPanel>
+        <Separator DockPanel.Dock="Top"/>
+
+        <ContentControl x:Name="contentControl" Content="{Binding SelectedViewModel}"/>
+    </DockPanel>
+</Window>
