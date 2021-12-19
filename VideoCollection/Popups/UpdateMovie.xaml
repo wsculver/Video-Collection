@@ -17,21 +17,26 @@
             <ColumnDefinition Width="500"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Grid.Column="0">
-            <Label Foreground="White">Movies:</Label>
-            <ListView x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}">
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            
+            <Label Grid.Row="0" Foreground="White">Movies:</Label>
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <Image Height="32" Source="{Binding Thumbnail}"/>
+                            <Image Width="57" Height="32" Source="{Binding Thumbnail}"/>
                             <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </StackPanel>
+        </Grid>
 
-        <StackPanel Grid.Row="0" Grid.Column="1">
+        <StackPanel x:Name="panelMovieInfo" Grid.Row="0" Grid.Column="1" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                 <Label Foreground="White">Movie Title</Label>
                 <TextBox x:Name="txtMovieName" Width="200" FontSize="12" Foreground="White"></TextBox>

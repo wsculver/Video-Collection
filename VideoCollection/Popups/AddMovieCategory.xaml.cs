@@ -23,9 +23,30 @@ namespace VideoCollection.Popups
     /// </summary>
     public partial class AddMovieCategory : Window
     {
+        private List<int> _selectedMovieIds;
+
         public AddMovieCategory()
         {
             InitializeComponent();
+
+            _selectedMovieIds = new List<int>();
+
+            UpdateMovieList();
+        }
+
+        private void UpdateMovieList()
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Movie>();
+                List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
+                List<MovieDeserialized> movies = new List<MovieDeserialized>();
+                foreach (Movie movie in rawMovies)
+                {
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories));
+                }
+                lvMovieList.ItemsSource = movies;
+            }
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
@@ -39,21 +60,28 @@ namespace VideoCollection.Popups
             {
                 JavaScriptSerializer jss = new JavaScriptSerializer();
 
-                MovieCategory category = new MovieCategory()
-                {
-                    Name = txtCategoryName.Text.ToUpper(),
-                    Movies = jss.Serialize(new List<Movie>()),
-                    IsChecked = false
-                };
-
                 bool repeat = false;
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
-                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).ToList();
+                    List<Movie> selectedMovies = new List<Movie>();
+
+                    foreach(int id in _selectedMovieIds)
+                    {
+                        Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
+                        selectedMovies.Add(movie);
+                    }
+
+                    MovieCategory category = new MovieCategory()
+                    {
+                        Name = txtCategoryName.Text.ToUpper(),
+                        Movies = jss.Serialize(selectedMovies),
+                        IsChecked = false
+                    };
+
+                    List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
                     foreach(MovieCategory movieCategory in categories)
                     {
-                        Console.WriteLine(movieCategory.Id);
                         if(movieCategory.Name == category.Name)
                             repeat = true;
                     }
@@ -78,6 +106,16 @@ namespace VideoCollection.Popups
             {
                 MessageBox.Show("You need to enter a category name", "Missing Category Name", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            _selectedMovieIds.Add((int)(sender as CheckBox).Tag);
+        }
+
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            _selectedMovieIds.Remove((int)(sender as CheckBox).Tag);
         }
     }
 }

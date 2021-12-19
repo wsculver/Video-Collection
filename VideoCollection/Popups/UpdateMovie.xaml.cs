@@ -24,7 +24,6 @@ namespace VideoCollection.Popups
     /// </summary>
     public partial class UpdateMovie : Window
     {
-        private List<string> _originalCategories;
         private List<string> _selectedCategories;
         private int _movieId;
         private bool _changesSaved;
@@ -34,7 +33,6 @@ namespace VideoCollection.Popups
             InitializeComponent();
 
             _selectedCategories = new List<string>();
-            _originalCategories = new List<string>();
             _changesSaved = false;
 
             UpdateMovieList();
@@ -134,9 +132,9 @@ namespace VideoCollection.Popups
             var movies = lvMovieList.SelectedItems;
             if (movies.Count > 0)
             {
+                panelMovieInfo.Visibility = Visibility.Visible;
                 _changesSaved = false;
                 _selectedCategories = new List<string>();
-                _originalCategories = new List<string>();
 
                 MovieDeserialized movie = (MovieDeserialized)movies[0];
                 txtMovieName.Text = movie.Title;
@@ -151,7 +149,6 @@ namespace VideoCollection.Popups
                     {
                         check = true;
                         _selectedCategories.Add(category.Name);
-                        _originalCategories.Add(category.Name);
                     }
                     categories.Add(new MovieCategoryDeserialized(category.Id, category.Name, category.Movies, check));
                 }
@@ -162,6 +159,13 @@ namespace VideoCollection.Popups
         private void btnApply_Click(object sender, RoutedEventArgs e)
         {
             ApplyUpdate();
+        }
+
+        private bool MovieContentChanged(Movie movie)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != jss.Serialize(_selectedCategories));
         }
 
         private bool ApplyUpdate()
@@ -175,6 +179,7 @@ namespace VideoCollection.Popups
                     // Update the movie in the Movie table
                     connection.CreateTable<Movie>();
                     Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
+                    bool movieContentChanged = MovieContentChanged(movie);
                     movie.Title = txtMovieName.Text;
                     movie.Thumbnail = imgThumbnail.Source.ToString();
                     movie.MovieFilePath = txtFile.Text;
@@ -188,10 +193,10 @@ namespace VideoCollection.Popups
                     {
                         if (_selectedCategories.Contains(category.Name))
                         {
-                            // Add movie to categories in the MovieCategory table
-                            if (!_originalCategories.Contains(category.Name))
+                            // Update movie in the MovieCategory table if any content changed
+                            if(movieContentChanged)
                             {
-                                DatabaseFunctions.AddMovieToCategory(movie, category);
+                                DatabaseFunctions.UpdateMovieInCategory(movie, category);
                             }
                         }
                         else

@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoCollection.Database;
 using VideoCollection.Movies;
 
 namespace VideoCollection.Popups
@@ -39,10 +40,9 @@ namespace VideoCollection.Popups
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
-                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).ToList();
+                    List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
                     foreach (MovieCategory movieCategory in categories)
                     {
-                        Console.WriteLine(movieCategory.Id);
                         if (movieCategory.Name == txtCategoryName.Text.ToUpper())
                             repeat = true;
                     }
@@ -53,9 +53,10 @@ namespace VideoCollection.Popups
                     }
                     else
                     {
-                        List<MovieCategory> result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString());
-                        result[0].Name = txtCategoryName.Text.ToUpper();
-                        connection.Update(result[0]);
+                        MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
+                        DatabaseFunctions.UpdateCategoryNameInMovies(result.Name, txtCategoryName.Text.ToUpper());
+                        result.Name = txtCategoryName.Text.ToUpper();
+                        connection.Update(result);
                     }
                 }
 

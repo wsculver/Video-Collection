@@ -36,10 +36,34 @@ namespace VideoCollection.Database
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<Movie> deserializedMovies = jss.Deserialize<List<Movie>>(category.Movies);
-                deserializedMovies.Add(movie);
-                category.Movies = jss.Serialize(deserializedMovies);
+                List<Movie> movies = jss.Deserialize<List<Movie>>(category.Movies);
+                movies.Add(movie);
+                category.Movies = jss.Serialize(movies);
                 connection.Update(category);
+            }
+        }
+
+        public static void UpdateMovieInCategory(Movie movie, MovieCategory category)
+        {
+            RemoveMovieFromCategory(movie.Id.ToString(), category);
+            AddMovieToCategory(movie, category);
+        }
+
+        public static void UpdateCategoryNameInMovies(string oldName, string newName)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                List<Movie> movies = (connection.Table<Movie>().ToList()).ToList();
+                foreach(Movie movie in movies)
+                {
+                    List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
+                    categories.Remove(oldName);
+                    categories.Add(newName);
+                    movie.Categories = jss.Serialize(categories);
+                    connection.Update(movie);
+                }
             }
         }
     }

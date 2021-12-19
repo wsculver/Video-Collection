@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        WindowStyle="None" Height="150" Width="250" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="500" Width="300" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
@@ -17,7 +18,33 @@
             <TextBox x:Name="txtCategoryName" Width="150" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
         </StackPanel>
 
-        <StackPanel x:Name="buttons" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            
+            <Label Grid.Row="0" Foreground="White">Add Movies:</Label>
+            <ListView Grid.Row="1" x:Name="lvMovieList" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Tag="{Binding Id}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Width="57" Height="32" Source="{Binding Thumbnail}"/>
+                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </CheckBox>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Focusable" Value="false"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </Grid>
+
+        <StackPanel x:Name="buttons" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnOK_Click">OK</Button>
         </StackPanel>

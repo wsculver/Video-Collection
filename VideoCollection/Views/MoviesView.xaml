@@ -99,8 +99,8 @@
                 </materialDesign:PopupBox.ToggleContent>
                 <StackPanel>
                     <Button x:Name="btnNewMovie" Click="btnNewMovie_Click">NEW MOVIE</Button>
+                    <Button x:Name="btnUpdateExistingMovie" Click="btnUpdateExistingMovie_Click">UPDATE MOVIE</Button>
                     <Button x:Name="btnAddCategory" Click="btnAddCategory_Click">ADD CATEGORY</Button>
-                    <Button x:Name="btnUpdateExistingMovie" Click="btnUpdateExistingMovie_Click">UPDATE EXISTING MOVIE</Button>
                 </StackPanel>
             </materialDesign:PopupBox>
         </Button>
