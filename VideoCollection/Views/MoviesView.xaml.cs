@@ -38,22 +38,25 @@ namespace VideoCollection.Views
             UpdateCategoryDisplay();
         }
 
+        // Refresh category display to show current database data
         private void UpdateCategoryDisplay()
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                List<MovieCategory> rawCategories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Position).ToList();
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Name, category.Movies, category.IsChecked));
+                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
                 }
                 
                 icCategoryDisplay.ItemsSource = _categories;
             }
         }
 
+
+        // Get the first child that is a ScrollViewer
         public static DependencyObject GetScrollViewer(DependencyObject o)
         {
             // Return the DependencyObject if it is a ScrollViewer
@@ -77,6 +80,7 @@ namespace VideoCollection.Views
             return null;
         }
 
+        // Left arrow button to scroll left inside a category
         private void Back_MouseUp(object sender, MouseButtonEventArgs e)
         {
             ScrollViewer scroll = GetScrollViewer((sender as Image).Parent) as ScrollViewer;
@@ -94,6 +98,7 @@ namespace VideoCollection.Views
             scroll.ScrollToHorizontalOffset(location);
         }
 
+        // Right arrow button to scroll right inside a category
         private void Next_MouseUp(object sender, MouseButtonEventArgs e)
         {
             ScrollViewer scroll = GetScrollViewer((sender as Image).Parent) as ScrollViewer;
@@ -111,6 +116,7 @@ namespace VideoCollection.Views
             scroll.ScrollToHorizontalOffset(location);
         }
 
+        // Popup add category window
         private void btnAddCategory_Click(object sender, RoutedEventArgs e)
         {
             AddMovieCategory popup = new AddMovieCategory();
@@ -120,6 +126,7 @@ namespace VideoCollection.Views
             UpdateCategoryDisplay();
         }
 
+        // Popup add movie window
         private void btnNewMovie_Click(object sender, RoutedEventArgs e)
         {
             AddMovie popup = new AddMovie();
@@ -129,6 +136,7 @@ namespace VideoCollection.Views
             UpdateCategoryDisplay();
         }
 
+        // Remove the category from the database and from all movie category lists
         private void btnDeleteCategory_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -138,7 +146,7 @@ namespace VideoCollection.Views
                 connection.CreateTable<MovieCategory>();
 
                 MovieCategory category = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + categoryId)[0];
-                List<Movie> movies = (connection.Table<Movie>().ToList()).ToList();
+                List<Movie> movies = connection.Table<Movie>().ToList();
                 foreach(Movie movie in movies)
                 {
                     List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
@@ -152,16 +160,17 @@ namespace VideoCollection.Views
             UpdateCategoryDisplay();
         }
 
-        private void btnRenameCategory_Click(object sender, RoutedEventArgs e)
+        // Popup update movie category window
+        private void btnUpdateCategory_Click(object sender, RoutedEventArgs e)
         {
-            RenameMovieCategory popup = new RenameMovieCategory();
+            UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString());
             popup.Owner = Window.GetWindow(this);
-            popup.Tag = (sender as Button).Tag;
             popup.ShowDialog();
 
             UpdateCategoryDisplay();
         }
 
+        // Remove the movie from the category list and the category from the list for the movie
         private void btnRemoveMovieFromCategory_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -185,11 +194,76 @@ namespace VideoCollection.Views
             UpdateCategoryDisplay();
         }
 
+        // Popup update movie window
         private void btnUpdateExistingMovie_Click(object sender, RoutedEventArgs e)
         {
             UpdateMovie popup = new UpdateMovie();
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
+
+            UpdateCategoryDisplay();
+        }
+
+        // Shift a category up by one
+        private void btnMoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            int categoryId = (int)(sender as Button).Tag;
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<MovieCategory>();
+
+                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Position).ToList();
+
+                MovieCategory previousCategory = categories[0];
+                foreach(MovieCategory category in categories)
+                {
+                    if(category.Id == categoryId)
+                    {
+                        if (category != previousCategory)
+                        {
+                            category.Position -= 1;
+                            previousCategory.Position += 1;
+                            connection.Update(category);
+                            connection.Update(previousCategory);
+                        }
+                        break;
+                    }
+                    previousCategory = category;
+                }
+            }
+
+            UpdateCategoryDisplay();
+        }
+
+        // Shift a category down by one
+        private void btnMoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            int categoryId = (int)(sender as Button).Tag;
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<MovieCategory>();
+
+                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderByDescending(c => c.Position).ToList();
+
+                MovieCategory previousCategory = categories[0];
+                foreach (MovieCategory category in categories)
+                {
+                    if (category.Id == categoryId)
+                    {
+                        if (category != previousCategory)
+                        {
+                            category.Position += 1;
+                            previousCategory.Position -= 1;
+                            connection.Update(category);
+                            connection.Update(previousCategory);
+                        }
+                        break;
+                    }
+                    previousCategory = category;
+                }
+            }
 
             UpdateCategoryDisplay();
         }

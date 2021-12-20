@@ -26,6 +26,7 @@ namespace VideoCollection.Commands
             return true;
         }
 
+        // Switch views
         public void Execute(object parameter)
         {
             if(parameter.ToString() == "Shows")

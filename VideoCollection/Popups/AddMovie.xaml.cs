@@ -33,6 +33,7 @@ namespace VideoCollection.Popups
 
             _selectedCategories = new List<string>();
 
+            // Load categories to display
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
@@ -40,29 +41,33 @@ namespace VideoCollection.Popups
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Name, category.Movies, category.IsChecked));
+                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
                 }
                 icCategories.ItemsSource = _categories;
             }
         }
 
+        // Select a category
         private void CheckBoxChecked(object sender, RoutedEventArgs e)
         {
             CheckBox checkBox = sender as CheckBox;
             _selectedCategories.Add(checkBox.Content.ToString());
         }
 
+        // Unselect a category
         private void CheckBoxUnchecked(object sender, RoutedEventArgs e)
         {
             CheckBox checkBox = sender as CheckBox;
             _selectedCategories.Remove(checkBox.Content.ToString());
         }
 
+        // Close the window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
 
+        // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtMovieName.Text != "")
@@ -74,7 +79,8 @@ namespace VideoCollection.Popups
                     Title = txtMovieName.Text,
                     Thumbnail = imgThumbnail.Source.ToString(),
                     MovieFilePath = txtFile.Text,
-                    Categories = jss.Serialize(_selectedCategories)
+                    Categories = jss.Serialize(_selectedCategories),
+                    IsChecked = false
                 };
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -101,6 +107,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Choose movie file
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog filePath = new OpenFileDialog();
@@ -110,6 +117,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog imagePath = new OpenFileDialog();
@@ -121,6 +129,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Convert a Uri into an ImageSource
         private ImageSource BitmapFromUri(Uri source)
         {
             var bitmap = new BitmapImage();

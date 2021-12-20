@@ -41,8 +41,10 @@
                                 <Label Foreground="White" FontSize="18" Content="{Binding Name}" FontWeight="Bold"/>
                                 <materialDesign:PopupBox Foreground="White">
                                     <StackPanel>
-                                        <Button x:Name="btnRenameCategory" Click="btnRenameCategory_Click" Tag="{Binding Id}">RENAME</Button>
+                                        <Button x:Name="btnUpdateCategory" Click="btnUpdateCategory_Click" Tag="{Binding Id}">EDIT</Button>
                                         <Button x:Name="btnDeleteCategory" Click="btnDeleteCategory_Click" Tag="{Binding Id}">DELETE</Button>
+                                        <Button x:Name="btnMoveUp" Click="btnMoveUp_Click" Tag="{Binding Id}">MOVE UP</Button>
+                                        <Button x:Name="btnMoveDown" Click="btnMoveDown_Click" Tag="{Binding Id}">MOVE DOWN</Button>
                                     </StackPanel>
                                 </materialDesign:PopupBox>
                             </StackPanel>

@@ -13,44 +13,56 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoCollection.Database;
 using VideoCollection.Movies;
-using VideoCollection.Views;
 
 namespace VideoCollection.Popups
 {
     /// <summary>
-    /// Interaction logic for AddMovieCategory.xaml
+    /// Interaction logic for RenameMovieCategory.xaml
     /// </summary>
-    public partial class AddMovieCategory : Window
+    public partial class UpdateMovieCategory : Window
     {
         private List<int> _selectedMovieIds;
 
-        public AddMovieCategory()
+        public UpdateMovieCategory(string Id)
         {
             InitializeComponent();
 
             _selectedMovieIds = new List<int>();
 
-            UpdateMovieList();
-        }
+            Tag = Id;
 
-        // Load current movie list
-        private void UpdateMovieList()
-        {
+            // Check current movies and fill the category name text box
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
+                connection.CreateTable<MovieCategory>();
+                MovieCategory movieCategory = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
+                txtCategoryName.Text = movieCategory.Name;
+                MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory.Id, movieCategory.Position, movieCategory.Name, movieCategory.Movies, movieCategory.IsChecked);
+
                 connection.CreateTable<Movie>();
                 List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories, false));
+                    bool check = false;
+                    foreach (Movie movieDeserialized in movieCategoryDeserialized.Movies)
+                    {
+                        if (movieDeserialized.Id == movie.Id)
+                        {
+                            check = true;
+                            _selectedMovieIds.Add(movie.Id);
+                        }
+                    }
+
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories, check));
                 }
                 lvMovieList.ItemsSource = movies;
             }
         }
 
-        // Close window on cancel
+        // Close the window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -59,52 +71,28 @@ namespace VideoCollection.Popups
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (txtCategoryName.Text != "") 
+            if (txtCategoryName.Text != "")
             {
                 JavaScriptSerializer jss = new JavaScriptSerializer();
-
-                bool repeat = false;
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
                     List<Movie> selectedMovies = new List<Movie>();
 
-                    foreach(int id in _selectedMovieIds)
+                    foreach (int id in _selectedMovieIds)
                     {
                         Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
                         selectedMovies.Add(movie);
                     }
 
-                    MovieCategory category = new MovieCategory()
-                    {
-                        Name = txtCategoryName.Text.ToUpper(),
-                        Movies = jss.Serialize(selectedMovies),
-                        IsChecked = false
-                    };
-
-                    List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
-                    foreach(MovieCategory movieCategory in categories)
-                    {
-                        if(movieCategory.Name == category.Name)
-                            repeat = true;
-                    }
-
-                    if(repeat)
-                    {
-                        MessageBox.Show("A category with that name already exists", "Duplicate Category", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                    else
-                    {
-                        connection.CreateTable<MovieCategory>();
-                        connection.Query<MovieCategory>("CREATE TRIGGER IF NOT EXISTS updatePosition AFTER INSERT ON MovieCategory BEGIN UPDATE MovieCategory SET Position = new.Id WHERE Id = new.Id; END; ");
-                        connection.Insert(category);
-                    }
+                    MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
+                    DatabaseFunctions.UpdateCategoryNameInMovies(result.Name, txtCategoryName.Text.ToUpper());
+                    result.Name = txtCategoryName.Text.ToUpper();
+                    result.Movies = jss.Serialize(selectedMovies);
+                    connection.Update(result);
                 }
 
-                if (!repeat)
-                {
-                    Close();
-                }
+                Close();
             }
             else
             {
@@ -112,14 +100,13 @@ namespace VideoCollection.Popups
             }
         }
 
-
-        // Select a movie
+        // Add movie to selected
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
             _selectedMovieIds.Add((int)(sender as CheckBox).Tag);
         }
 
-        // Unselect a movie
+        // Remove movie from selected
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _selectedMovieIds.Remove((int)(sender as CheckBox).Tag);

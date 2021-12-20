@@ -104,8 +104,8 @@
     <Compile Include="Popups\AddMovieCategory.xaml.cs">
       <DependentUpon>AddMovieCategory.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\RenameMovieCategory.xaml.cs">
-      <DependentUpon>RenameMovieCategory.xaml</DependentUpon>
+    <Compile Include="Popups\UpdateMovieCategory.xaml.cs">
+      <DependentUpon>UpdateMovieCategory.xaml</DependentUpon>
     </Compile>
     <Compile Include="Popups\UpdateMovie.xaml.cs">
       <DependentUpon>UpdateMovie.xaml</DependentUpon>
@@ -143,7 +143,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\RenameMovieCategory.xaml">
+    <Page Include="Popups\UpdateMovieCategory.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

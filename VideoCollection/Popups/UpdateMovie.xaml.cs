@@ -37,6 +37,7 @@ namespace VideoCollection.Popups
 
             UpdateMovieList();
 
+            // Load categories
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
@@ -44,12 +45,13 @@ namespace VideoCollection.Popups
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    categories.Add(new MovieCategoryDeserialized(category.Id, category.Name, category.Movies, category.IsChecked));
+                    categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
                 }
                 icCategories.ItemsSource = categories;
             }
         }
 
+        // Load current movie list
         private void UpdateMovieList()
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -59,29 +61,33 @@ namespace VideoCollection.Popups
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories));
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories, false));
                 }
                 lvMovieList.ItemsSource = movies;
             }
         }
 
+        // Select a category
         private void CheckBoxChecked(object sender, RoutedEventArgs e)
         {
             CheckBox checkBox = sender as CheckBox;
             _selectedCategories.Add(checkBox.Content.ToString());
         }
 
+        // Unselect a category
         private void CheckBoxUnchecked(object sender, RoutedEventArgs e)
         {
             CheckBox checkBox = sender as CheckBox;
             _selectedCategories.Remove(checkBox.Content.ToString());
         }
 
+        // Close window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
 
+        // If there are changes save them before closing
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (!_changesSaved)
@@ -97,6 +103,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Choose movie file
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog filePath = new OpenFileDialog();
@@ -106,6 +113,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog imagePath = new OpenFileDialog();
@@ -117,6 +125,7 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Convert Uri into an ImageSource
         private ImageSource BitmapFromUri(Uri source)
         {
             var bitmap = new BitmapImage();
@@ -127,6 +136,7 @@ namespace VideoCollection.Popups
             return bitmap;
         }
 
+        // Load movie info when a movie is selected from the list
         private void lvMovieList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var movies = lvMovieList.SelectedItems;
@@ -150,17 +160,19 @@ namespace VideoCollection.Popups
                         check = true;
                         _selectedCategories.Add(category.Name);
                     }
-                    categories.Add(new MovieCategoryDeserialized(category.Id, category.Name, category.Movies, check));
+                    categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, check));
                 }
                 icCategories.ItemsSource = categories;
             }
         }
 
+        // Always save changes on apply
         private void btnApply_Click(object sender, RoutedEventArgs e)
         {
             ApplyUpdate();
         }
 
+        // Check if any movie content has changed from what was already saved
         private bool MovieContentChanged(Movie movie)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -168,6 +180,7 @@ namespace VideoCollection.Popups
             return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != jss.Serialize(_selectedCategories));
         }
 
+        // Save changes
         private bool ApplyUpdate()
         {
             if (txtMovieName.Text != "")

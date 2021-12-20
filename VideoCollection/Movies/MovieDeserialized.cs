@@ -16,8 +16,9 @@ namespace VideoCollection.Movies
         public ImageSource Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
         public List<string> Categories { get; set; }
+        public bool IsChecked { get; set; }
 
-        public MovieDeserialized(int id, string title, string thumbnail, string filePath, string categories)
+        public MovieDeserialized(int id, string title, string thumbnail, string filePath, string categories, bool check)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
             Id = id;
@@ -25,8 +26,10 @@ namespace VideoCollection.Movies
             Thumbnail = BitmapFromUri(new Uri(thumbnail));
             MovieFilePath = filePath;
             Categories = jss.Deserialize<List<string>>(categories);
+            IsChecked = check;
         }
 
+        // Convert a Uri into an ImageSource
         private ImageSource BitmapFromUri(Uri source)
         {
             var bitmap = new BitmapImage();

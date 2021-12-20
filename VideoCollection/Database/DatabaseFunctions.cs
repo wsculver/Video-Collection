@@ -11,6 +11,7 @@ namespace VideoCollection.Database
 {
     internal static class DatabaseFunctions
     {
+        // Remove movie with movieId from category
         public static void RemoveMovieFromCategory(string movieId, MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -30,6 +31,7 @@ namespace VideoCollection.Database
             }
         }
 
+        // Add movie object to category
         public static void AddMovieToCategory(Movie movie, MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -43,12 +45,14 @@ namespace VideoCollection.Database
             }
         }
 
+        // Remove old movie from category based on its Id and add the new movie object to the category
         public static void UpdateMovieInCategory(Movie movie, MovieCategory category)
         {
             RemoveMovieFromCategory(movie.Id.ToString(), category);
             AddMovieToCategory(movie, category);
         }
 
+        // Change the category name in all movie lists
         public static void UpdateCategoryNameInMovies(string oldName, string newName)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();

@@ -17,5 +17,7 @@ namespace VideoCollection.Movies
         public string MovieFilePath { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }
+        // Used for editing categories
+        public bool IsChecked { get; set; }
     }
 }
