@@ -15,6 +15,7 @@ namespace VideoCollection.Movies
         public string Title { get; set; }
         public string Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
+        public string BonusFolderPath { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }
         // Used for editing categories

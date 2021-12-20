@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Movies;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace VideoCollection.Popups
 {
@@ -61,7 +62,7 @@ namespace VideoCollection.Popups
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.Categories, false));
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, false));
                 }
                 lvMovieList.ItemsSource = movies;
             }
@@ -107,6 +108,12 @@ namespace VideoCollection.Popups
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog filePath = new OpenFileDialog();
+            filePath.DefaultExt = ".m4v";
+            filePath.CheckFileExists = true;
+            filePath.CheckPathExists = true;
+            filePath.Multiselect = false;
+            filePath.ValidateNames = true;
+            filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
             if (filePath.ShowDialog() == true)
             {
                 txtFile.Text = filePath.FileName;
@@ -118,7 +125,11 @@ namespace VideoCollection.Popups
         {
             OpenFileDialog imagePath = new OpenFileDialog();
             imagePath.DefaultExt = ".png";
-            imagePath.Filter = "png Files (*.png)|*.png|jpeg Files (*.jpg)|*.jpg";
+            imagePath.CheckFileExists = true;
+            imagePath.CheckPathExists = true;
+            imagePath.Multiselect = false;
+            imagePath.ValidateNames = true;
+            imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
             if (imagePath.ShowDialog() == true)
             {
                 imgThumbnail.Source = BitmapFromUri(new Uri(imagePath.FileName));
@@ -196,6 +207,7 @@ namespace VideoCollection.Popups
                     movie.Title = txtMovieName.Text;
                     movie.Thumbnail = imgThumbnail.Source.ToString();
                     movie.MovieFilePath = txtFile.Text;
+                    movie.BonusFolderPath = txtBonusFolder.Text;
                     movie.Categories = jss.Serialize(_selectedCategories);
                     connection.Update(movie);
 
@@ -229,6 +241,27 @@ namespace VideoCollection.Popups
                 MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             return false;
+        }
+
+        // Choose a folder that has bonus content
+        private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new CommonOpenFileDialog();
+            dlg.IsFolderPicker = true;
+
+            dlg.AddToMostRecentlyUsedList = false;
+            dlg.AllowNonFileSystemItems = false;
+            dlg.EnsureFileExists = true;
+            dlg.EnsurePathExists = true;
+            dlg.EnsureReadOnly = false;
+            dlg.EnsureValidNames = true;
+            dlg.Multiselect = false;
+            dlg.ShowPlacesList = true;
+
+            if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                txtBonusFolder.Text = dlg.FileName;
+            }
         }
     }
 }

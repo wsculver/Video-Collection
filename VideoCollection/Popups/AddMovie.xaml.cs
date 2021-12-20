@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Movies;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace VideoCollection.Popups
 {
@@ -79,6 +80,7 @@ namespace VideoCollection.Popups
                     Title = txtMovieName.Text,
                     Thumbnail = imgThumbnail.Source.ToString(),
                     MovieFilePath = txtFile.Text,
+                    BonusFolderPath = txtBonusFolder.Text,
                     Categories = jss.Serialize(_selectedCategories),
                     IsChecked = false
                 };
@@ -111,7 +113,13 @@ namespace VideoCollection.Popups
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog filePath = new OpenFileDialog();
-            if(filePath.ShowDialog() == true)
+            filePath.DefaultExt = ".m4v";
+            filePath.CheckFileExists = true;
+            filePath.CheckPathExists = true;
+            filePath.Multiselect = false;
+            filePath.ValidateNames = true;
+            filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
+            if (filePath.ShowDialog() == true)
             {
                 txtFile.Text = filePath.FileName;
             }
@@ -122,7 +130,11 @@ namespace VideoCollection.Popups
         {
             OpenFileDialog imagePath = new OpenFileDialog();
             imagePath.DefaultExt = ".png";
-            imagePath.Filter = "png Files (*.png)|*.png|jpeg Files (*.jpg)|*.jpg";
+            imagePath.CheckFileExists = true;
+            imagePath.CheckPathExists = true;
+            imagePath.Multiselect = false;
+            imagePath.ValidateNames = true;
+            imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
             if (imagePath.ShowDialog() == true)
             {
                 imgThumbnail.Source = BitmapFromUri(new Uri(imagePath.FileName));
@@ -138,6 +150,27 @@ namespace VideoCollection.Popups
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
             return bitmap;
+        }
+
+        // Choose a folder that has bonus content
+        private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new CommonOpenFileDialog();
+            dlg.IsFolderPicker = true;
+
+            dlg.AddToMostRecentlyUsedList = false;
+            dlg.AllowNonFileSystemItems = false;
+            dlg.EnsureFileExists = true;
+            dlg.EnsurePathExists = true;
+            dlg.EnsureReadOnly = false;
+            dlg.EnsureValidNames = true;
+            dlg.Multiselect = false;
+            dlg.ShowPlacesList = true;
+
+            if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                txtBonusFolder.Text = dlg.FileName;
+            }
         }
     }
 }
