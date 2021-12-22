@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.Views;
 
@@ -123,6 +124,21 @@ namespace VideoCollection.Popups
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _selectedMovieIds.Remove((int)(sender as CheckBox).Tag);
+        }
+
+        // Scale based on the size of the window
+        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
+        #region ScaleValue Depdency Property
+        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<AddMovieCategory>();
+        public double ScaleValue
+        {
+            get => (double)GetValue(ScaleValueProperty);
+            set => SetValue(ScaleValueProperty, value);
+        }
+        #endregion
+        private void MainGrid_SizeChanged(object sender, EventArgs e)
+        {
+            ScaleValue = _scaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 300f);
         }
     }
 }

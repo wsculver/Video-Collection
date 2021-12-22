@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoCollection.Database;
+using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
 namespace VideoCollection.Popups
@@ -24,6 +25,9 @@ namespace VideoCollection.Popups
     public partial class UpdateMovieCategory : Window
     {
         private List<int> _selectedMovieIds;
+
+        // Don't use this constructur. It is only here to make resizing work
+        public UpdateMovieCategory() { }
 
         public UpdateMovieCategory(string Id)
         {
@@ -110,6 +114,21 @@ namespace VideoCollection.Popups
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _selectedMovieIds.Remove((int)(sender as CheckBox).Tag);
+        }
+
+        // Scale based on the size of the window
+        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
+        #region ScaleValue Depdency Property
+        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<UpdateMovieCategory>();
+        public double ScaleValue
+        {
+            get => (double)GetValue(ScaleValueProperty);
+            set => SetValue(ScaleValueProperty, value);
+        }
+        #endregion
+        private void MainGrid_SizeChanged(object sender, EventArgs e)
+        {
+            ScaleValue = _scaleValueHelper.CalculateScale(updateMovieCategoryWindow, 500f, 300f);
         }
     }
 }

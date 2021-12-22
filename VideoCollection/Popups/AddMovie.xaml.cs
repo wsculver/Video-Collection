@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using VideoCollection.Helpers;
 
 namespace VideoCollection.Popups
 {
@@ -171,6 +172,21 @@ namespace VideoCollection.Popups
             {
                 txtBonusFolder.Text = dlg.FileName;
             }
+        }
+
+        // Scale based on the size of the window
+        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
+        #region ScaleValue Depdency Property
+        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<AddMovie>();
+        public double ScaleValue
+        {
+            get => (double)GetValue(ScaleValueProperty);
+            set => SetValue(ScaleValueProperty, value);
+        }
+        #endregion
+        private void MainGrid_SizeChanged(object sender, EventArgs e)
+        {
+            ScaleValue = _scaleValueHelper.CalculateScale(addMovieWindow, 500f, 500f);
         }
     }
 }

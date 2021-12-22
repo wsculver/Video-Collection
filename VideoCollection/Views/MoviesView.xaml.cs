@@ -26,7 +26,7 @@ namespace VideoCollection.Views
     /// </summary>
     public partial class MoviesView : UserControl
     {
-        private const int _tileWidth = 276; // Tile + side margins
+        private const int _tileWidth = 284; // Tile + side margins
         private List<MovieCategoryDeserialized> _categories;
 
         public MoviesView()
@@ -80,46 +80,12 @@ namespace VideoCollection.Views
             return null;
         }
 
-        // Left arrow button to scroll left inside a category
-        private void Back_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            ScrollViewer scroll = GetScrollViewer((sender as Image).Parent) as ScrollViewer;
-            double location = scroll.HorizontalOffset;
-
-            if (location - _tileWidth < 0)
-            {
-                location = 0;
-            }
-            else
-            {
-                location -= _tileWidth;
-            }
-
-            scroll.ScrollToHorizontalOffset(location);
-        }
-
-        // Right arrow button to scroll right inside a category
-        private void Next_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            ScrollViewer scroll = GetScrollViewer((sender as Image).Parent) as ScrollViewer;
-            double location = scroll.HorizontalOffset;
-
-            if (location + _tileWidth >= scroll.ScrollableWidth)
-            {
-                location = scroll.ScrollableWidth;
-            }
-            else
-            {
-                location += _tileWidth;
-            }
-
-            scroll.ScrollToHorizontalOffset(location);
-        }
-
         // Popup add category window
         private void btnAddCategory_Click(object sender, RoutedEventArgs e)
         {
             AddMovieCategory popup = new AddMovieCategory();
+            popup.Width = Window.GetWindow(this).Width * 0.2;
+            popup.Height = Window.GetWindow(this).Height * 0.55;
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
             
@@ -130,6 +96,8 @@ namespace VideoCollection.Views
         private void btnNewMovie_Click(object sender, RoutedEventArgs e)
         {
             AddMovie popup = new AddMovie();
+            popup.Width = Window.GetWindow(this).Width * 0.3;
+            popup.Height = Window.GetWindow(this).Height * 0.6;
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
 
@@ -164,6 +132,8 @@ namespace VideoCollection.Views
         private void btnUpdateCategory_Click(object sender, RoutedEventArgs e)
         {
             UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString());
+            popup.Width = Window.GetWindow(this).Width * 0.2;
+            popup.Height = Window.GetWindow(this).Height * 0.6;
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
 
@@ -198,6 +168,8 @@ namespace VideoCollection.Views
         private void btnUpdateExistingMovie_Click(object sender, RoutedEventArgs e)
         {
             UpdateMovie popup = new UpdateMovie();
+            popup.Width = Window.GetWindow(this).Width * 0.5;
+            popup.Height = Window.GetWindow(this).Height * 0.6;
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
 
@@ -266,6 +238,86 @@ namespace VideoCollection.Views
             }
 
             UpdateCategoryDisplay();
+        }
+
+        // Left arrow button to scroll left inside a category
+        private void btnPrevious_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (sender as Button);
+            Image tile = GetImage(button.Parent) as Image;
+            double tileWidth = tile.Width + tile.Margin.Left + tile.Margin.Right;
+            ScrollViewer scroll = GetScrollViewer(button.Parent) as ScrollViewer;
+            double location = scroll.HorizontalOffset;
+
+            if (location - tileWidth < 0)
+            {
+                location = 0;
+            }
+            else
+            {
+                location -= tileWidth;
+            }
+
+            scroll.ScrollToHorizontalOffset(location);
+        }
+
+        // Right arrow button to scroll right inside a category
+        private void btnNext_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (sender as Button);
+            Image tile = GetImage(button.Parent) as Image;
+            double tileWidth = tile.Width + tile.Margin.Left + tile.Margin.Right;
+            ScrollViewer scroll = GetScrollViewer(button.Parent) as ScrollViewer;
+            double location = scroll.HorizontalOffset;
+
+            if (location + tileWidth >= scroll.ScrollableWidth)
+            {
+                location = scroll.ScrollableWidth;
+            }
+            else
+            {
+                location += tileWidth;
+            }
+
+            scroll.ScrollToHorizontalOffset(location);
+        }
+
+        // Get the first child that is an Image
+        public static DependencyObject GetImage(DependencyObject o)
+        {
+            // Return the DependencyObject if it is a ScrollViewer
+            if (o is Image)
+            { return o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetImage(child);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        // Prevent background scrolling from stopping when the mouse is over a category
+        private void HandlePreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is ScrollViewer && !e.Handled)
+            {
+                e.Handled = true;
+                var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta);
+                eventArg.RoutedEvent = UIElement.MouseWheelEvent;
+                eventArg.Source = sender;
+                var parent = ((Control)sender).Parent as UIElement;
+                parent.RaiseEvent(eventArg);
+            }
         }
     }
 }

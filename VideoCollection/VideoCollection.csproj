@@ -78,6 +78,7 @@
       <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
     </Reference>
@@ -110,6 +111,7 @@
     <Compile Include="Commands\MovieClickCommand.cs" />
     <Compile Include="Commands\UpdateViewCommand.cs" />
     <Compile Include="Database\DatabaseFunctions.cs" />
+    <Compile Include="Helpers\ScaleValueHelper.cs" />
     <Compile Include="Movies\MovieCategory.cs" />
     <Compile Include="Movies\MovieCategoryDeserialized.cs" />
     <Compile Include="Movies\MovieDeserialized.cs" />
@@ -118,6 +120,9 @@
     </Compile>
     <Compile Include="Popups\AddMovieCategory.xaml.cs">
       <DependentUpon>AddMovieCategory.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Popups\MovieDetails.xaml.cs">
+      <DependentUpon>MovieDetails.xaml</DependentUpon>
     </Compile>
     <Compile Include="Popups\UpdateMovieCategory.xaml.cs">
       <DependentUpon>UpdateMovieCategory.xaml</DependentUpon>
@@ -155,6 +160,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Popups\AddMovieCategory.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Popups\MovieDetails.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -219,6 +228,7 @@
   <ItemGroup>
     <Resource Include="license.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
