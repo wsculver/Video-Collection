@@ -10,11 +10,5 @@ namespace VideoCollection.ViewModels
 {
     internal class MoviesViewModel : BaseViewModel
     {
-        public ICommand MovieClickCommand { get; set; }
-
-        public MoviesViewModel()
-        {
-            MovieClickCommand = new MovieClickCommand(this);
-        }
     }
 }

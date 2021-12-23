@@ -53,31 +53,8 @@ namespace VideoCollection.Views
                 
                 icCategoryDisplay.ItemsSource = _categories;
             }
-        }
 
-
-        // Get the first child that is a ScrollViewer
-        public static DependencyObject GetScrollViewer(DependencyObject o)
-        {
-            // Return the DependencyObject if it is a ScrollViewer
-            if (o is ScrollViewer)
-            { return o; }
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
-            {
-                var child = VisualTreeHelper.GetChild(o, i);
-
-                var result = GetScrollViewer(child);
-                if (result == null)
-                {
-                    continue;
-                }
-                else
-                {
-                    return result;
-                }
-            }
-            return null;
+            UpdateCategoryScrollButtons();
         }
 
         // Popup add category window
@@ -244,12 +221,16 @@ namespace VideoCollection.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = GetImage(button.Parent) as Image;
-            double tileWidth = tile.Width + tile.Margin.Left + tile.Margin.Right;
-            ScrollViewer scroll = GetScrollViewer(button.Parent) as ScrollViewer;
+            Image tile = GetObject<Image>(button.Parent) as Image;
+            double tileWidth = 0;
+            if (tile != null) 
+            {
+                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
+            }
+            ScrollViewer scroll = GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (location - tileWidth < 0)
+            if (Math.Round(location - tileWidth) <= 0)
             {
                 location = 0;
             }
@@ -265,12 +246,16 @@ namespace VideoCollection.Views
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = GetImage(button.Parent) as Image;
-            double tileWidth = tile.Width + tile.Margin.Left + tile.Margin.Right;
-            ScrollViewer scroll = GetScrollViewer(button.Parent) as ScrollViewer;
+            Image tile = GetObject<Image>(button.Parent) as Image;
+            double tileWidth = 0;
+            if (tile != null)
+            {
+                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
+            }
+            ScrollViewer scroll = GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (location + tileWidth >= scroll.ScrollableWidth)
+            if (Math.Round(location + tileWidth) >= Math.Round(scroll.ScrollableWidth))
             {
                 location = scroll.ScrollableWidth;
             }
@@ -282,18 +267,42 @@ namespace VideoCollection.Views
             scroll.ScrollToHorizontalOffset(location);
         }
 
-        // Get the first child that is an Image
-        public static DependencyObject GetImage(DependencyObject o)
+        // Get the previous button for a category
+        public static DependencyObject GetPreviousButton(DependencyObject o)
         {
-            // Return the DependencyObject if it is a ScrollViewer
-            if (o is Image)
+            // Return the DependencyObject if it is a Button with the name btnPrevious
+            if (o is Button && (o as Button).Name == "btnPrevious")
             { return o; }
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
             {
                 var child = VisualTreeHelper.GetChild(o, i);
 
-                var result = GetImage(child);
+                var result = GetPreviousButton(child);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        // Get the next button for a category
+        public static DependencyObject GetNextButton(DependencyObject o)
+        {
+            // Return the DependencyObject if it is a Button with the name btnNext
+            if (o is Button && (o as Button).Name == "btnNext")
+            { return o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetNextButton(child);
                 if (result == null)
                 {
                     continue;
@@ -318,6 +327,88 @@ namespace VideoCollection.Views
                 var parent = ((Control)sender).Parent as UIElement;
                 parent.RaiseEvent(eventArg);
             }
+        }
+
+        // Show the movie details when a movie thumbnail is clicked
+        private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
+            popup.Width = Window.GetWindow(this).Width * 0.95;
+            popup.Height = Window.GetWindow(this).Height * 0.9;
+            popup.Owner = Window.GetWindow(this);
+            popup.ShowDialog();
+        }
+
+        // When the grid size is changed update the category scroll buttons
+        private void MainGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateCategoryScrollButtons();
+        }
+
+        // Make the category scroll buttons visable if they are needed
+        private void UpdateCategoryScrollButtons()
+        {
+            for (int i = 0; i < icCategoryDisplay.Items.Count; i++)
+            {
+                ContentPresenter c = (ContentPresenter)icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i);
+                if (c != null)
+                {
+                    c.ApplyTemplate();
+                    ItemsControl moviesControl = c.ContentTemplate.FindName("icMovies", c) as ItemsControl;
+                    ContentPresenter c2 = (ContentPresenter)moviesControl.ItemContainerGenerator.ContainerFromIndex(0);
+                    if (c2 != null)
+                    {
+                        c2.ApplyTemplate();
+                        Image tile = c2.ContentTemplate.FindName("imageThumbnail", c2) as Image;
+                        ScrollViewer scrollViewer = c.ContentTemplate.FindName("scrollMovies", c) as ScrollViewer;
+                        if (Math.Round(moviesControl.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollViewer.ActualWidth) && scrollViewer.HorizontalOffset < scrollViewer.ScrollableWidth)
+                        {
+                            (GetNextButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            (GetNextButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Hidden;
+                        }
+
+                        if (scrollViewer.HorizontalOffset > 0)
+                        {
+                            (GetPreviousButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            (GetPreviousButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Hidden;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Get the first child of type T
+        public static DependencyObject GetObject<T>(DependencyObject o)
+        {
+            if (o is T)
+            { return o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetObject<T>(child);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        private void scrollMovies_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            UpdateCategoryScrollButtons();
         }
     }
 }
