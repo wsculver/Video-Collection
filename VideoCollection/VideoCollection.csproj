@@ -111,6 +111,7 @@
     <Compile Include="Commands\UpdateViewCommand.cs" />
     <Compile Include="Database\DatabaseFunctions.cs" />
     <Compile Include="Helpers\ScaleValueHelper.cs" />
+    <Compile Include="Helpers\StaticHelpers.cs" />
     <Compile Include="Movies\MovieCategory.cs" />
     <Compile Include="Movies\MovieCategoryDeserialized.cs" />
     <Compile Include="Movies\MovieDeserialized.cs" />

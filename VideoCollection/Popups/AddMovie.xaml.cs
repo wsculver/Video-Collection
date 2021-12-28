@@ -18,6 +18,7 @@ using VideoCollection.Database;
 using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
+using System.IO;
 
 namespace VideoCollection.Popups
 {
@@ -78,7 +79,7 @@ namespace VideoCollection.Popups
 
                 Movie movie = new Movie()
                 {
-                    Title = txtMovieName.Text,
+                    Title = txtMovieName.Text.ToUpper(),
                     Thumbnail = imgThumbnail.Source.ToString(),
                     MovieFilePath = txtFile.Text,
                     BonusFolderPath = txtBonusFolder.Text,
@@ -122,7 +123,7 @@ namespace VideoCollection.Popups
             filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
             if (filePath.ShowDialog() == true)
             {
-                txtFile.Text = filePath.FileName;
+                txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
             }
         }
 
@@ -138,7 +139,7 @@ namespace VideoCollection.Popups
             imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
             if (imagePath.ShowDialog() == true)
             {
-                imgThumbnail.Source = BitmapFromUri(new Uri(imagePath.FileName));
+                imgThumbnail.Source = BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
             }
         }
 
@@ -147,7 +148,7 @@ namespace VideoCollection.Popups
         {
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.UriSource = new Uri(source.AbsoluteUri);
+            bitmap.UriSource = source;
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
             return bitmap;
@@ -170,7 +171,7 @@ namespace VideoCollection.Popups
 
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                txtBonusFolder.Text = dlg.FileName;
+                txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
             }
         }
 

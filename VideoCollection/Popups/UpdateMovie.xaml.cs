@@ -117,7 +117,7 @@ namespace VideoCollection.Popups
             filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
             if (filePath.ShowDialog() == true)
             {
-                txtFile.Text = filePath.FileName;
+                txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
             }
         }
 
@@ -133,7 +133,7 @@ namespace VideoCollection.Popups
             imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
             if (imagePath.ShowDialog() == true)
             {
-                imgThumbnail.Source = BitmapFromUri(new Uri(imagePath.FileName));
+                imgThumbnail.Source = BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
             }
         }
 
@@ -162,6 +162,7 @@ namespace VideoCollection.Popups
                 txtMovieName.Text = movie.Title;
                 imgThumbnail.Source = movie.Thumbnail;
                 txtFile.Text = movie.MovieFilePath;
+                txtBonusFolder.Text = movie.BonusFolderPath;
                 _movieId = movie.Id;
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategoryDeserialized category in icCategories.Items)
@@ -205,7 +206,7 @@ namespace VideoCollection.Popups
                     connection.CreateTable<Movie>();
                     Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
                     bool movieContentChanged = MovieContentChanged(movie);
-                    movie.Title = txtMovieName.Text;
+                    movie.Title = txtMovieName.Text.ToUpper();
                     movie.Thumbnail = imgThumbnail.Source.ToString();
                     movie.MovieFilePath = txtFile.Text;
                     movie.BonusFolderPath = txtBonusFolder.Text;
@@ -261,7 +262,7 @@ namespace VideoCollection.Popups
 
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                txtBonusFolder.Text = dlg.FileName;
+                txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
             }
         }
 

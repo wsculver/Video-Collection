@@ -51,7 +51,7 @@ namespace VideoCollection.Popups
                 foreach (Movie movie in rawMovies)
                 {
                     bool check = false;
-                    foreach (Movie movieDeserialized in movieCategoryDeserialized.Movies)
+                    foreach (MovieDeserialized movieDeserialized in movieCategoryDeserialized.Movies)
                     {
                         if (movieDeserialized.Id == movie.Id)
                         {

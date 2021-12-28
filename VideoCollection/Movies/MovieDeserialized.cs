@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace VideoCollection.Movies
 {
@@ -24,7 +25,7 @@ namespace VideoCollection.Movies
             JavaScriptSerializer jss = new JavaScriptSerializer();
             Id = id;
             Title = title;
-            Thumbnail = BitmapFromUri(new Uri(thumbnail));
+            Thumbnail = BitmapFromUri(new Uri(new Uri(Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar), thumbnail));
             BonusFolderPath = bonusFolderPath;
             MovieFilePath = filePath;
             Categories = jss.Deserialize<List<string>>(categories);
@@ -36,7 +37,7 @@ namespace VideoCollection.Movies
         {
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.UriSource = new Uri(source.AbsoluteUri);
+            bitmap.UriSource = source;
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
             return bitmap;

@@ -12,7 +12,7 @@ namespace VideoCollection.Movies
         public int Id { get; set; }
         public int Position { get; set; }
         public string Name { get; set; }
-        public List<Movie> Movies { get; set; }
+        public List<MovieDeserialized> Movies { get; set; }
         public bool IsChecked { get; set; }
 
         public MovieCategoryDeserialized(int id, int position, string name, string movies, bool check)
@@ -21,11 +21,17 @@ namespace VideoCollection.Movies
             Id = id;
             Position = position;
             Name = name;
-            Movies = jss.Deserialize<List<Movie>>(movies);
+            List<Movie> moviesList = jss.Deserialize<List<Movie>>(movies);
+            List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
+            foreach (Movie movie in moviesList)
+            {
+                moviesDeserialized.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, false));
+            }
+            Movies = moviesDeserialized;
             IsChecked = check;
         }
 
-        public MovieCategoryDeserialized(int id, int position, string name, List<Movie> movies, bool check)
+        public MovieCategoryDeserialized(int id, int position, string name, List<MovieDeserialized> movies, bool check)
         {
             Id = id;
             Position = position;
