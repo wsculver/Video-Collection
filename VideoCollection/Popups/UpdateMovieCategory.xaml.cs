@@ -60,7 +60,7 @@ namespace VideoCollection.Popups
                         }
                     }
 
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, check));
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, check));
                 }
                 lvMovieList.ItemsSource = movies;
             }

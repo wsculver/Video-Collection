@@ -63,7 +63,7 @@ namespace VideoCollection.Popups
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, false));
+                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false));
                 }
                 lvMovieList.ItemsSource = movies;
             }
@@ -108,13 +108,7 @@ namespace VideoCollection.Popups
         // Choose movie file
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog filePath = new OpenFileDialog();
-            filePath.DefaultExt = ".m4v";
-            filePath.CheckFileExists = true;
-            filePath.CheckPathExists = true;
-            filePath.Multiselect = false;
-            filePath.ValidateNames = true;
-            filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
+            OpenFileDialog filePath = StaticHelpers.CreateVideoFileDialog();
             if (filePath.ShowDialog() == true)
             {
                 txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
@@ -124,28 +118,11 @@ namespace VideoCollection.Popups
         // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog imagePath = new OpenFileDialog();
-            imagePath.DefaultExt = ".png";
-            imagePath.CheckFileExists = true;
-            imagePath.CheckPathExists = true;
-            imagePath.Multiselect = false;
-            imagePath.ValidateNames = true;
-            imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
+            OpenFileDialog imagePath = StaticHelpers.CreateImageFileDialog();
             if (imagePath.ShowDialog() == true)
             {
-                imgThumbnail.Source = BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
+                imgThumbnail.Source = StaticHelpers.BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
             }
-        }
-
-        // Convert Uri into an ImageSource
-        private ImageSource BitmapFromUri(Uri source)
-        {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(source.AbsoluteUri);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            return bitmap;
         }
 
         // Load movie info when a movie is selected from the list
@@ -196,70 +173,63 @@ namespace VideoCollection.Popups
         // Save changes
         private bool ApplyUpdate()
         {
-            if (txtMovieName.Text != "")
-            {
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-
-                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-                {
-                    // Update the movie in the Movie table
-                    connection.CreateTable<Movie>();
-                    Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
-                    bool movieContentChanged = MovieContentChanged(movie);
-                    movie.Title = txtMovieName.Text.ToUpper();
-                    movie.Thumbnail = imgThumbnail.Source.ToString();
-                    movie.MovieFilePath = txtFile.Text;
-                    movie.BonusFolderPath = txtBonusFolder.Text;
-                    movie.Categories = jss.Serialize(_selectedCategories);
-                    connection.Update(movie);
-
-                    // Update the MovieCateogry table
-                    connection.CreateTable<MovieCategory>();
-                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                    foreach (MovieCategory category in categories)
-                    {
-                        if (_selectedCategories.Contains(category.Name))
-                        {
-                            // Update movie in the MovieCategory table if any content changed
-                            if(movieContentChanged)
-                            {
-                                DatabaseFunctions.UpdateMovieInCategory(movie, category);
-                            }
-                        }
-                        else
-                        {
-                            // Remove movie from categories in the MovieCategory table
-                            DatabaseFunctions.RemoveMovieFromCategory(_movieId.ToString(), category);
-                        }
-                    }
-                }
-                UpdateMovieList();
-                _changesSaved = true;
-
-                return true;
-            }
-            else
+            if (txtMovieName.Text == "")
             {
                 MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
-            return false;
+            if (txtFile.Text == "")
+            {
+                MessageBox.Show("You need to select a movie file", "Missing Movie File", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                // Update the movie in the Movie table
+                connection.CreateTable<Movie>();
+                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
+                bool movieContentChanged = MovieContentChanged(movie);
+                movie.Title = txtMovieName.Text.ToUpper();
+                movie.Thumbnail = imgThumbnail.Source.ToString();
+                movie.MovieFilePath = txtFile.Text;
+                movie.BonusFolderPath = txtBonusFolder.Text;
+                movie.BonusVideos = jss.Serialize(StaticHelpers.ParseMovieBonusFolder(txtBonusFolder.Text));
+                movie.Categories = jss.Serialize(_selectedCategories);
+                connection.Update(movie);
+
+                // Update the MovieCateogry table
+                connection.CreateTable<MovieCategory>();
+                List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                foreach (MovieCategory category in categories)
+                {
+                    if (_selectedCategories.Contains(category.Name))
+                    {
+                        // Update movie in the MovieCategory table if any content changed
+                        if(movieContentChanged)
+                        {
+                            DatabaseFunctions.UpdateMovieInCategory(movie, category);
+                        }
+                    }
+                    else
+                    {
+                        // Remove movie from categories in the MovieCategory table
+                        DatabaseFunctions.RemoveMovieFromCategory(_movieId.ToString(), category);
+                    }
+                }
+            }
+            UpdateMovieList();
+            _changesSaved = true;
+
+            return true;
         }
 
         // Choose a folder that has bonus content
         private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new CommonOpenFileDialog();
-            dlg.IsFolderPicker = true;
-
-            dlg.AddToMostRecentlyUsedList = false;
-            dlg.AllowNonFileSystemItems = false;
-            dlg.EnsureFileExists = true;
-            dlg.EnsurePathExists = true;
-            dlg.EnsureReadOnly = false;
-            dlg.EnsureValidNames = true;
-            dlg.Multiselect = false;
-            dlg.ShowPlacesList = true;
-
+            CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);

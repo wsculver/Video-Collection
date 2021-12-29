@@ -35,10 +35,13 @@ namespace VideoCollection.Popups
             {
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + Id)[0];
-                _movieDeserialized = new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, false);
+                _movieDeserialized = new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false);
                 labelTitle.Content = _movieDeserialized.Title.ToUpper();
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
+                icBonusVideos.ItemsSource = _movieDeserialized.BonusVideos;
             }
+
+            UpdateBonusScrollButtons();
         }
 
         // Scale based on the size of the window
@@ -73,12 +76,83 @@ namespace VideoCollection.Popups
 
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
+            Button button = (sender as Button);
+            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
+            double tileWidth = 0;
+            if (tile != null)
+            {
+                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
+            }
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            double location = scroll.HorizontalOffset;
 
+            if (Math.Round(location - tileWidth) <= 0)
+            {
+                location = 0;
+            }
+            else
+            {
+                location -= tileWidth;
+            }
+
+            scroll.ScrollToHorizontalOffset(location);
         }
 
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
+            Button button = (sender as Button);
+            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
+            double tileWidth = 0;
+            if (tile != null)
+            {
+                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
+            }
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            double location = scroll.HorizontalOffset;
 
+            if (Math.Round(location + tileWidth) >= Math.Round(scroll.ScrollableWidth))
+            {
+                location = scroll.ScrollableWidth;
+            }
+            else
+            {
+                location += tileWidth;
+            }
+
+            scroll.ScrollToHorizontalOffset(location);
+        }
+
+        // Make the bonus scroll buttons visable if they are needed
+        private void UpdateBonusScrollButtons()
+        {
+            ContentPresenter c2 = (ContentPresenter)icBonusVideos.ItemContainerGenerator.ContainerFromIndex(0);
+            if (c2 != null)
+            {
+                c2.ApplyTemplate();
+                Image tile = c2.ContentTemplate.FindName("imageThumbnail", c2) as Image;
+                if (Math.Round(icBonusVideos.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollBonusVideos.ActualWidth) && scrollBonusVideos.HorizontalOffset < scrollBonusVideos.ScrollableWidth)
+                {
+                    btnNext.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    btnNext.Visibility = Visibility.Hidden;
+                }
+
+                if (scrollBonusVideos.HorizontalOffset > 0)
+                {
+                    btnPrevious.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    btnPrevious.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        private void scrollBonusVideos_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            UpdateBonusScrollButtons();
         }
     }
 }

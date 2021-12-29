@@ -17,16 +17,24 @@ namespace VideoCollection.Movies
         public ImageSource Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
         public string BonusFolderPath { get; set; }
+        public List<MovieBonusVideoDeserialized> BonusVideos { get; set; }
         public List<string> Categories { get; set; }
         public bool IsChecked { get; set; }
 
-        public MovieDeserialized(int id, string title, string thumbnail, string filePath, string bonusFolderPath, string categories, bool check)
+        public MovieDeserialized(int id, string title, string thumbnail, string filePath, string bonusFolderPath, string bonusVideos, string categories, bool check)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
             Id = id;
             Title = title;
             Thumbnail = BitmapFromUri(new Uri(new Uri(Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar), thumbnail));
             BonusFolderPath = bonusFolderPath;
+            List<MovieBonusVideo> movieBonusVideos = jss.Deserialize<List<MovieBonusVideo>>(bonusVideos);
+            List<MovieBonusVideoDeserialized> movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
+            foreach (MovieBonusVideo video in movieBonusVideos)
+            {
+                movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video.Title, video.Thumbnail, video.FilePath));
+            }
+            BonusVideos = movieBonusVideosDeserialized;
             MovieFilePath = filePath;
             Categories = jss.Deserialize<List<string>>(categories);
             IsChecked = check;

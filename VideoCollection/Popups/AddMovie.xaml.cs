@@ -73,54 +73,53 @@ namespace VideoCollection.Popups
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (txtMovieName.Text != "")
-            {
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-
-                Movie movie = new Movie()
-                {
-                    Title = txtMovieName.Text.ToUpper(),
-                    Thumbnail = imgThumbnail.Source.ToString(),
-                    MovieFilePath = txtFile.Text,
-                    BonusFolderPath = txtBonusFolder.Text,
-                    Categories = jss.Serialize(_selectedCategories),
-                    IsChecked = false
-                };
-
-                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-                {
-                    connection.CreateTable<Movie>();
-                    connection.Insert(movie);
-
-                    connection.CreateTable<MovieCategory>();
-                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                    foreach(MovieCategory category in categories)
-                    {
-                        if(_selectedCategories.Contains(category.Name))
-                        {
-                            DatabaseFunctions.AddMovieToCategory(movie, category);
-                        }
-                    }
-                }
-
-                Close();
-            }
-            else
+            if (txtMovieName.Text == "")
             {
                 MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
+            if (txtFile.Text == "")
+            {
+                MessageBox.Show("You need to select a movie file", "Missing Movie File", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            Movie movie = new Movie()
+            {
+                Title = txtMovieName.Text.ToUpper(),
+                Thumbnail = imgThumbnail.Source.ToString(),
+                MovieFilePath = txtFile.Text,
+                BonusFolderPath = txtBonusFolder.Text,
+                BonusVideos = jss.Serialize(StaticHelpers.ParseMovieBonusFolder(txtBonusFolder.Text)),
+                Categories = jss.Serialize(_selectedCategories),
+                IsChecked = false
+            };
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Movie>();
+                connection.Insert(movie);
+
+                connection.CreateTable<MovieCategory>();
+                List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                foreach (MovieCategory category in categories)
+                {
+                    if (_selectedCategories.Contains(category.Name))
+                    {
+                        DatabaseFunctions.AddMovieToCategory(movie, category);
+                    }
+                }
+            }
+
+            Close();
         }
 
         // Choose movie file
         private void btnChooseFile_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog filePath = new OpenFileDialog();
-            filePath.DefaultExt = ".m4v";
-            filePath.CheckFileExists = true;
-            filePath.CheckPathExists = true;
-            filePath.Multiselect = false;
-            filePath.ValidateNames = true;
-            filePath.Filter = "Video Files|*.m4v;*.mp4;*.MOV;*.mkv";
+            OpenFileDialog filePath = StaticHelpers.CreateVideoFileDialog();
             if (filePath.ShowDialog() == true)
             {
                 txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
@@ -130,45 +129,17 @@ namespace VideoCollection.Popups
         // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog imagePath = new OpenFileDialog();
-            imagePath.DefaultExt = ".png";
-            imagePath.CheckFileExists = true;
-            imagePath.CheckPathExists = true;
-            imagePath.Multiselect = false;
-            imagePath.ValidateNames = true;
-            imagePath.Filter = "Image Files|*.png;*.jpg;*.jpeg";
+            OpenFileDialog imagePath = StaticHelpers.CreateImageFileDialog();
             if (imagePath.ShowDialog() == true)
             {
-                imgThumbnail.Source = BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
+                imgThumbnail.Source = StaticHelpers.BitmapFromUri(StaticHelpers.GetRelativePathUriFromCurrent(imagePath.FileName));
             }
-        }
-
-        // Convert a Uri into an ImageSource
-        private ImageSource BitmapFromUri(Uri source)
-        {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = source;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            return bitmap;
         }
 
         // Choose a folder that has bonus content
         private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new CommonOpenFileDialog();
-            dlg.IsFolderPicker = true;
-
-            dlg.AddToMostRecentlyUsedList = false;
-            dlg.AllowNonFileSystemItems = false;
-            dlg.EnsureFileExists = true;
-            dlg.EnsurePathExists = true;
-            dlg.EnsureReadOnly = false;
-            dlg.EnsureValidNames = true;
-            dlg.Multiselect = false;
-            dlg.ShowPlacesList = true;
-
+            CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);

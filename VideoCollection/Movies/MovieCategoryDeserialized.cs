@@ -25,7 +25,7 @@ namespace VideoCollection.Movies
             List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
             foreach (Movie movie in moviesList)
             {
-                moviesDeserialized.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.Categories, false));
+                moviesDeserialized.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false));
             }
             Movies = moviesDeserialized;
             IsChecked = check;

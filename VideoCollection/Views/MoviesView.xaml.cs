@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VideoCollection.Database;
+using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.Popups;
 using VideoCollection.ViewModels;
@@ -221,13 +222,13 @@ namespace VideoCollection.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = GetObject<Image>(button.Parent) as Image;
+            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
             double tileWidth = 0;
             if (tile != null) 
             {
                 tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
             }
-            ScrollViewer scroll = GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - tileWidth) <= 0)
@@ -246,13 +247,13 @@ namespace VideoCollection.Views
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = GetObject<Image>(button.Parent) as Image;
+            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
             double tileWidth = 0;
             if (tile != null)
             {
                 tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
             }
-            ScrollViewer scroll = GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + tileWidth) >= Math.Round(scroll.ScrollableWidth))
@@ -333,7 +334,7 @@ namespace VideoCollection.Views
         private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
             MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
-            popup.Width = Window.GetWindow(this).Width * 0.95;
+            popup.Width = Window.GetWindow(this).Width * 0.954;
             popup.Height = Window.GetWindow(this).Height * 0.9;
             popup.Owner = Window.GetWindow(this);
             popup.ShowDialog();
@@ -381,29 +382,6 @@ namespace VideoCollection.Views
                     }
                 }
             }
-        }
-
-        // Get the first child of type T
-        public static DependencyObject GetObject<T>(DependencyObject o)
-        {
-            if (o is T)
-            { return o; }
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
-            {
-                var child = VisualTreeHelper.GetChild(o, i);
-
-                var result = GetObject<T>(child);
-                if (result == null)
-                {
-                    continue;
-                }
-                else
-                {
-                    return result;
-                }
-            }
-            return null;
         }
 
         private void scrollMovies_ScrollChanged(object sender, ScrollChangedEventArgs e)

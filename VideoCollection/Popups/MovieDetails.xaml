@@ -31,10 +31,10 @@
             </Border>
         </Button>
 
-        <Image x:Name="imageMovieThumbnail" Grid.Row="1" Width="267" Height="150" Margin="20,0,20,0" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" HorizontalAlignment="Left"/>
+        <Image x:Name="imageMovieThumbnail" Grid.Row="1" Width="320" Height="180" Margin="20,0,20,0" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" HorizontalAlignment="Left"/>
 
         <Separator Grid.Row="2" VerticalAlignment="Top" MinHeight="1"/>
-        <Button Grid.Row="2" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Foreground="White" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}" FontSize="10">BONUS</Button>
+        <Button Grid.Row="2" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Foreground="White" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}" FontSize="10" Margin="8,0,0,0">BONUS</Button>
         <Separator Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
 
         <Grid Grid.Row="3">
@@ -44,29 +44,35 @@
                 <ColumnDefinition Width="12"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="27,0,27,0">
-                <ItemsControl ItemsSource="{Binding Movies}">
+            <ScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+                <ItemsControl x:Name="icBonusVideos">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Height="81"/>
+                            <StackPanel Orientation="Horizontal"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Grid>
-                                <Image x:Name="imageThumbnail" Width="145" Height="81" Margin="1,0,1,0" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" Tag="{Binding Id}"/>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="88"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <Image x:Name="imageThumbnail" Grid.Row="0" Width="137" Height="88" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" Tag="{Binding FilePath}" Margin="1,0,1,0"/>
+                                <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
 
-            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="27" Height="27">
+            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="27" Height="27" Margin="0,27,0,0" Visibility="Hidden">
                 <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ChevronLeft" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
             </Button>
-            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Width="27" Height="27">
+            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Width="27" Height="27" Margin="0,27,0,0" Visibility="Hidden">
                 <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ChevronRight" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
