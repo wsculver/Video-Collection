@@ -27,8 +27,9 @@ namespace VideoCollection.Popups
     public partial class UpdateMovie : Window
     {
         private List<string> _selectedCategories;
-        private int _movieId;
         private bool _changesSaved;
+        private int _movieId;
+        private MovieDeserialized _movie;
 
         public UpdateMovie()
         {
@@ -47,7 +48,7 @@ namespace VideoCollection.Popups
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
+                    categories.Add(new MovieCategoryDeserialized(category));
                 }
                 icCategories.ItemsSource = categories;
             }
@@ -63,7 +64,7 @@ namespace VideoCollection.Popups
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false));
+                    movies.Add(new MovieDeserialized(movie));
                 }
                 lvMovieList.ItemsSource = movies;
             }
@@ -136,11 +137,12 @@ namespace VideoCollection.Popups
                 _selectedCategories = new List<string>();
 
                 MovieDeserialized movie = (MovieDeserialized)movies[0];
+                txtMovieFolder.Text = movie.MovieFolderPath;
                 txtMovieName.Text = movie.Title;
                 imgThumbnail.Source = movie.Thumbnail;
                 txtFile.Text = movie.MovieFilePath;
-                txtBonusFolder.Text = movie.BonusFolderPath;
                 _movieId = movie.Id;
+                _movie = movie;
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategoryDeserialized category in icCategories.Items)
                 {
@@ -152,7 +154,7 @@ namespace VideoCollection.Popups
                     }
                     categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, check));
                 }
-                icCategories.ItemsSource = categories;
+                icCategories.ItemsSource = categories;                
             }
         }
 
@@ -193,10 +195,33 @@ namespace VideoCollection.Popups
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
                 bool movieContentChanged = MovieContentChanged(movie);
                 movie.Title = txtMovieName.Text.ToUpper();
+                movie.MovieFolderPath = txtMovieFolder.Text;
                 movie.Thumbnail = imgThumbnail.Source.ToString();
                 movie.MovieFilePath = txtFile.Text;
-                movie.BonusFolderPath = txtBonusFolder.Text;
-                movie.BonusVideos = jss.Serialize(StaticHelpers.ParseMovieBonusFolder(txtBonusFolder.Text));
+                List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
+                foreach(MovieBonusSectionDeserialized section in _movie.BonusSections)
+                {
+                    MovieBonusSection sec = new MovieBonusSection()
+                    {
+                        Name = section.Name,
+                        Background = jss.Serialize(null)
+                    };
+                    bonusSections.Add(sec);
+                }
+                movie.BonusSections = jss.Serialize(bonusSections);
+                List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
+                foreach(MovieBonusVideoDeserialized video in _movie.BonusVideos)
+                {
+                    MovieBonusVideo vid = new MovieBonusVideo()
+                    {
+                        Title = video.Title,
+                        Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
+                        FilePath = video.FilePath,
+                        Section = video.Section
+                    };
+                    bonusVideos.Add(vid);
+                }
+                movie.BonusVideos = jss.Serialize(bonusVideos);
                 movie.Categories = jss.Serialize(_selectedCategories);
                 connection.Update(movie);
 
@@ -216,7 +241,7 @@ namespace VideoCollection.Popups
                     else
                     {
                         // Remove movie from categories in the MovieCategory table
-                        DatabaseFunctions.RemoveMovieFromCategory(_movieId.ToString(), category);
+                        DatabaseFunctions.RemoveMovieFromCategory(_movie.Id.ToString(), category);
                     }
                 }
             }
@@ -224,16 +249,6 @@ namespace VideoCollection.Popups
             _changesSaved = true;
 
             return true;
-        }
-
-        // Choose a folder that has bonus content
-        private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
-        {
-            CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
-            if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
-            {
-                txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-            }
         }
 
         // Scale based on the size of the window
@@ -249,6 +264,30 @@ namespace VideoCollection.Popups
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
             ScaleValue = _scaleValueHelper.CalculateScale(updateMovieWindow, 500f, 800f);
+        }
+
+        // Choose the whole movie folder
+        private void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
+        {
+            CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
+            if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
+                Movie movie = StaticHelpers.ParseMovieVideos(dlg.FileName);
+                _movie = new MovieDeserialized(movie);
+
+                txtMovieName.Text = _movie.Title;
+                if (movie.Thumbnail != "")
+                {
+                    imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(movie.Thumbnail));
+                }
+                txtFile.Text = _movie.MovieFilePath;
+
+                if (_movie.MovieFilePath == "")
+                {
+                    MessageBox.Show("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.", "No Movie File Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 }

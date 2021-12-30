@@ -21,42 +21,45 @@
 
         <StackPanel Grid.Row="0">
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
-                <Label Foreground="White">Movie Title</Label>
-                <TextBox x:Name="txtMovieName" Width="200" FontSize="12" Foreground="White"></TextBox>
+                <Label Foreground="White">Movie Folder</Label>
+                <TextBox x:Name="txtMovieFolder" Width="250" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                <Button x:Name="btnChooseMovieFolder" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseMovieFolder_Click">Choose Folder</Button>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
-                <Label Foreground="White">Thumbnail</Label>
-                <Button x:Name="btnChooseImage" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnChooseImage_Click" VerticalAlignment="Top">Choose Image</Button>
-                <Image x:Name="imgThumbnail" Height="153" Width="272"/>
-            </StackPanel>
-        
-            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
-                <Label Foreground="White" Margin="0,0,15,0">Movie File</Label>
-                <TextBox x:Name="txtFile" Width="200" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
-                <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
-            </StackPanel>
+            <StackPanel x:Name="panelMovieFields" Visibility="Hidden">
+                <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                    <Label Foreground="White" Margin="0,0,11,0">Movie Title</Label>
+                    <TextBox x:Name="txtMovieName" Width="250" FontSize="12" Foreground="White"></TextBox>
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
-                <Label Foreground="White">Bonus Folder</Label>
-                <TextBox x:Name="txtBonusFolder" Width="200" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
-                <Button x:Name="btnChooseBonusFolder" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseBonusFolder_Click">Choose Folder</Button>
-            </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                    <Label Foreground="White">Thumbnail</Label>
+                    <Button x:Name="btnChooseImage" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnChooseImage_Click" VerticalAlignment="Top">Choose Image</Button>
+                    <Image x:Name="imgThumbnail" Height="153" Width="272"/>
+                </StackPanel>
 
-            <Label Foreground="White">Categories:</Label>
-            <ItemsControl x:Name="icCategories" Height="100">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <CheckBox Content="{Binding Name}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                    <Label Foreground="White" Margin="0,0,15,0">Movie File</Label>
+                    <TextBox x:Name="txtFile" Width="250" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                    <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
+                </StackPanel>
+
+                <Label Foreground="White">Categories:</Label>
+                <ItemsControl x:Name="icCategories" Height="100">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Name}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
         </StackPanel>
+        
 
         <StackPanel x:Name="buttons" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>

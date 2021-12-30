@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Indigo.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="BackgroundBrush" Color="#303030"/>
+            <SolidColorBrush x:Key="SelectedButtonBackgroundBrush" Color="#FF4B4B4B"/>
             <DataTemplate DataType="{x:Type viewmodels:ShowsViewModel}">
                 <views:ShowsView/>
             </DataTemplate>

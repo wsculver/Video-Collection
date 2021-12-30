@@ -29,12 +29,14 @@ namespace VideoCollection.Popups
     {
         private List<MovieCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
+        private Movie _movie;
 
         public AddMovie()
         {
             InitializeComponent();
 
             _selectedCategories = new List<string>();
+            _movie = new Movie();
 
             // Load categories to display
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -44,7 +46,7 @@ namespace VideoCollection.Popups
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
+                    _categories.Add(new MovieCategoryDeserialized(category));
                 }
                 icCategories.ItemsSource = _categories;
             }
@@ -73,47 +75,62 @@ namespace VideoCollection.Popups
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (txtMovieName.Text == "")
+            if (txtMovieFolder.Text == "")
+            {
+                MessageBox.Show("You need to select a movie folder", "No Movie Folder Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else if (txtMovieName.Text == "")
             {
                 MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
             }
-            if (txtFile.Text == "")
+            else if (txtFile.Text == "")
             {
-                MessageBox.Show("You need to select a movie file", "Missing Movie File", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                MessageBox.Show("You need to select a movie file", "No Movie File Selected", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-
-            Movie movie = new Movie()
+            else
             {
-                Title = txtMovieName.Text.ToUpper(),
-                Thumbnail = imgThumbnail.Source.ToString(),
-                MovieFilePath = txtFile.Text,
-                BonusFolderPath = txtBonusFolder.Text,
-                BonusVideos = jss.Serialize(StaticHelpers.ParseMovieBonusFolder(txtBonusFolder.Text)),
-                Categories = jss.Serialize(_selectedCategories),
-                IsChecked = false
-            };
+                JavaScriptSerializer jss = new JavaScriptSerializer();
 
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-            {
-                connection.CreateTable<Movie>();
-                connection.Insert(movie);
-
-                connection.CreateTable<MovieCategory>();
-                List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                foreach (MovieCategory category in categories)
+                string thumbnail = "";
+                if (imgThumbnail.Source == null)
                 {
-                    if (_selectedCategories.Contains(category.Name))
+                    thumbnail = StaticHelpers.CreateThumbnailFromVideoFile(txtMovieFolder.Text, txtFile.Text, 60);
+                }
+                else
+                {
+                    thumbnail = imgThumbnail.Source.ToString();
+                }
+
+                Movie movie = new Movie()
+                {
+                    Title = txtMovieName.Text.ToUpper(),
+                    MovieFolderPath = txtMovieFolder.Text,
+                    Thumbnail = thumbnail,
+                    MovieFilePath = txtFile.Text,
+                    BonusSections = _movie.BonusSections,
+                    BonusVideos = _movie.BonusVideos,
+                    Categories = jss.Serialize(_selectedCategories),
+                    IsChecked = false
+                };
+
+                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+                {
+                    connection.CreateTable<Movie>();
+                    connection.Insert(movie);
+
+                    connection.CreateTable<MovieCategory>();
+                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                    foreach (MovieCategory category in categories)
                     {
-                        DatabaseFunctions.AddMovieToCategory(movie, category);
+                        if (_selectedCategories.Contains(category.Name))
+                        {
+                            DatabaseFunctions.AddMovieToCategory(movie, category);
+                        }
                     }
                 }
-            }
 
-            Close();
+                Close();
+            }
         }
 
         // Choose movie file
@@ -136,13 +153,28 @@ namespace VideoCollection.Popups
             }
         }
 
-        // Choose a folder that has bonus content
-        private void btnChooseBonusFolder_Click(object sender, RoutedEventArgs e)
+        // Choose the whole movie folder
+        private void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
         {
             CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                txtBonusFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
+                txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
+                _movie = StaticHelpers.ParseMovieVideos(dlg.FileName);
+
+                txtMovieName.Text = _movie.Title;
+                if (_movie.Thumbnail != "")
+                {
+                    imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(_movie.Thumbnail));
+                }
+                txtFile.Text = _movie.MovieFilePath;
+
+                panelMovieFields.Visibility = Visibility.Visible;
+
+                if(_movie.MovieFilePath == "")
+                {
+                    MessageBox.Show("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.", "No Movie File Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
 

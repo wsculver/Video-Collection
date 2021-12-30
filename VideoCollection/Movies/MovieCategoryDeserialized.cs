@@ -15,20 +15,20 @@ namespace VideoCollection.Movies
         public List<MovieDeserialized> Movies { get; set; }
         public bool IsChecked { get; set; }
 
-        public MovieCategoryDeserialized(int id, int position, string name, string movies, bool check)
+        public MovieCategoryDeserialized(MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
-            Id = id;
-            Position = position;
-            Name = name;
-            List<Movie> moviesList = jss.Deserialize<List<Movie>>(movies);
+            Id = category.Id;
+            Position = category.Position;
+            Name = category.Name;
+            List<Movie> moviesList = jss.Deserialize<List<Movie>>(category.Movies);
             List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
             foreach (Movie movie in moviesList)
             {
-                moviesDeserialized.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false));
+                moviesDeserialized.Add(new MovieDeserialized(movie));
             }
             Movies = moviesDeserialized;
-            IsChecked = check;
+            IsChecked = category.IsChecked;
         }
 
         public MovieCategoryDeserialized(int id, int position, string name, List<MovieDeserialized> movies, bool check)

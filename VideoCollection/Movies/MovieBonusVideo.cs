@@ -11,5 +11,6 @@ namespace VideoCollection.Movies
         public string Title { get; set; }
         public string Thumbnail { get; set; }
         public string FilePath { get; set; }
+        public string Section { get; set; }
     }
 }

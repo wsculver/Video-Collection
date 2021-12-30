@@ -116,6 +116,8 @@
     <Compile Include="Database\DatabaseFunctions.cs" />
     <Compile Include="Helpers\ScaleValueHelper.cs" />
     <Compile Include="Helpers\StaticHelpers.cs" />
+    <Compile Include="Movies\MovieBonusSection.cs" />
+    <Compile Include="Movies\MovieBonusSectionDeserialized.cs" />
     <Compile Include="Movies\MovieBonusVideo.cs" />
     <Compile Include="Movies\MovieBonusVideoDeserialized.cs" />
     <Compile Include="Movies\MovieCategory.cs" />

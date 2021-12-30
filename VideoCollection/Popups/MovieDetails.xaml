@@ -34,7 +34,18 @@
         <Image x:Name="imageMovieThumbnail" Grid.Row="1" Width="320" Height="180" Margin="20,0,20,0" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" HorizontalAlignment="Left"/>
 
         <Separator Grid.Row="2" VerticalAlignment="Top" MinHeight="1"/>
-        <Button Grid.Row="2" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Foreground="White" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}" FontSize="10" Margin="8,0,0,0">BONUS</Button>
+        <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Foreground="White" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
         <Separator Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
 
         <Grid Grid.Row="3">

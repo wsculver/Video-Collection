@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -92,37 +93,114 @@ namespace VideoCollection.Helpers
         }
 
         // Parse a movie bonus folder to format all videos in it
-        public static List<MovieBonusVideo> ParseMovieBonusFolder(string bonusFolderPath)
+        public static Movie ParseMovieVideos(string movieFolderPath)
         {
-            List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
+            JavaScriptSerializer jss = new JavaScriptSerializer();
 
-            var videoFiles = Directory.GetFiles(bonusFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
-            foreach(string videoFile in videoFiles)
+            var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+
+            // The first video found should be the movie
+            string movieFile = videoFiles.FirstOrDefault();
+            string movieTitle = "";
+            string movieFilePath = "";
+            if (movieFile != null)
             {
-                string videoFileReplaced = videoFile.Replace("\\", "/");
-                var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
-                MemoryStream thumbnailStream = new MemoryStream();
-                NReco.VideoConverter.ConvertSettings convertSettings = new NReco.VideoConverter.ConvertSettings()
-                {
-                    VideoFrameSize = "640x360"
-                };
-                ffMpeg.GetVideoThumbnail(videoFile, thumbnailStream, 5, convertSettings);
-                Image image = Image.FromStream(thumbnailStream);
-
-                MovieBonusVideo video = new MovieBonusVideo()
-                {
-                    Title = Path.GetFileNameWithoutExtension(videoFile).ToUpper(),
-                    Thumbnail = ImageToBase64(image, System.Drawing.Imaging.ImageFormat.Jpeg),
-                    FilePath = videoFile
-                };
-                bonusVideos.Add(video);
+                movieTitle = Path.GetFileNameWithoutExtension(movieFile);
+                movieFilePath = GetRelativePathStringFromCurrent(movieFile);
             }
 
-            return bonusVideos;
+            // All other videos are bonus
+            
+            List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
+            HashSet<string> bonusSectionsSet = new HashSet<string>();
+            int numVideoFiles = videoFiles.Count();
+            for(int i = 1; i < numVideoFiles; i++)
+            {
+                string videoFile = videoFiles.ElementAt(i);
+                string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
+                bonusSectionsSet.Add(bonusSection);
+
+                using (MemoryStream thumbnailStream = new MemoryStream())
+                {
+                    CreateThumbnailFromVideoFile(thumbnailStream, videoFile, 5);
+                    Image image = Image.FromStream(thumbnailStream);
+
+                    MovieBonusVideo video = new MovieBonusVideo()
+                    {
+                        Title = Path.GetFileNameWithoutExtension(videoFile).ToUpper(),
+                        Thumbnail = ImageToBase64(image, ImageFormat.Jpeg),
+                        FilePath = videoFile,
+                        Section = bonusSection
+                    };
+                    bonusVideos.Add(video);
+                }
+            }
+
+            List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
+            foreach(string sectionName in bonusSectionsSet)
+            {
+                MovieBonusSection section = new MovieBonusSection()
+                {
+                    Name = sectionName,
+                    Background = jss.Serialize(null)
+                };
+                bonusSections.Add(section);
+            }
+
+            // Get the thumbnail file if it exists, otherwise create one
+            var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".png") || s.EndsWith(".jpg") || s.EndsWith(".jpeg"));
+            string movieThumbnail = "";
+            if (imageFiles.Any())
+            {
+                movieThumbnail = GetRelativePathStringFromCurrent(imageFiles.First());
+            }
+            else if(movieFile != null)
+            {
+                movieThumbnail = CreateThumbnailFromVideoFile(movieFolderPath, movieFile, 60);
+            }
+
+            Movie movie = new Movie()
+            {
+                Title = movieTitle.ToUpper(),
+                Thumbnail = movieThumbnail,
+                MovieFilePath = movieFilePath,
+                BonusSections = jss.Serialize(bonusSections),
+                BonusVideos = jss.Serialize(bonusVideos),
+                Categories = "",
+                IsChecked = false
+            };
+
+            return movie;
+        }
+
+        // Create a thumbnail from a provided video file at the frame seconds in
+        // Return a relative path to the new image in pathToDirectory
+        public static string CreateThumbnailFromVideoFile(string pathToDirectory, string videoFile, int seconds)
+        {
+            var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
+            NReco.VideoConverter.ConvertSettings convertSettings = new NReco.VideoConverter.ConvertSettings()
+            {
+                VideoFrameSize = "640x360"
+            };
+            string thumbnailPath = pathToDirectory + "/" + Path.GetFileNameWithoutExtension(videoFile) + " Thumbnail.jpg";
+            ffMpeg.GetVideoThumbnail(videoFile, thumbnailPath, seconds, convertSettings);
+            return GetRelativePathStringFromCurrent(thumbnailPath);
+        }
+
+        // Create a thumbnail from a provided video file at the frame seconds in
+        // Output thumbnail to provided thumbnailStream
+        public static void CreateThumbnailFromVideoFile(Stream thumbnailStream, string videoFile, int seconds)
+        {
+            var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
+            NReco.VideoConverter.ConvertSettings convertSettings = new NReco.VideoConverter.ConvertSettings()
+            {
+                VideoFrameSize = "640x360"
+            };
+            ffMpeg.GetVideoThumbnail(videoFile, thumbnailStream, seconds, convertSettings);
         }
 
         // Convert an Image to a base 64 string
-        public static string ImageToBase64(Image image, System.Drawing.Imaging.ImageFormat format)
+        public static string ImageToBase64(Image image, ImageFormat format)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -136,31 +214,45 @@ namespace VideoCollection.Helpers
             }
         }
 
-        // Convert a base 64 string to an Image
+        // Convert an ImageSource to a base 64 string
+        public static string ImageSourceToBase64(ImageSource image)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                var encoder = new BmpBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(image as BitmapSource));
+                encoder.Save(ms);
+                return ImageToBase64(Image.FromStream(ms), ImageFormat.Jpeg);
+            }
+        }
+
+        // Convert a base 64 string to an ImageSource
         public static ImageSource Base64ToImageSource(string base64String)
         {
             // Convert Base64 String to byte[]
             byte[] imageBytes = Convert.FromBase64String(base64String);
-            MemoryStream ms = new MemoryStream(imageBytes, 0, imageBytes.Length);
-            ms.Seek(0, SeekOrigin.Begin);
-
-            // Convert byte[] to Image
-            ms.Write(imageBytes, 0, imageBytes.Length);
-            Image image = Image.FromStream(ms, true);
-
-            using (var ms2 = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream(imageBytes, 0, imageBytes.Length))
             {
-                image.Save(ms2, ImageFormat.Jpeg);
-                ms2.Seek(0, SeekOrigin.Begin);
+                ms.Seek(0, SeekOrigin.Begin);
 
-                var bitmapImage = new BitmapImage();
-                bitmapImage.BeginInit();
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.StreamSource = ms2;
-                bitmapImage.EndInit();
+                // Convert byte[] to ImageSource
+                ms.Write(imageBytes, 0, imageBytes.Length);
+                Image image = Image.FromStream(ms, true);
 
-                return bitmapImage;
-            }            
+                using (MemoryStream ms2 = new MemoryStream())
+                {
+                    image.Save(ms2, ImageFormat.Jpeg);
+                    ms2.Seek(0, SeekOrigin.Begin);
+
+                    var bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.StreamSource = ms2;
+                    bitmapImage.EndInit();
+
+                    return bitmapImage;
+                }
+            }
         }
 
         // Get the first child of type T

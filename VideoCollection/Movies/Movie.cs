@@ -13,9 +13,11 @@ namespace VideoCollection.Movies
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
         public string Title { get; set; }
+        public string MovieFolderPath { get; set; }
         public string Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
-        public string BonusFolderPath { get; set; }
+        // JSON encoded List<string>
+        public string BonusSections { get; set; }
         // JSON encoded List<MovieBonusVideo>
         public string BonusVideos { get; set; }
         // JSON encoded List<string>

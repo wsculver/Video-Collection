@@ -49,7 +49,7 @@ namespace VideoCollection.Views
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    _categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, category.IsChecked));
+                    _categories.Add(new MovieCategoryDeserialized(category));
                 }
                 
                 icCategoryDisplay.ItemsSource = _categories;

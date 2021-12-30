@@ -43,7 +43,7 @@ namespace VideoCollection.Popups
                 connection.CreateTable<MovieCategory>();
                 MovieCategory movieCategory = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
                 txtCategoryName.Text = movieCategory.Name;
-                MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory.Id, movieCategory.Position, movieCategory.Name, movieCategory.Movies, movieCategory.IsChecked);
+                MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory);
 
                 connection.CreateTable<Movie>();
                 List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
@@ -60,7 +60,8 @@ namespace VideoCollection.Popups
                         }
                     }
 
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, check));
+                    movie.IsChecked = check;
+                    movies.Add(new MovieDeserialized(movie));
                 }
                 lvMovieList.ItemsSource = movies;
             }

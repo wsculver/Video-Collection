@@ -13,12 +13,14 @@ namespace VideoCollection.Movies
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }
         public string FilePath { get; set; }
+        public string Section { get; set; }
 
-        public MovieBonusVideoDeserialized(string title, string base64String, string filePath)
+        public MovieBonusVideoDeserialized(MovieBonusVideo video)
         {
-            Title = title;
-            Thumbnail = StaticHelpers.Base64ToImageSource(base64String);
-            FilePath = filePath;
+            Title = video.Title;
+            Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
+            FilePath = video.FilePath;
+            Section = video.Section;
         }
     }
 }

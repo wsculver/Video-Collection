@@ -101,14 +101,14 @@ namespace VideoCollection
 
         private void btnShows_Click(object sender, RoutedEventArgs e)
         {
-            btnShows.Background = new SolidColorBrush(Color.FromRgb(75, 75, 75));
+            btnShows.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
             btnMovies.Background = null;
         }
 
         private void btnMovies_Click(object sender, RoutedEventArgs e)
         {
             btnShows.Background = null;
-            btnMovies.Background = new SolidColorBrush(Color.FromRgb(75, 75, 75));
+            btnMovies.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
         }
     }
 }

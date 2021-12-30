@@ -23,6 +23,7 @@ namespace VideoCollection.Popups
     public partial class MovieDetails : Window
     {
         private MovieDeserialized _movieDeserialized;
+        private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
 
         // Don't use this constructur. It is only here to make resizing work
         public MovieDetails() { }
@@ -35,10 +36,21 @@ namespace VideoCollection.Popups
             {
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + Id)[0];
-                _movieDeserialized = new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false);
+                _movieDeserialized = new MovieDeserialized(movie);
                 labelTitle.Content = _movieDeserialized.Title.ToUpper();
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
-                icBonusVideos.ItemsSource = _movieDeserialized.BonusVideos;
+                _movieDeserialized.BonusSections.FirstOrDefault().Background = new SolidColorBrush(Color.FromRgb(75, 75, 75));
+                icBonusSectionButtons.ItemsSource = _movieDeserialized.BonusSections;
+                _bonusVideosDictionary = new Dictionary<string, List<MovieBonusVideoDeserialized>>();
+                foreach(MovieBonusVideoDeserialized bonusVideo in _movieDeserialized.BonusVideos)
+                {
+                    if(!_bonusVideosDictionary.ContainsKey(bonusVideo.Section))
+                    {
+                        _bonusVideosDictionary.Add(bonusVideo.Section, new List<MovieBonusVideoDeserialized>());
+                    } 
+                    _bonusVideosDictionary[bonusVideo.Section].Add(bonusVideo);
+                }
+                icBonusVideos.ItemsSource = _bonusVideosDictionary[_movieDeserialized.BonusSections.FirstOrDefault().Name];
             }
 
             UpdateBonusScrollButtons();
@@ -152,6 +164,33 @@ namespace VideoCollection.Popups
 
         private void scrollBonusVideos_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            UpdateBonusScrollButtons();
+        }
+
+        private void btnBonusSection_Click(object sender, RoutedEventArgs e)
+        {
+            Button clickedButton = sender as Button;
+            for (int i = 0; i < icBonusSectionButtons.Items.Count; i++)
+            {
+                ContentPresenter c = (ContentPresenter)icBonusSectionButtons.ItemContainerGenerator.ContainerFromIndex(i);
+                if (c != null)
+                {
+                    c.ApplyTemplate();
+                    Button button = c.ContentTemplate.FindName("btnBonusSection", c) as Button;
+                    if(button.Equals(clickedButton))
+                    {
+                        button.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+                    }
+                    else
+                    {
+                        button.Background = null;
+                    }
+                }
+            }
+
+            scrollBonusVideos.ScrollToHorizontalOffset(0);
+            icBonusVideos.ItemsSource = _bonusVideosDictionary[clickedButton.Content.ToString()];
+
             UpdateBonusScrollButtons();
         }
     }

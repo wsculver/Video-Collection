@@ -45,7 +45,7 @@ namespace VideoCollection.Popups
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie.Id, movie.Title, movie.Thumbnail, movie.MovieFilePath, movie.BonusFolderPath, movie.BonusVideos, movie.Categories, false));
+                    movies.Add(new MovieDeserialized(movie));
                 }
                 lvMovieList.ItemsSource = movies;
             }
@@ -68,34 +68,40 @@ namespace VideoCollection.Popups
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
-                    List<Movie> selectedMovies = new List<Movie>();
-
-                    foreach(int id in _selectedMovieIds)
-                    {
-                        Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
-                        selectedMovies.Add(movie);
-                    }
-
-                    MovieCategory category = new MovieCategory()
-                    {
-                        Name = txtCategoryName.Text.ToUpper(),
-                        Movies = jss.Serialize(selectedMovies),
-                        IsChecked = false
-                    };
-
                     List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
-                    foreach(MovieCategory movieCategory in categories)
+                    foreach (MovieCategory movieCategory in categories)
                     {
-                        if(movieCategory.Name == category.Name)
+                        if (movieCategory.Name == txtCategoryName.Text.ToUpper())
                             repeat = true;
                     }
 
-                    if(repeat)
+                    if (repeat)
                     {
                         MessageBox.Show("A category with that name already exists", "Duplicate Category", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     else
                     {
+                        List<Movie> selectedMovies = new List<Movie>();
+                        connection.CreateTable<Movie>();
+                        foreach (int id in _selectedMovieIds)
+                        {
+                            Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
+                            selectedMovies.Add(movie);
+
+                            // Add category to selected movie
+                            List<string> movieCategories = jss.Deserialize<List<string>>(movie.Categories);
+                            movieCategories.Add(txtCategoryName.Text.ToUpper());
+                            movie.Categories = jss.Serialize(movieCategories);
+                            connection.Update(movie);
+                        }
+
+                        MovieCategory category = new MovieCategory()
+                        {
+                            Name = txtCategoryName.Text.ToUpper(),
+                            Movies = jss.Serialize(selectedMovies),
+                            IsChecked = false
+                        };
+
                         connection.CreateTable<MovieCategory>();
                         connection.Query<MovieCategory>("CREATE TRIGGER IF NOT EXISTS updatePosition AFTER INSERT ON MovieCategory BEGIN UPDATE MovieCategory SET Position = new.Id WHERE Id = new.Id; END; ");
                         connection.Insert(category);
