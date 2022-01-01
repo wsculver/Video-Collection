@@ -6,11 +6,11 @@
         xmlns:local="clr-namespace:VideoCollection.Popups"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="400" Width="700" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="210"/>
+            <RowDefinition Height="200"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -33,7 +33,7 @@
 
         <Image x:Name="imageMovieThumbnail" Grid.Row="1" Width="320" Height="180" Margin="20,0,20,0" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" HorizontalAlignment="Left"/>
 
-        <Separator Grid.Row="2" VerticalAlignment="Top" MinHeight="1"/>
+        <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
         <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -42,17 +42,17 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Foreground="White" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0"/>
+                    <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Separator Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
+        <Separator x:Name="separatorBonusBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1" Visibility="Collapsed"/>
 
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="12"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
+                <ColumnDefinition x:Name="colMiddle" Width="749"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <ScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
@@ -66,11 +66,11 @@
                         <DataTemplate>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="88"/>
+                                    <RowDefinition Height="92"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 
-                                <Image x:Name="imageThumbnail" Grid.Row="0" Width="137" Height="88" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" Tag="{Binding FilePath}" Margin="1,0,1,0"/>
+                                <Image x:Name="imageThumbnail" Grid.Row="0" Width="143" Height="92" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" Tag="{Binding FilePath}" Margin="1,0,1,0"/>
                                 <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
                             </Grid>
                         </DataTemplate>

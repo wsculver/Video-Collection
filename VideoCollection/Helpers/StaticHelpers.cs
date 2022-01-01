@@ -142,7 +142,7 @@ namespace VideoCollection.Helpers
                 MovieBonusSection section = new MovieBonusSection()
                 {
                     Name = sectionName,
-                    Background = jss.Serialize(null)
+                    Background = jss.Serialize(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
                 };
                 bonusSections.Add(section);
             }

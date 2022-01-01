@@ -22,6 +22,9 @@ namespace VideoCollection.Popups
     /// </summary>
     public partial class MovieDetails : Window
     {
+        private const int _sideMargins = 16;
+        private const int _scrollViewerMargins = 24;
+        private double _scrollDistance = 0;
         private MovieDeserialized _movieDeserialized;
         private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
 
@@ -39,7 +42,6 @@ namespace VideoCollection.Popups
                 _movieDeserialized = new MovieDeserialized(movie);
                 labelTitle.Content = _movieDeserialized.Title.ToUpper();
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
-                _movieDeserialized.BonusSections.FirstOrDefault().Background = new SolidColorBrush(Color.FromRgb(75, 75, 75));
                 icBonusSectionButtons.ItemsSource = _movieDeserialized.BonusSections;
                 _bonusVideosDictionary = new Dictionary<string, List<MovieBonusVideoDeserialized>>();
                 foreach(MovieBonusVideoDeserialized bonusVideo in _movieDeserialized.BonusVideos)
@@ -50,7 +52,13 @@ namespace VideoCollection.Popups
                     } 
                     _bonusVideosDictionary[bonusVideo.Section].Add(bonusVideo);
                 }
-                icBonusVideos.ItemsSource = _bonusVideosDictionary[_movieDeserialized.BonusSections.FirstOrDefault().Name];
+                if (_movieDeserialized.BonusSections.Any())
+                {
+                    _movieDeserialized.BonusSections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+                    icBonusVideos.ItemsSource = _bonusVideosDictionary[_movieDeserialized.BonusSections.FirstOrDefault().Name];
+                    separatorBonusTop.Visibility = Visibility.Visible;
+                    separatorBonusBottom.Visibility = Visibility.Visible;
+                }
             }
 
             UpdateBonusScrollButtons();
@@ -68,7 +76,18 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 700f);
+            double columnWidth = _scrollViewerMargins;
+            double tileWidth = 145;
+            while (columnWidth + tileWidth + _sideMargins < MainGrid.ActualWidth)
+            {
+                columnWidth += tileWidth;
+            }
+
+            colMiddle.Width = new GridLength(columnWidth);
+
+            _scrollDistance = columnWidth - _scrollViewerMargins;
+
+            ScaleValue = _scaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 780f);
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
@@ -89,22 +108,16 @@ namespace VideoCollection.Popups
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
-            double tileWidth = 0;
-            if (tile != null)
-            {
-                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
-            }
             ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (Math.Round(location - tileWidth) <= 0)
+            if (Math.Round(location - _scrollDistance) <= 0)
             {
                 location = 0;
             }
             else
             {
-                location -= tileWidth;
+                location -= _scrollDistance;
             }
 
             scroll.ScrollToHorizontalOffset(location);
@@ -113,22 +126,16 @@ namespace VideoCollection.Popups
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
-            double tileWidth = 0;
-            if (tile != null)
-            {
-                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
-            }
             ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (Math.Round(location + tileWidth) >= Math.Round(scroll.ScrollableWidth))
+            if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
             {
                 location = scroll.ScrollableWidth;
             }
             else
             {
-                location += tileWidth;
+                location += _scrollDistance;
             }
 
             scroll.ScrollToHorizontalOffset(location);

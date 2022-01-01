@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:VideoCollection"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="446" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized">
+        WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.LayoutTransform>
@@ -20,30 +20,26 @@
                         ScaleY="{Binding ElementName=myMainWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
         
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Height="64">
-            <Button x:Name="btnShows" Click="btnShows_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Shows" Margin="0,0,20,0" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="20" FontWeight="Bold" Height="40">SHOWS</Button>
-            <Button x:Name="btnMovies" Click="btnMovies_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Movies" Margin="20,0,0,0" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="20" FontWeight="Bold" Height="40">MOVIES</Button>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Height="32">
+            <Button x:Name="btnShows" Click="btnShows_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Shows" Margin="0,0,5,3" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">SHOWS</Button>
+            <Button x:Name="btnMovies" Click="btnMovies_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Movies" Margin="5,0,0,3" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">MOVIES</Button>
         </StackPanel>
         
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Hand">
-            <Button x:Name="btnMinimize" Click="btnMinimize_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="50" Height="35" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Border Width="50" Height="35" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="WindowMinimize" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25"/>
-                </Border>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Hand" Height="16">
+            <Button x:Name="btnMinimize" Click="btnMinimize_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Background="{x:Null}" BorderBrush="{x:Null}" Padding="7,0,7,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="WindowMinimize" Foreground="White" Width="12" Height="10"/>
             </Button>
-            <Button x:Name="btnMaximize" Click="btnMaximize_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="50" Height="35" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Border Width="50" Height="35" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <materialDesign:PackIcon x:Name="iconMaximize" Kind="WindowRestore" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25"/>
-                </Border>
+            <Button x:Name="btnMaximize" Click="btnMaximize_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Background="{x:Null}" BorderBrush="{x:Null}" Padding="7,0,7,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <materialDesign:PackIcon x:Name="iconMaximize" Kind="WindowRestore" Foreground="White" Width="12" Height="10"/>
             </Button>
-            <Button x:Name="btnClose" Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="50" Height="35" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Border Width="50" Height="35" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="WindowClose" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25"/>
-                </Border>
+            <Button x:Name="btnClose" Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Background="{x:Null}" BorderBrush="{x:Null}" Padding="7,0,7,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="WindowClose" Foreground="White" Width="12" Height="10"/>
             </Button>
         </StackPanel>
         <Separator Grid.Row="0" VerticalAlignment="Bottom" MinHeight="1"/>
 
         <ContentControl x:Name="contentControl" Grid.Row="1" Content="{Binding SelectedViewModel}"/>
+
+        <Border x:Name="Splash" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

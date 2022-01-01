@@ -25,6 +25,10 @@ namespace VideoCollection
         {
             InitializeComponent();
 
+            this.MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
+            this.Height = SystemParameters.MaximizedPrimaryScreenHeight / 2;
+            this.Width = SystemParameters.MaximizedPrimaryScreenWidth / 2;
+
             DataContext = new MainViewModel();
         }
 
@@ -68,8 +72,8 @@ namespace VideoCollection
 
         private void CalculateScale()
         {
-            double yScale = ActualHeight / 900f;
-            double xScale = ActualWidth / 1600f;
+            double yScale = ActualHeight / (SystemParameters.MaximizedPrimaryScreenHeight / 2);
+            double xScale = ActualWidth / (SystemParameters.MaximizedPrimaryScreenWidth / 2);
             double value = Math.Min(xScale, yScale);
 
             ScaleValue = (double)OnCoerceScaleValue(myMainWindow, value);

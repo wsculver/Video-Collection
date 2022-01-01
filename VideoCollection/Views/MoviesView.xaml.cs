@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -27,7 +28,9 @@ namespace VideoCollection.Views
     /// </summary>
     public partial class MoviesView : UserControl
     {
-        private const int _tileWidth = 284; // Tile + side margins
+        private const int _sideMargins = 24;
+        private const int _scrollViewerMargins = 24;
+        private double _scrollDistance = 0;
         private List<MovieCategoryDeserialized> _categories;
 
         public MoviesView()
@@ -61,23 +64,29 @@ namespace VideoCollection.Views
         // Popup add category window
         private void btnAddCategory_Click(object sender, RoutedEventArgs e)
         {
+            Window parentWindow = Window.GetWindow(this);
             AddMovieCategory popup = new AddMovieCategory();
-            popup.Width = Window.GetWindow(this).Width * 0.2;
-            popup.Height = Window.GetWindow(this).Height * 0.55;
-            popup.Owner = Window.GetWindow(this);
+            popup.Width = parentWindow.Width * 0.35;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
             popup.ShowDialog();
-            
+            splashBackground(false);
+
             UpdateCategoryDisplay();
         }
 
         // Popup add movie window
         private void btnNewMovie_Click(object sender, RoutedEventArgs e)
         {
+            Window parentWindow = Window.GetWindow(this);
             AddMovie popup = new AddMovie();
-            popup.Width = Window.GetWindow(this).Width * 0.3;
-            popup.Height = Window.GetWindow(this).Height * 0.6;
-            popup.Owner = Window.GetWindow(this);
+            popup.Width = parentWindow.Width * 0.46;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
             popup.ShowDialog();
+            splashBackground(false);
 
             UpdateCategoryDisplay();
         }
@@ -109,11 +118,14 @@ namespace VideoCollection.Views
         // Popup update movie category window
         private void btnUpdateCategory_Click(object sender, RoutedEventArgs e)
         {
+            Window parentWindow = Window.GetWindow(this);
             UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString());
-            popup.Width = Window.GetWindow(this).Width * 0.2;
-            popup.Height = Window.GetWindow(this).Height * 0.6;
-            popup.Owner = Window.GetWindow(this);
+            popup.Width = parentWindow.Width * 0.35;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
             popup.ShowDialog();
+            splashBackground(false);
 
             UpdateCategoryDisplay();
         }
@@ -145,11 +157,14 @@ namespace VideoCollection.Views
         // Popup update movie window
         private void btnUpdateExistingMovie_Click(object sender, RoutedEventArgs e)
         {
+            Window parentWindow = Window.GetWindow(this);
             UpdateMovie popup = new UpdateMovie();
-            popup.Width = Window.GetWindow(this).Width * 0.5;
-            popup.Height = Window.GetWindow(this).Height * 0.6;
-            popup.Owner = Window.GetWindow(this);
+            popup.Width = parentWindow.Width * 0.72;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
             popup.ShowDialog();
+            splashBackground(false);
 
             UpdateCategoryDisplay();
         }
@@ -222,22 +237,16 @@ namespace VideoCollection.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
-            double tileWidth = 0;
-            if (tile != null) 
-            {
-                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
-            }
             ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (Math.Round(location - tileWidth) <= 0)
+            if (Math.Round(location - _scrollDistance) <= 0)
             {
                 location = 0;
             }
             else
             {
-                location -= tileWidth;
+                location -= _scrollDistance;
             }
 
             scroll.ScrollToHorizontalOffset(location);
@@ -247,22 +256,16 @@ namespace VideoCollection.Views
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            Image tile = StaticHelpers.GetObject<Image>(button.Parent) as Image;
-            double tileWidth = 0;
-            if (tile != null)
-            {
-                tileWidth = tile.ActualWidth + tile.Margin.Left + tile.Margin.Right;
-            }
             ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
             double location = scroll.HorizontalOffset;
 
-            if (Math.Round(location + tileWidth) >= Math.Round(scroll.ScrollableWidth))
+            if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
             {
                 location = scroll.ScrollableWidth;
             }
             else
             {
-                location += tileWidth;
+                location += _scrollDistance;
             }
 
             scroll.ScrollToHorizontalOffset(location);
@@ -333,16 +336,59 @@ namespace VideoCollection.Views
         // Show the movie details when a movie thumbnail is clicked
         private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            Window parentWindow = Window.GetWindow(this);
             MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
-            popup.Width = Window.GetWindow(this).Width * 0.954;
-            popup.Height = Window.GetWindow(this).Height * 0.9;
-            popup.Owner = Window.GetWindow(this);
+            popup.Width = parentWindow.Width * 0.91;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
             popup.ShowDialog();
+            splashBackground(false);
         }
 
-        // When the grid size is changed update the category scroll buttons
+        private void splashBackground(bool makeVisible)
+        {
+            if (makeVisible)
+            {
+                ((MainWindow)Window.GetWindow(this)).Splash.Visibility = Visibility.Visible;
+                Splash.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ((MainWindow)Window.GetWindow(this)).Splash.Visibility = Visibility.Collapsed;
+                Splash.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // When the grid size is changed scale the middle column to fit as many tiles as possible
         private void MainGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            double columnWidth = 0;
+
+            for (int i = 0; i < icCategoryDisplay.Items.Count; i++)
+            {
+                ContentPresenter c = (ContentPresenter)icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i);
+                if (c != null)
+                {
+                    c.ApplyTemplate();
+                    ColumnDefinition middleColumn = c.ContentTemplate.FindName("colMiddle", c) as ColumnDefinition;
+
+                    if (columnWidth == 0)
+                    {
+                        columnWidth = _scrollViewerMargins;
+                        double tileWidth = 142;
+                        while(columnWidth + tileWidth + _sideMargins < MainGrid.ActualWidth)
+                        {
+                            columnWidth += tileWidth;
+                        }
+                    }
+                    
+                    middleColumn.Width = new GridLength(columnWidth);
+                }
+            }
+
+            _scrollDistance = columnWidth - _scrollViewerMargins;
+
             UpdateCategoryScrollButtons();
         }
 

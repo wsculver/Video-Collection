@@ -17,7 +17,8 @@ namespace VideoCollection.Movies
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
             Name = section.Name;
-            Background = jss.Deserialize<SolidColorBrush>(section.Background);
+            Color backgroundColor = jss.Deserialize<Color>(section.Background);
+            Background = new SolidColorBrush(backgroundColor);
         }
     }
 }

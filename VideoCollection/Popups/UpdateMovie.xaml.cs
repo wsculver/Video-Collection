@@ -204,7 +204,7 @@ namespace VideoCollection.Popups
                     MovieBonusSection sec = new MovieBonusSection()
                     {
                         Name = section.Name,
-                        Background = jss.Serialize(null)
+                        Background = jss.Serialize(Color.FromArgb(0, 0, 0, 0))
                     };
                     bonusSections.Add(sec);
                 }

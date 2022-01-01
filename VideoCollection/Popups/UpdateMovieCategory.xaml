@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        WindowStyle="None" Height="500" Width="300" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="500" Width="350" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
@@ -23,7 +23,7 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
             <Label Foreground="White" VerticalAlignment="Center">Category Name</Label>
-            <TextBox x:Name="txtCategoryName" Width="180" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
+            <TextBox x:Name="txtCategoryName" Width="250" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
         </StackPanel>
 
         <Grid Grid.Row="1">
