@@ -44,6 +44,15 @@
                     <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
                 </StackPanel>
 
+                <Label Foreground="White">Rating:</Label>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="btnG" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">G</RadioButton>
+                    <RadioButton x:Name="btnPG" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">PG</RadioButton>
+                    <RadioButton x:Name="btnPG13" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">PG-13</RadioButton>
+                    <RadioButton x:Name="btnR" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">R</RadioButton>
+                    <RadioButton x:Name="btnNC17" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">NC-17</RadioButton>
+                </StackPanel>
+
                 <Label Foreground="White">Categories:</Label>
                 <ItemsControl x:Name="icCategories" Height="100">
                     <ItemsControl.ItemsPanel>

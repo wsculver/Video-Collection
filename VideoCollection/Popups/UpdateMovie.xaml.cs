@@ -30,6 +30,7 @@ namespace VideoCollection.Popups
         private bool _changesSaved;
         private int _movieId;
         private MovieDeserialized _movie;
+        private string _rating;
 
         public UpdateMovie()
         {
@@ -37,6 +38,7 @@ namespace VideoCollection.Popups
 
             _selectedCategories = new List<string>();
             _changesSaved = false;
+            _rating = "";
 
             UpdateMovieList();
 
@@ -143,6 +145,25 @@ namespace VideoCollection.Popups
                 txtFile.Text = movie.MovieFilePath;
                 _movieId = movie.Id;
                 _movie = movie;
+                switch(movie.Rating)
+                {
+                    case "G":
+                        btnG.IsChecked = true;
+                        break;
+                    case "PG":
+                        btnPG.IsChecked = true;
+                        break;
+                    case "PG-13":
+                        btnPG13.IsChecked = true;
+                        break;
+                    case "R":
+                        btnR.IsChecked = true;
+                        break;
+                    case "NC-17":
+                        btnNC17.IsChecked = true;
+                        break;
+                }
+                _rating = movie.Rating;
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategoryDeserialized category in icCategories.Items)
                 {
@@ -175,80 +196,95 @@ namespace VideoCollection.Popups
         // Save changes
         private bool ApplyUpdate()
         {
-            if (txtMovieName.Text == "")
+            if (txtMovieFolder.Text == "")
+            {
+                MessageBox.Show("You need to select a movie folder", "No Movie Folder Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+            else if (txtMovieName.Text == "")
             {
                 MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
-            if (txtFile.Text == "")
+            else if (txtFile.Text == "")
             {
-                MessageBox.Show("You need to select a movie file", "Missing Movie File", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("You need to select a movie file", "No Movie File Selected", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
-
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            else if (_rating == "")
             {
-                // Update the movie in the Movie table
-                connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
-                bool movieContentChanged = MovieContentChanged(movie);
-                movie.Title = txtMovieName.Text.ToUpper();
-                movie.MovieFolderPath = txtMovieFolder.Text;
-                movie.Thumbnail = imgThumbnail.Source.ToString();
-                movie.MovieFilePath = txtFile.Text;
-                List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
-                foreach(MovieBonusSectionDeserialized section in _movie.BonusSections)
-                {
-                    MovieBonusSection sec = new MovieBonusSection()
-                    {
-                        Name = section.Name,
-                        Background = jss.Serialize(Color.FromArgb(0, 0, 0, 0))
-                    };
-                    bonusSections.Add(sec);
-                }
-                movie.BonusSections = jss.Serialize(bonusSections);
-                List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
-                foreach(MovieBonusVideoDeserialized video in _movie.BonusVideos)
-                {
-                    MovieBonusVideo vid = new MovieBonusVideo()
-                    {
-                        Title = video.Title,
-                        Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
-                        FilePath = video.FilePath,
-                        Section = video.Section
-                    };
-                    bonusVideos.Add(vid);
-                }
-                movie.BonusVideos = jss.Serialize(bonusVideos);
-                movie.Categories = jss.Serialize(_selectedCategories);
-                connection.Update(movie);
+                MessageBox.Show("You need to select a rating", "No Rating Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+            else
+            {
 
-                // Update the MovieCateogry table
-                connection.CreateTable<MovieCategory>();
-                List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                foreach (MovieCategory category in categories)
+                JavaScriptSerializer jss = new JavaScriptSerializer();
+
+                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
-                    if (_selectedCategories.Contains(category.Name))
+                    // Update the movie in the Movie table
+                    connection.CreateTable<Movie>();
+                    Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
+                    bool movieContentChanged = MovieContentChanged(movie);
+                    movie.Title = txtMovieName.Text.ToUpper();
+                    movie.MovieFolderPath = txtMovieFolder.Text;
+                    movie.Thumbnail = imgThumbnail.Source.ToString();
+                    movie.MovieFilePath = txtFile.Text;
+                    movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
+                    List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
+                    foreach (MovieBonusSectionDeserialized section in _movie.BonusSections)
                     {
-                        // Update movie in the MovieCategory table if any content changed
-                        if(movieContentChanged)
+                        MovieBonusSection sec = new MovieBonusSection()
                         {
-                            DatabaseFunctions.UpdateMovieInCategory(movie, category);
+                            Name = section.Name,
+                            Background = jss.Serialize(Color.FromArgb(0, 0, 0, 0))
+                        };
+                        bonusSections.Add(sec);
+                    }
+                    movie.BonusSections = jss.Serialize(bonusSections);
+                    List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
+                    foreach (MovieBonusVideoDeserialized video in _movie.BonusVideos)
+                    {
+                        MovieBonusVideo vid = new MovieBonusVideo()
+                        {
+                            Title = video.Title,
+                            Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
+                            FilePath = video.FilePath,
+                            Section = video.Section
+                        };
+                        bonusVideos.Add(vid);
+                    }
+                    movie.BonusVideos = jss.Serialize(bonusVideos);
+                    movie.Rating = _rating;
+                    movie.Categories = jss.Serialize(_selectedCategories);
+                    connection.Update(movie);
+
+                    // Update the MovieCateogry table
+                    connection.CreateTable<MovieCategory>();
+                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                    foreach (MovieCategory category in categories)
+                    {
+                        if (_selectedCategories.Contains(category.Name))
+                        {
+                            // Update movie in the MovieCategory table if any content changed
+                            if (movieContentChanged)
+                            {
+                                DatabaseFunctions.UpdateMovieInCategory(movie, category);
+                            }
+                        }
+                        else
+                        {
+                            // Remove movie from categories in the MovieCategory table
+                            DatabaseFunctions.RemoveMovieFromCategory(_movie.Id.ToString(), category);
                         }
                     }
-                    else
-                    {
-                        // Remove movie from categories in the MovieCategory table
-                        DatabaseFunctions.RemoveMovieFromCategory(_movie.Id.ToString(), category);
-                    }
                 }
-            }
-            UpdateMovieList();
-            _changesSaved = true;
+                UpdateMovieList();
+                _changesSaved = true;
 
-            return true;
+                return true;
+            }
         }
 
         // Scale based on the size of the window
@@ -288,6 +324,11 @@ namespace VideoCollection.Popups
                     MessageBox.Show("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.", "No Movie File Found", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
+        }
+
+        private void RatingButtonClick(object sender, RoutedEventArgs e)
+        {
+            _rating = (sender as RadioButton).Content.ToString();
         }
     }
 }

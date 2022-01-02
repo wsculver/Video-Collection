@@ -31,8 +31,35 @@
             </Border>
         </Button>
 
-        <Image x:Name="imageMovieThumbnail" Grid.Row="1" Width="320" Height="180" Margin="20,0,20,0" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" HorizontalAlignment="Left"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
+            <Grid Grid.Column="0">
+                <Image x:Name="imageMovieThumbnail" Width="320" Height="180" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" MouseEnter="imageMovieThumbnail_MouseEnter" MouseLeave="imageMovieThumbnail_MouseLeave"/>
+                <Border x:Name="movieSplash" Background="Black" Opacity="0.25" Width="320" Height="180" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <Rectangle x:Name="playMovieIconBackground" Fill="{StaticResource BackgroundBrush}" Width="32" Height="32" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <materialDesign:PackIcon x:Name="iconPlayMovie" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
+            </Grid>
+                
+            <StackPanel Grid.Column="1" Margin="35,10,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Runtime:</Label>
+                    <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Rating:</Label>
+                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Categories:</Label>
+                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+        
         <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
         <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
             <ItemsControl.ItemsPanel>
@@ -69,8 +96,15 @@
                                     <RowDefinition Height="92"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                
-                                <Image x:Name="imageThumbnail" Grid.Row="0" Width="143" Height="92" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" Tag="{Binding FilePath}" Margin="1,0,1,0"/>
+
+                                <Grid Grid.Row="0">
+                                    <Image x:Name="imageThumbnail" Width="143" Height="80" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding FilePath}" Margin="1,6,1,6"/>
+                                    <Border x:Name="bonusSplash" Background="Black" Opacity="0.25" Width="143" Height="80" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Rectangle Fill="{StaticResource BackgroundBrush}" Width="16" Height="16" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Border x:Name="iconPlayBonus" IsHitTestVisible="False" Visibility="Collapsed">
+                                        <materialDesign:PackIcon Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
+                                    </Border>
+                                </Grid>
                                 <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
                             </Grid>
                         </DataTemplate>

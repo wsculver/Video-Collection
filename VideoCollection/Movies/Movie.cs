@@ -16,10 +16,12 @@ namespace VideoCollection.Movies
         public string MovieFolderPath { get; set; }
         public string Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
+        public string Runtime { get; set; }
         // JSON encoded List<string>
         public string BonusSections { get; set; }
         // JSON encoded List<MovieBonusVideo>
         public string BonusVideos { get; set; }
+        public string Rating { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }
         // Used for editing categories

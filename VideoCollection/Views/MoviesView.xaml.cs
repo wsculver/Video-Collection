@@ -237,7 +237,7 @@ namespace VideoCollection.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -256,7 +256,7 @@ namespace VideoCollection.Views
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
@@ -433,6 +433,20 @@ namespace VideoCollection.Views
         private void scrollMovies_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             UpdateCategoryScrollButtons();
+        }
+
+        private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "movieSplash").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Visible;
+        }
+
+        private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "movieSplash").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Collapsed;
         }
     }
 }

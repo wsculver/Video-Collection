@@ -1,11 +1,18 @@
-﻿using Microsoft.Win32;
+﻿using DirectShowLib;
+using DirectShowLib.DES;
+using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.WindowsAPICodePack.Shell;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
+using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -256,10 +263,11 @@ namespace VideoCollection.Helpers
         }
 
         // Get the first child of type T
-        public static DependencyObject GetObject<T>(DependencyObject o)
+        public static T GetObject<T>(DependencyObject o)
+            where T : DependencyObject
         {
             if (o is T)
-            { return o; }
+            { return (T)o; }
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
             {
@@ -276,6 +284,38 @@ namespace VideoCollection.Helpers
                 }
             }
             return null;
+        }
+
+        // Get the first child of type T with name
+        public static T GetObject<T>(DependencyObject o, string name)
+            where T : DependencyObject
+        {
+            if (o is T && (o as FrameworkElement).Name == name)
+            { return (T)o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetObject<T>(child, name);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        // Get the duration of a video file
+        public static string GetVideoDuration(string filePath)
+        {
+            var ffProbe = new FFProbe();
+            var videoInfo = ffProbe.GetMediaInfo(filePath);
+            return videoInfo.Duration.ToString(@"h\:mm\:ss");
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using SQLite;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,6 +43,15 @@ namespace VideoCollection.Popups
                 _movieDeserialized = new MovieDeserialized(movie);
                 labelTitle.Content = _movieDeserialized.Title.ToUpper();
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
+                txtRuntime.Text = _movieDeserialized.Runtime;
+                txtRating.Text = _movieDeserialized.Rating;
+                string categories = "";
+                foreach(string category in _movieDeserialized.Categories)
+                {
+                    categories += (CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.ToLower()) + ", ");
+                }
+                categories = categories.Substring(0, categories.Length-2);
+                txtCategories.Text = categories;
                 icBonusSectionButtons.ItemsSource = _movieDeserialized.BonusSections;
                 _bonusVideosDictionary = new Dictionary<string, List<MovieBonusVideoDeserialized>>();
                 foreach(MovieBonusVideoDeserialized bonusVideo in _movieDeserialized.BonusVideos)
@@ -108,7 +118,7 @@ namespace VideoCollection.Popups
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -126,7 +136,7 @@ namespace VideoCollection.Popups
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent) as ScrollViewer;
+            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
@@ -199,6 +209,34 @@ namespace VideoCollection.Popups
             icBonusVideos.ItemsSource = _bonusVideosDictionary[clickedButton.Content.ToString()];
 
             UpdateBonusScrollButtons();
+        }
+
+        private void imageMovieThumbnail_MouseEnter(object sender, MouseEventArgs e)
+        {
+            playMovieIconBackground.Visibility = Visibility.Visible;
+            iconPlayMovie.Visibility = Visibility.Visible;
+            movieSplash.Visibility = Visibility.Visible;
+        }
+
+        private void imageMovieThumbnail_MouseLeave(object sender, MouseEventArgs e)
+        {
+            playMovieIconBackground.Visibility = Visibility.Collapsed;
+            iconPlayMovie.Visibility = Visibility.Collapsed;
+            movieSplash.Visibility = Visibility.Collapsed;
+        }
+
+        private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayBonus").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "bonusSplash").Visibility = Visibility.Visible;
+        }
+
+        private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayBonus").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "bonusSplash").Visibility = Visibility.Collapsed;
         }
     }
 }

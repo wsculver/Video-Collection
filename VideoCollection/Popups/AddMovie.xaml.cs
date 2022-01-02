@@ -30,6 +30,7 @@ namespace VideoCollection.Popups
         private List<MovieCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
         private Movie _movie;
+        private string _rating = "";
 
         public AddMovie()
         {
@@ -87,6 +88,10 @@ namespace VideoCollection.Popups
             {
                 MessageBox.Show("You need to select a movie file", "No Movie File Selected", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            else if (_rating == "")
+            {
+                MessageBox.Show("You need to select a rating", "No Rating Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             else
             {
                 JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -107,8 +112,10 @@ namespace VideoCollection.Popups
                     MovieFolderPath = txtMovieFolder.Text,
                     Thumbnail = thumbnail,
                     MovieFilePath = txtFile.Text,
+                    Runtime = StaticHelpers.GetVideoDuration(txtFile.Text),
                     BonusSections = _movie.BonusSections,
                     BonusVideos = _movie.BonusVideos,
+                    Rating = _rating,
                     Categories = jss.Serialize(_selectedCategories),
                     IsChecked = false
                 };
@@ -191,6 +198,12 @@ namespace VideoCollection.Popups
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
             ScaleValue = _scaleValueHelper.CalculateScale(addMovieWindow, 500f, 500f);
+        }
+
+        // Set the movie rating
+        private void RatingButtonClick(object sender, RoutedEventArgs e)
+        {
+            _rating = (sender as RadioButton).Content.ToString();
         }
     }
 }

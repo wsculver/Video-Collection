@@ -18,8 +18,10 @@ namespace VideoCollection.Movies
         public string MovieFolderPath { get; set; }
         public ImageSource Thumbnail { get; set; }
         public string MovieFilePath { get; set; }
+        public string Runtime { get; set; }
         public List<MovieBonusSectionDeserialized> BonusSections { get; set; }
         public List<MovieBonusVideoDeserialized> BonusVideos { get; set; }
+        public string Rating { get; set; }
         public List<string> Categories { get; set; }
         public bool IsChecked { get; set; }
 
@@ -45,6 +47,8 @@ namespace VideoCollection.Movies
             }
             BonusVideos = movieBonusVideosDeserialized;
             MovieFilePath = movie.MovieFilePath;
+            Runtime = movie.Runtime;
+            Rating = movie.Rating;
             Categories = jss.Deserialize<List<string>>(movie.Categories);
             IsChecked = movie.IsChecked;
         }
