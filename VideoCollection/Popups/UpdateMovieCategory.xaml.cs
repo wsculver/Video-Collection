@@ -25,6 +25,7 @@ namespace VideoCollection.Popups
     public partial class UpdateMovieCategory : Window
     {
         private List<int> _selectedMovieIds;
+        private string _originalCategoryName;
 
         // Don't use this constructur. It is only here to make resizing work
         public UpdateMovieCategory() { }
@@ -43,6 +44,7 @@ namespace VideoCollection.Popups
                 connection.CreateTable<MovieCategory>();
                 MovieCategory movieCategory = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
                 txtCategoryName.Text = movieCategory.Name;
+                _originalCategoryName = movieCategory.Name;
                 MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory);
 
                 connection.CreateTable<Movie>();
@@ -73,35 +75,69 @@ namespace VideoCollection.Popups
             Close();
         }
 
+        // Shows a custom OK message box
+        private void ShowOKMessageBox(string message)
+        {
+            Window parentWindow = GetWindow(this).Owner;
+            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
+            popup.Width = parentWindow.Width * 0.25;
+            popup.Height = parentWindow.Height * 0.25;
+            popup.Owner = parentWindow;
+            Splash.Visibility = Visibility.Visible;
+            popup.ShowDialog();
+            Splash.Visibility = Visibility.Collapsed;
+        }
+
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (txtCategoryName.Text != "")
+            if (txtCategoryName.Text == "")
             {
+                ShowOKMessageBox("You need to enter a category name");
+            }
+            else
+            { 
                 JavaScriptSerializer jss = new JavaScriptSerializer();
+
+                bool repeat = false;
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
-                    List<Movie> selectedMovies = new List<Movie>();
-
-                    foreach (int id in _selectedMovieIds)
+                    connection.CreateTable<MovieCategory>();
+                    List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
+                    foreach (MovieCategory movieCategory in categories)
                     {
-                        Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
-                        selectedMovies.Add(movie);
+                        if (movieCategory.Name != _originalCategoryName && movieCategory.Name == txtCategoryName.Text.ToUpper())
+                            repeat = true;
                     }
 
-                    MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
-                    DatabaseFunctions.UpdateCategoryNameInMovies(result.Name, txtCategoryName.Text.ToUpper());
-                    result.Name = txtCategoryName.Text.ToUpper();
-                    result.Movies = jss.Serialize(selectedMovies);
-                    connection.Update(result);
+                    if (repeat)
+                    {
+                        ShowOKMessageBox("A category with that name already exists");
+                    }
+                    else
+                    {
+
+                        List<Movie> selectedMovies = new List<Movie>();
+
+                        foreach (int id in _selectedMovieIds)
+                        {
+                            Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
+                            selectedMovies.Add(movie);
+                        }
+
+                        MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
+                        DatabaseFunctions.UpdateCategoryNameInMovies(result.Name, txtCategoryName.Text.ToUpper());
+                        result.Name = txtCategoryName.Text.ToUpper();
+                        result.Movies = jss.Serialize(selectedMovies);
+                        connection.Update(result);
+                    }
                 }
 
-                Close();
-            }
-            else
-            {
-                MessageBox.Show("You need to enter a category name", "Missing Category Name", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!repeat)
+                {
+                    Close();
+                }
             }
         }
 

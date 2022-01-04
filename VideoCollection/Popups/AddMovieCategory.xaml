@@ -9,7 +9,7 @@
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
         <Grid.LayoutTransform>
@@ -55,5 +55,7 @@
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnOK_Click">OK</Button>
         </StackPanel>
+
+        <Border x:Name="Splash" Grid.RowSpan="3" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

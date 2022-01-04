@@ -70,5 +70,31 @@ namespace VideoCollection.Database
                 }
             }
         }
+
+        // Delete a movie from the database
+        public static void DeleteMovie(Movie movie)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                List<MovieCategory> movieCategories = connection.Table<MovieCategory>().ToList();
+                foreach (MovieCategory category in movieCategories)
+                {
+                    List<Movie> movies = jss.Deserialize<List<Movie>>(category.Movies);
+                    foreach (Movie m in movies)
+                    {
+                        if (m.Id == movie.Id)
+                        {
+                            movies.Remove(m);
+                            break;
+                        }
+                    }
+                    category.Movies = jss.Serialize(movies);
+                    connection.Update(category);
+                }
+                connection.Delete<Movie>(movie.Id);
+            }
+        }
     }
 }

@@ -73,24 +73,37 @@ namespace VideoCollection.Popups
             Close();
         }
 
+        // Shows a custom OK message box
+        private void ShowOKMessageBox(string message)
+        {
+            Window parentWindow = GetWindow(this).Owner;
+            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
+            popup.Width = parentWindow.Width * 0.25;
+            popup.Height = parentWindow.Height * 0.25;
+            popup.Owner = parentWindow;
+            Splash.Visibility = Visibility.Visible;
+            popup.ShowDialog();
+            Splash.Visibility = Visibility.Collapsed;
+        }
+
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtMovieFolder.Text == "")
             {
-                MessageBox.Show("You need to select a movie folder", "No Movie Folder Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowOKMessageBox("You need to select a movie folder");
             }
             else if (txtMovieName.Text == "")
             {
-                MessageBox.Show("You need to enter a movie name", "Missing Movie Name", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowOKMessageBox("You need to enter a movie name");
             }
             else if (txtFile.Text == "")
-            {
-                MessageBox.Show("You need to select a movie file", "No Movie File Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+            { 
+                ShowOKMessageBox("You need to select a movie file");
             }
             else if (_rating == "")
             {
-                MessageBox.Show("You need to select a rating", "No Rating Selected", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowOKMessageBox("You need to select a rating");
             }
             else
             {
@@ -120,23 +133,44 @@ namespace VideoCollection.Popups
                     IsChecked = false
                 };
 
+                bool repeat = false;
+
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
                     connection.CreateTable<Movie>();
-                    connection.Insert(movie);
-
-                    connection.CreateTable<MovieCategory>();
-                    List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                    foreach (MovieCategory category in categories)
+                    List<Movie> movies = connection.Table<Movie>().ToList();
+                    foreach (Movie m in movies)
                     {
-                        if (_selectedCategories.Contains(category.Name))
+                        if (m.Title == txtMovieName.Text.ToUpper())
+                            repeat = true;
+                    }
+
+                    if (repeat)
+                    {
+                        ShowOKMessageBox("A movie with that name already exists");
+                    }
+                    else
+                    {
+
+                        connection.CreateTable<Movie>();
+                        connection.Insert(movie);
+
+                        connection.CreateTable<MovieCategory>();
+                        List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                        foreach (MovieCategory category in categories)
                         {
-                            DatabaseFunctions.AddMovieToCategory(movie, category);
+                            if (_selectedCategories.Contains(category.Name))
+                            {
+                                DatabaseFunctions.AddMovieToCategory(movie, category);
+                            }
                         }
                     }
                 }
 
-                Close();
+                if (!repeat)
+                {
+                    Close();
+                }
             }
         }
 
@@ -180,7 +214,7 @@ namespace VideoCollection.Popups
 
                 if(_movie.MovieFilePath == "")
                 {
-                    MessageBox.Show("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.", "No Movie File Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
                 }
             }
         }

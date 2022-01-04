@@ -74,5 +74,7 @@
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnOK_Click">OK</Button>
         </StackPanel>
+
+        <Border x:Name="Splash" Grid.RowSpan="2" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

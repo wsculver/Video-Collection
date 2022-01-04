@@ -15,8 +15,8 @@ namespace VideoCollection
     public partial class App : Application
     {
         static string path = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-        static string databaseFolderPath = System.IO.Path.Combine(path, "Database");
+        static string databaseFolderPath = Path.Combine(path, "Database");
         static string databaseName = "VideoCollection.db";
-        public static string databasePath = System.IO.Path.Combine(databaseFolderPath, databaseName);
+        public static string databasePath = Path.Combine(databaseFolderPath, databaseName);
     }
 }

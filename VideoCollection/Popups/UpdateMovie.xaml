@@ -4,16 +4,46 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style x:Key="DeleteIconButtonStyle" BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="#536DFE" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger
+                        Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}"
+                        Value="True">
+                        <Setter Property="Foreground" Value="Red" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="500"/>
         </Grid.ColumnDefinitions>
 
@@ -28,17 +58,26 @@
         <Grid Grid.Row="0" Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="25"/>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
             <Label Grid.Row="0" Foreground="White">Movies:</Label>
             <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Image Width="57" Height="32" Source="{Binding Thumbnail}"/>
-                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                        </StackPanel>
+                        <Grid Width="280">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="57"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="32"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Image Grid.Column="0" Width="57" Height="32" Source="{Binding Thumbnail}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,10,0" TextWrapping="WrapWithOverflow"/>
+                            <Button x:Name="btnDeleteMovie" Grid.Column="2" Style="{StaticResource DeleteIconButtonStyle}" Click="btnDeleteMovie_Click" Tag="{Binding Id}" Width="32" Height="32">
+                                <materialDesign:PackIcon Kind="CloseCircleOutline" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="32" Height="32"/>
+                            </Button>
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -97,5 +136,7 @@
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnOK_Click">OK</Button>
             <Button x:Name="btnApply" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnApply_Click">Apply</Button>
         </StackPanel>
+
+        <Border x:Name="Splash" Grid.ColumnSpan="2" Grid.RowSpan="2" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

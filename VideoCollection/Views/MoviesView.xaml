@@ -14,13 +14,6 @@
             <sys:Double x:Key="CategorySettingsWidth">82</sys:Double>
             <sys:Double x:Key="MovieSettingsWidth">128</sys:Double>
             <sys:Double x:Key="AddSettingsWidth">90</sys:Double>
-            <SolidColorBrush x:Key="PopupStackPanelBackgroundColor">#263238</SolidColorBrush>
-            <Style x:Key="SettingsTextBlockStyle" BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
-                <Setter Property="Foreground" Value="White"/>
-                <Setter Property="FontSize" Value="8"/>
-                <Setter Property="Margin" Value="0,-45,0,0"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">

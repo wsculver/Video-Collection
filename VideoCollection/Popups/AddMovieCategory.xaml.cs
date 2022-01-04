@@ -57,17 +57,35 @@ namespace VideoCollection.Popups
             Close();
         }
 
+        // Shows a custom OK message box
+        private void ShowOKMessageBox(string message)
+        {
+            Window parentWindow = GetWindow(this).Owner;
+            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
+            popup.Width = parentWindow.Width * 0.25;
+            popup.Height = parentWindow.Height * 0.25;
+            popup.Owner = parentWindow;
+            Splash.Visibility = Visibility.Visible;
+            popup.ShowDialog();
+            Splash.Visibility = Visibility.Collapsed;
+        }
+
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (txtCategoryName.Text != "") 
+            if (txtCategoryName.Text == "")
             {
+                ShowOKMessageBox("You need to enter a category name");
+            }
+            else 
+            { 
                 JavaScriptSerializer jss = new JavaScriptSerializer();
 
                 bool repeat = false;
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
+                    connection.CreateTable<MovieCategory>();
                     List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
                     foreach (MovieCategory movieCategory in categories)
                     {
@@ -77,7 +95,7 @@ namespace VideoCollection.Popups
 
                     if (repeat)
                     {
-                        MessageBox.Show("A category with that name already exists", "Duplicate Category", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ShowOKMessageBox("A category with that name already exists");
                     }
                     else
                     {
@@ -112,10 +130,6 @@ namespace VideoCollection.Popups
                 {
                     Close();
                 }
-            }
-            else
-            {
-                MessageBox.Show("You need to enter a category name", "Missing Category Name", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
