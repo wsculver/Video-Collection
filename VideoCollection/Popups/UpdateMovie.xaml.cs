@@ -90,7 +90,7 @@ namespace VideoCollection.Popups
         // Close window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            DialogResult = false;
         }
 
         // If there are changes save them before closing
@@ -100,12 +100,12 @@ namespace VideoCollection.Popups
             {
                 if (ApplyUpdate())
                 {
-                    Close();
+                    DialogResult = true;
                 }
             }
             else
             {
-                Close();
+                DialogResult = false;
             }
         }
 
@@ -136,7 +136,6 @@ namespace VideoCollection.Popups
             if (movies.Count > 0)
             {
                 panelMovieInfo.Visibility = Visibility.Visible;
-                _changesSaved = false;
                 _selectedCategories = new List<string>();
 
                 MovieDeserialized movie = (MovieDeserialized)movies[0];
@@ -177,7 +176,7 @@ namespace VideoCollection.Popups
                     }
                     categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, check));
                 }
-                icCategories.ItemsSource = categories;                
+                icCategories.ItemsSource = categories;
             }
         }
 
@@ -395,7 +394,7 @@ namespace VideoCollection.Popups
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
 
                 Window parentWindow = GetWindow(this).Owner;
-                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database?", CustomMessageBox.MessageBoxType.YesNo);
+                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
                 popup.Width = parentWindow.Width * 0.25;
                 popup.Height = parentWindow.Height * 0.25;
                 popup.Owner = parentWindow;

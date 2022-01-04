@@ -72,7 +72,7 @@ namespace VideoCollection.Popups
         // Close the window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            DialogResult = false;
         }
 
         // Shows a custom OK message box
@@ -136,7 +136,7 @@ namespace VideoCollection.Popups
 
                 if (!repeat)
                 {
-                    Close();
+                    DialogResult = true;
                 }
             }
         }

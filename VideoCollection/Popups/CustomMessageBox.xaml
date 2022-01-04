@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        WindowStyle="None" Height="200" Width="400" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="200" Width="400" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -20,7 +20,7 @@
         </Grid.LayoutTransform>
 
         <Border Grid.Row="0" BorderBrush="{x:Null}">
-            <TextBlock x:Name="txtMessage" TextWrapping="Wrap" Text="This is a test message" TextAlignment="Center" VerticalAlignment="Center" Foreground="White" HorizontalAlignment="Center" FontSize="18"/>
+            <TextBlock x:Name="txtMessage" TextWrapping="Wrap" Text="This is a test message" TextAlignment="Center" VerticalAlignment="Center" Foreground="White" HorizontalAlignment="Center" FontSize="18" Width="370"/>
         </Border>
         <StackPanel x:Name="panelButtons" Grid.Row="1" Orientation="Horizontal"/>
     </Grid>

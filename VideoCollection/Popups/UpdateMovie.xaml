@@ -7,7 +7,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
     <Window.Resources>
         <ResourceDictionary>
             <Style x:Key="DeleteIconButtonStyle" BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
@@ -65,7 +65,7 @@
             <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="280">
+                        <Grid Width="270">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="57"/>
                                 <ColumnDefinition Width="*"/>
@@ -74,7 +74,7 @@
                             
                             <Image Grid.Column="0" Width="57" Height="32" Source="{Binding Thumbnail}"/>
                             <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,10,0" TextWrapping="WrapWithOverflow"/>
-                            <Button x:Name="btnDeleteMovie" Grid.Column="2" Style="{StaticResource DeleteIconButtonStyle}" Click="btnDeleteMovie_Click" Tag="{Binding Id}" Width="32" Height="32">
+                            <Button x:Name="btnDeleteMovie" Grid.Column="2" Style="{StaticResource DeleteIconButtonStyle}" Click="btnDeleteMovie_Click" Tag="{Binding Id}" Width="32" Height="32" Margin="0,0,-10,0">
                                 <materialDesign:PackIcon Kind="CloseCircleOutline" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="32" Height="32"/>
                             </Button>
                         </Grid>

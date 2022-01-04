@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
+        xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}">
+        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -82,7 +83,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+            <customtypes:AnimatedScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
                 <ItemsControl x:Name="icBonusVideos">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -110,7 +111,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
+            </customtypes:AnimatedScrollViewer>
 
             <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="27" Height="27" Margin="0,27,0,0" Visibility="Hidden">
                 <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">

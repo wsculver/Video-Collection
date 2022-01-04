@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VideoCollection.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
              mc:Ignorable="d" 
              d:DesignHeight="398" d:DesignWidth="800" Background="{StaticResource BackgroundBrush}">
     <UserControl.Resources>
@@ -63,7 +63,7 @@
                                     </materialDesign:PopupBox>
                                 </Button>
                             </StackPanel>
-                            <ScrollViewer x:Name="scrollMovies" ScrollChanged="scrollMovies_ScrollChanged" Grid.Column="1" Grid.Row="1" PreviewMouseWheel="HandlePreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+                            <customtypes:AnimatedScrollViewer x:Name="scrollMovies" ScrollChanged="scrollMovies_ScrollChanged" Grid.Column="1" Grid.Row="1" PreviewMouseWheel="HandlePreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
                                 <ItemsControl x:Name="icMovies" ItemsSource="{Binding Movies}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -93,8 +93,20 @@
                                                                     </MultiBinding>
                                                                 </TextBlock.Text>
                                                             </TextBlock>
+                                                            <Button x:Name="btnPlayMovie" Width="{StaticResource MovieSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnPlayMovie_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="PLAY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnDetails" Width="{StaticResource MovieSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDetails_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="DETAILS" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnUpdate" Width="{StaticResource MovieSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdate_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="UPDATE" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
                                                             <Button x:Name="btnRemoveMovieFromCategory" Width="{StaticResource MovieSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnRemoveMovieFromCategory_Click" Tag="{Binding Text, ElementName=hiddenText}" Cursor="Hand">
                                                                 <TextBlock Text="REMOVE FROM CATEGORY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnDeleteMovie" Width="{StaticResource MovieSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDeleteMovie_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="DELETE" Style="{StaticResource SettingsTextBlockStyle}"/>
                                                             </Button>
                                                         </StackPanel>
                                                     </materialDesign:PopupBox>
@@ -103,7 +115,7 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                            </ScrollViewer>
+                            </customtypes:AnimatedScrollViewer>
                             <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Hidden" Width="25" Height="25">
                                 <materialDesign:PackIcon Kind="ChevronLeft" Foreground="White" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>

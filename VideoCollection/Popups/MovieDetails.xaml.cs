@@ -11,8 +11,10 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
@@ -102,7 +104,7 @@ namespace VideoCollection.Popups
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            DialogResult = false;
         }
 
         private void imageMovieThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
@@ -118,7 +120,7 @@ namespace VideoCollection.Popups
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -130,13 +132,14 @@ namespace VideoCollection.Popups
                 location -= _scrollDistance;
             }
 
-            scroll.ScrollToHorizontalOffset(location);
+            var scrolling = new DoubleAnimation(scroll.ContentHorizontalOffset, location, new Duration(TimeSpan.FromMilliseconds(400)));
+            scroll.BeginAnimation(AnimatedScrollViewer.SetableOffsetProperty, scrolling);
         }
 
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
@@ -148,7 +151,8 @@ namespace VideoCollection.Popups
                 location += _scrollDistance;
             }
 
-            scroll.ScrollToHorizontalOffset(location);
+            var scrolling = new DoubleAnimation(scroll.ContentHorizontalOffset, location, new Duration(TimeSpan.FromMilliseconds(400)));
+            scroll.BeginAnimation(AnimatedScrollViewer.SetableOffsetProperty, scrolling);
         }
 
         // Make the bonus scroll buttons visable if they are needed

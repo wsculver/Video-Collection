@@ -32,7 +32,8 @@ namespace VideoCollection.Helpers
             // Make sure path ends with a slash because it is a directory
             Uri currentPath = new Uri(Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
             Uri filePath = new Uri(fileName);
-            return currentPath.MakeRelativeUri(filePath);
+            Uri relativePath = currentPath.MakeRelativeUri(filePath);
+            return new Uri(Uri.UnescapeDataString(relativePath.OriginalString));
         }
 
         // Get a relative path from the current application directory to a file

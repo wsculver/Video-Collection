@@ -11,10 +11,12 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VideoCollection.CustomTypes;
 using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
@@ -70,10 +72,11 @@ namespace VideoCollection.Views
             popup.Height = parentWindow.Height * 0.85;
             popup.Owner = parentWindow;
             splashBackground(true);
-            popup.ShowDialog();
+            if (popup.ShowDialog() == true)
+            {
+                UpdateCategoryDisplay();
+            }
             splashBackground(false);
-
-            UpdateCategoryDisplay();
         }
 
         // Popup add movie window
@@ -85,10 +88,11 @@ namespace VideoCollection.Views
             popup.Height = parentWindow.Height * 0.85;
             popup.Owner = parentWindow;
             splashBackground(true);
-            popup.ShowDialog();
+            if (popup.ShowDialog() == true)
+            {
+                UpdateCategoryDisplay();
+            }
             splashBackground(false);
-
-            UpdateCategoryDisplay();
         }
 
         // Remove the category from the database and from all movie category lists
@@ -124,10 +128,11 @@ namespace VideoCollection.Views
             popup.Height = parentWindow.Height * 0.85;
             popup.Owner = parentWindow;
             splashBackground(true);
-            popup.ShowDialog();
+            if (popup.ShowDialog() == true)
+            {
+                UpdateCategoryDisplay();
+            }
             splashBackground(false);
-
-            UpdateCategoryDisplay();
         }
 
         // Remove the movie from the category list and the category from the list for the movie
@@ -163,10 +168,11 @@ namespace VideoCollection.Views
             popup.Height = parentWindow.Height * 0.85;
             popup.Owner = parentWindow;
             splashBackground(true);
-            popup.ShowDialog();
+            if (popup.ShowDialog() == true)
+            {
+                UpdateCategoryDisplay();
+            }
             splashBackground(false);
-
-            UpdateCategoryDisplay();
         }
 
         // Shift a category up by one
@@ -237,7 +243,7 @@ namespace VideoCollection.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -249,14 +255,15 @@ namespace VideoCollection.Views
                 location -= _scrollDistance;
             }
 
-            scroll.ScrollToHorizontalOffset(location);
+            var scrolling = new DoubleAnimation(scroll.ContentHorizontalOffset, location, new Duration(TimeSpan.FromMilliseconds(400)));
+            scroll.BeginAnimation(AnimatedScrollViewer.SetableOffsetProperty, scrolling);
         }
 
         // Right arrow button to scroll right inside a category
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             Button button = (sender as Button);
-            ScrollViewer scroll = StaticHelpers.GetObject<ScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
@@ -268,7 +275,8 @@ namespace VideoCollection.Views
                 location += _scrollDistance;
             }
 
-            scroll.ScrollToHorizontalOffset(location);
+            var scrolling = new DoubleAnimation(scroll.ContentHorizontalOffset, location, new Duration(TimeSpan.FromMilliseconds(400)));
+            scroll.BeginAnimation(AnimatedScrollViewer.SetableOffsetProperty, scrolling);
         }
 
         // Get the previous button for a category
@@ -435,6 +443,7 @@ namespace VideoCollection.Views
             UpdateCategoryScrollButtons();
         }
 
+        // Show info icon when hovering a thumbnail
         private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
         {
             StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Visible;
@@ -442,11 +451,80 @@ namespace VideoCollection.Views
             StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Visible;
         }
 
+        // Hide info icon when not hovering a thumbnail
         private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
         {
             StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Collapsed;
             StaticHelpers.GetObject<Border>((sender as Image).Parent, "movieSplash").Visibility = Visibility.Collapsed;
             StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Collapsed;
+        }
+
+        // Play the movie directly
+        private void btnPlayMovie_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        // Show the movie details when the details setting button is clicked
+        private void btnDetails_Click(object sender, RoutedEventArgs e)
+        {
+            Window parentWindow = Window.GetWindow(this);
+            MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString());
+            popup.Width = parentWindow.Width * 0.91;
+            popup.Height = parentWindow.Height * 0.85;
+            popup.Owner = parentWindow;
+            splashBackground(true);
+            popup.ShowDialog();
+            splashBackground(false);
+        }
+
+        // Delete the movie from the database
+        private void btnDeleteMovie_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            string movieId = button.Tag.ToString();
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Movie>();
+                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
+
+                Window parentWindow = Window.GetWindow(this);
+                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
+                popup.Width = parentWindow.Width * 0.25;
+                popup.Height = parentWindow.Height * 0.25;
+                popup.Owner = parentWindow;
+                splashBackground(true);
+                if (popup.ShowDialog() == true)
+                {
+                    DatabaseFunctions.DeleteMovie(movie);
+                }
+                splashBackground(false);
+            }
+        }
+
+        // Show the update movie screen with the movie selected
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            Window parentWindow = Window.GetWindow(this);
+            UpdateMovie popup = new UpdateMovie();
+            popup.Width = parentWindow.Width * 0.72;
+            popup.Height = parentWindow.Height * 0.85;
+            for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
+            {
+                MovieDeserialized movie = (MovieDeserialized)popup.lvMovieList.Items[i];
+                if (movie.Id.ToString() == button.Tag.ToString())
+                {
+                    popup.lvMovieList.SelectedIndex = i;
+                }
+            }
+            popup.Owner = parentWindow;
+            splashBackground(true);
+            if (popup.ShowDialog() == true) 
+            {
+                UpdateCategoryDisplay();
+            }
+            splashBackground(false);
         }
     }
 }

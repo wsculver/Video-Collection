@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VideoCollection"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized">
+        Title="Video Collection" WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
