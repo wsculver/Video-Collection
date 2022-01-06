@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        WindowStyle="None" Height="500" Width="350" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
+        WindowStyle="None" Height="500" Width="350" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
@@ -23,7 +23,7 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
             <Label Foreground="White" VerticalAlignment="Center">Category Name</Label>
-            <TextBox x:Name="txtCategoryName" Width="250" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
+            <TextBox x:Name="txtCategoryName" Width="270" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
         </StackPanel>
 
         <Grid Grid.Row="1">
@@ -33,12 +33,12 @@
             </Grid.RowDefinitions>
 
             <Label Grid.Row="0" Foreground="White">Movies:</Label>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Single">
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Single" Margin="0,0,0,4">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Tag="{Binding Id}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked">
+                        <CheckBox Tag="{Binding Id}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" Width="365">
                             <StackPanel Orientation="Horizontal">
-                                <Image Width="57" Height="32" Source="{Binding Thumbnail}"/>
+                                <Image Width="59" Height="33" Source="{Binding Thumbnail}"/>
                                 <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
                             </StackPanel>
                         </CheckBox>

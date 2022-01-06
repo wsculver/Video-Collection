@@ -7,7 +7,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
+        WindowStyle="None" Height="500" Width="800" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Window.Resources>
         <ResourceDictionary>
             <Style x:Key="DeleteIconButtonStyle" BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
@@ -86,13 +86,13 @@
         <StackPanel x:Name="panelMovieInfo" Grid.Row="0" Grid.Column="1" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                 <Label Foreground="White">Movie Folder</Label>
-                <TextBox x:Name="txtMovieFolder" Width="250" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                <TextBox x:Name="txtMovieFolder" Width="270" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
                 <Button x:Name="btnChooseMovieFolder" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseMovieFolder_Click">Choose Folder</Button>
             </StackPanel>
             
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                 <Label Foreground="White" Margin="0,0,11,0">Movie Title</Label>
-                <TextBox x:Name="txtMovieName" Width="250" FontSize="12" Foreground="White"></TextBox>
+                <TextBox x:Name="txtMovieName" Width="270" FontSize="12" Foreground="White"></TextBox>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
@@ -103,7 +103,7 @@
 
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                 <Label Foreground="White" Margin="0,0,15,0">Movie File</Label>
-                <TextBox x:Name="txtFile" Width="250" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                <TextBox x:Name="txtFile" Width="270" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
                 <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
             </StackPanel>
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        WindowStyle="None" Height="200" Width="400" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
+        WindowStyle="None" Height="200" Width="400" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

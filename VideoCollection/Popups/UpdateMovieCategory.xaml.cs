@@ -127,8 +127,9 @@ namespace VideoCollection.Popups
                         }
 
                         MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
-                        DatabaseFunctions.UpdateCategoryNameInMovies(result.Name, txtCategoryName.Text.ToUpper());
+                        DatabaseFunctions.UpdateCategoryInMovies(result.Name, txtCategoryName.Text.ToUpper(), selectedMovies);
                         result.Name = txtCategoryName.Text.ToUpper();
+                        selectedMovies.Sort();
                         result.Movies = jss.Serialize(selectedMovies);
                         connection.Update(result);
                     }
@@ -165,7 +166,7 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(updateMovieCategoryWindow, 500f, 300f);
+            ScaleValue = _scaleValueHelper.CalculateScale(updateMovieCategoryWindow, 500f, 350f);
         }
     }
 }

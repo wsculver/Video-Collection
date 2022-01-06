@@ -7,11 +7,11 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
         xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False">
+        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="200"/>
+            <RowDefinition Height="214"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -24,7 +24,7 @@
                         ScaleY="{Binding ElementName=movieDetailsWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
 
-        <Label x:Name="labelTitle" Grid.Row="0" HorizontalAlignment="Center" FontWeight="Bold">TITLE</Label>
+        <Label x:Name="labelTitle" Grid.Row="0" HorizontalAlignment="Center" FontWeight="Bold" Margin="0,1,0,0">TITLE</Label>
         <Separator Grid.Row="0" VerticalAlignment="Bottom" MinHeight="1"/>
         <Button x:Name="btnClose" Grid.Row="0" Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="25" Height="20" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Right" VerticalAlignment="Top">
             <Border Width="25" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-7,0,0,0">
@@ -39,13 +39,13 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
-                <Image x:Name="imageMovieThumbnail" Width="320" Height="180" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" MouseEnter="imageMovieThumbnail_MouseEnter" MouseLeave="imageMovieThumbnail_MouseLeave"/>
-                <Border x:Name="movieSplash" Background="Black" Opacity="0.25" Width="320" Height="180" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <Image x:Name="imageMovieThumbnail" Width="359" Height="201" Cursor="Hand" MouseDown="imageMovieThumbnail_MouseDown" MouseEnter="imageMovieThumbnail_MouseEnter" MouseLeave="imageMovieThumbnail_MouseLeave"/>
+                <Border x:Name="movieSplash" Background="Black" Opacity="0.25" Width="359" Height="201" IsHitTestVisible="False" Visibility="Collapsed"/>
                 <Rectangle x:Name="playMovieIconBackground" Fill="{StaticResource BackgroundBrush}" Width="32" Height="32" IsHitTestVisible="False" Visibility="Collapsed"/>
                 <materialDesign:PackIcon x:Name="iconPlayMovie" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
             </Grid>
                 
-            <StackPanel Grid.Column="1" Margin="35,10,0,0">
+            <StackPanel Grid.Column="1" Margin="22,-2,0,0">
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Runtime:</Label>
                     <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0"/>
@@ -79,7 +79,7 @@
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition x:Name="colMiddle" Width="749"/>
+                <ColumnDefinition x:Name="colMiddle" Width="794"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -94,13 +94,13 @@
                         <DataTemplate>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="92"/>
+                                    <RowDefinition Height="97"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
                                 <Grid Grid.Row="0">
-                                    <Image x:Name="imageThumbnail" Width="143" Height="80" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding FilePath}" Margin="1,6,1,6"/>
-                                    <Border x:Name="bonusSplash" Background="Black" Opacity="0.25" Width="143" Height="80" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Image x:Name="imageThumbnail" Width="152" Height="85" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding FilePath}" Margin="1,6,1,6"/>
+                                    <Border x:Name="bonusSplash" Background="Black" Opacity="0.25" Width="152" Height="85" IsHitTestVisible="False" Visibility="Collapsed"/>
                                     <Rectangle Fill="{StaticResource BackgroundBrush}" Width="16" Height="16" IsHitTestVisible="False" Visibility="Collapsed"/>
                                     <Border x:Name="iconPlayBonus" IsHitTestVisible="False" Visibility="Collapsed">
                                         <materialDesign:PackIcon Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
@@ -113,12 +113,12 @@
                 </ItemsControl>
             </customtypes:AnimatedScrollViewer>
 
-            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="27" Height="27" Margin="0,27,0,0" Visibility="Hidden">
+            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="27" Height="27" Margin="0,36,0,0" Visibility="Hidden">
                 <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ChevronLeft" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
             </Button>
-            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Width="27" Height="27" Margin="0,27,0,0" Visibility="Hidden">
+            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Width="27" Height="27" Visibility="Hidden" Margin="0,36,0,0">
                 <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="ChevronRight" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>

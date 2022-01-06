@@ -40,6 +40,7 @@ namespace VideoCollection.Database
             {
                 List<Movie> movies = jss.Deserialize<List<Movie>>(category.Movies);
                 movies.Add(movie);
+                movies.Sort();
                 category.Movies = jss.Serialize(movies);
                 connection.Update(category);
             }
@@ -52,8 +53,8 @@ namespace VideoCollection.Database
             AddMovieToCategory(movie, category);
         }
 
-        // Change the category name in all movie lists
-        public static void UpdateCategoryNameInMovies(string oldName, string newName)
+        // Update all movies with the updated category
+        public static void UpdateCategoryInMovies(string oldName, string newName, List<Movie> selectedMovies)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
 
@@ -64,7 +65,13 @@ namespace VideoCollection.Database
                 {
                     List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
                     categories.Remove(oldName);
-                    categories.Add(newName);
+                    foreach (Movie selectedMovie in selectedMovies)
+                    {
+                        if (selectedMovie.Id == movie.Id)
+                        {
+                            categories.Add(newName);
+                        }
+                    }
                     movie.Categories = jss.Serialize(categories);
                     connection.Update(movie);
                 }

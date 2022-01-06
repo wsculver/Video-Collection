@@ -30,6 +30,7 @@ namespace VideoCollection.Views
     /// </summary>
     public partial class MoviesView : UserControl
     {
+        private const double _popupHeightMult = 0.84;
         private const int _sideMargins = 24;
         private const int _scrollViewerMargins = 24;
         private double _scrollDistance = 0;
@@ -69,7 +70,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             AddMovieCategory popup = new AddMovieCategory();
             popup.Width = parentWindow.Width * 0.35;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -84,8 +85,8 @@ namespace VideoCollection.Views
         {
             Window parentWindow = Window.GetWindow(this);
             AddMovie popup = new AddMovie();
-            popup.Width = parentWindow.Width * 0.46;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Width = parentWindow.Width * 0.43;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -125,7 +126,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString());
             popup.Width = parentWindow.Width * 0.35;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -164,8 +165,8 @@ namespace VideoCollection.Views
         {
             Window parentWindow = Window.GetWindow(this);
             UpdateMovie popup = new UpdateMovie();
-            popup.Width = parentWindow.Width * 0.72;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Width = parentWindow.Width * 0.73;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -277,55 +278,7 @@ namespace VideoCollection.Views
 
             var scrolling = new DoubleAnimation(scroll.ContentHorizontalOffset, location, new Duration(TimeSpan.FromMilliseconds(400)));
             scroll.BeginAnimation(AnimatedScrollViewer.SetableOffsetProperty, scrolling);
-        }
-
-        // Get the previous button for a category
-        public static DependencyObject GetPreviousButton(DependencyObject o)
-        {
-            // Return the DependencyObject if it is a Button with the name btnPrevious
-            if (o is Button && (o as Button).Name == "btnPrevious")
-            { return o; }
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
-            {
-                var child = VisualTreeHelper.GetChild(o, i);
-
-                var result = GetPreviousButton(child);
-                if (result == null)
-                {
-                    continue;
-                }
-                else
-                {
-                    return result;
-                }
-            }
-            return null;
-        }
-
-        // Get the next button for a category
-        public static DependencyObject GetNextButton(DependencyObject o)
-        {
-            // Return the DependencyObject if it is a Button with the name btnNext
-            if (o is Button && (o as Button).Name == "btnNext")
-            { return o; }
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
-            {
-                var child = VisualTreeHelper.GetChild(o, i);
-
-                var result = GetNextButton(child);
-                if (result == null)
-                {
-                    continue;
-                }
-                else
-                {
-                    return result;
-                }
-            }
-            return null;
-        }
+        }        
 
         // Prevent background scrolling from stopping when the mouse is over a category
         private void HandlePreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -346,8 +299,8 @@ namespace VideoCollection.Views
         {
             Window parentWindow = Window.GetWindow(this);
             MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
-            popup.Width = parentWindow.Width * 0.91;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Width = parentWindow.Width * 0.93;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             popup.ShowDialog();
@@ -416,22 +369,35 @@ namespace VideoCollection.Views
                         c2.ApplyTemplate();
                         Image tile = c2.ContentTemplate.FindName("imageThumbnail", c2) as Image;
                         ScrollViewer scrollViewer = c.ContentTemplate.FindName("scrollMovies", c) as ScrollViewer;
-                        if (Math.Round(moviesControl.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollViewer.ActualWidth) && scrollViewer.HorizontalOffset < scrollViewer.ScrollableWidth)
+                        bool needScroll = Math.Round(moviesControl.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollViewer.ActualWidth);
+                        // Show view all button or not
+                        if (needScroll)
                         {
-                            (GetNextButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Visible;
-                        }
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnViewAll").Visibility = Visibility.Visible;
+                        } 
                         else
                         {
-                            (GetNextButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Hidden;
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnViewAll").Visibility = Visibility.Hidden;
                         }
 
-                        if (scrollViewer.HorizontalOffset > 0)
+                        // Show next button or not
+                        if (needScroll && scrollViewer.HorizontalOffset < scrollViewer.ScrollableWidth)
                         {
-                            (GetPreviousButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Visible;
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnNext").Visibility = Visibility.Visible;
                         }
                         else
                         {
-                            (GetPreviousButton(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i)) as Button).Visibility = Visibility.Hidden;
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnNext").Visibility = Visibility.Hidden;
+                        }
+
+                        // Show previous button or not
+                        if (scrollViewer.HorizontalOffset > 0)
+                        {
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnPrevious").Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            StaticHelpers.GetObject<Button>(icCategoryDisplay.ItemContainerGenerator.ContainerFromIndex(i), "btnPrevious").Visibility = Visibility.Hidden;
                         }
                     }
                 }
@@ -470,8 +436,8 @@ namespace VideoCollection.Views
         {
             Window parentWindow = Window.GetWindow(this);
             MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString());
-            popup.Width = parentWindow.Width * 0.91;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Width = parentWindow.Width * 0.93;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             popup.Owner = parentWindow;
             splashBackground(true);
             popup.ShowDialog();
@@ -497,6 +463,7 @@ namespace VideoCollection.Views
                 if (popup.ShowDialog() == true)
                 {
                     DatabaseFunctions.DeleteMovie(movie);
+                    UpdateCategoryDisplay();
                 }
                 splashBackground(false);
             }
@@ -508,8 +475,8 @@ namespace VideoCollection.Views
             Button button = sender as Button;
             Window parentWindow = Window.GetWindow(this);
             UpdateMovie popup = new UpdateMovie();
-            popup.Width = parentWindow.Width * 0.72;
-            popup.Height = parentWindow.Height * 0.85;
+            popup.Width = parentWindow.Width * 0.73;
+            popup.Height = parentWindow.Height * _popupHeightMult;
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
             {
                 MovieDeserialized movie = (MovieDeserialized)popup.lvMovieList.Items[i];
@@ -521,6 +488,23 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true) 
+            {
+                UpdateCategoryDisplay();
+            }
+            splashBackground(false);
+        }
+
+        // Popup a window showing all movies in the cateogry
+        private void btnViewAll_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            Window parentWindow = Window.GetWindow(this);
+            MovieViewAll popup = new MovieViewAll(button.Tag.ToString());
+            popup.Width = parentWindow.Width * 0.93;
+            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Owner = parentWindow;
+            splashBackground(true);
+            if(popup.ShowDialog() == true)
             {
                 UpdateCategoryDisplay();
             }

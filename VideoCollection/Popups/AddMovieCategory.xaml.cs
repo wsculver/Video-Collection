@@ -113,6 +113,8 @@ namespace VideoCollection.Popups
                             connection.Update(movie);
                         }
 
+                        selectedMovies.Sort();
+
                         MovieCategory category = new MovieCategory()
                         {
                             Name = txtCategoryName.Text.ToUpper(),
@@ -158,7 +160,7 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 300f);
+            ScaleValue = _scaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 350f);
         }
     }
 }

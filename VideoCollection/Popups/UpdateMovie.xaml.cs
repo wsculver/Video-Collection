@@ -27,18 +27,17 @@ namespace VideoCollection.Popups
     public partial class UpdateMovie : Window
     {
         private List<string> _selectedCategories;
-        private bool _changesSaved;
         private int _movieId;
         private MovieDeserialized _movie;
         private string _rating;
         private string _originalMovieName;
+        private bool _movieDeleted = false;
 
         public UpdateMovie()
         {
             InitializeComponent();
 
             _selectedCategories = new List<string>();
-            _changesSaved = false;
             _rating = "";
 
             UpdateMovieList();
@@ -90,22 +89,21 @@ namespace VideoCollection.Popups
         // Close window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            if(_movieDeleted)
+            {
+                DialogResult = true;
+            } else
+            {
+                DialogResult = false;
+            }
         }
 
         // If there are changes save them before closing
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
-            if (!_changesSaved)
+            if (ApplyUpdate())
             {
-                if (ApplyUpdate())
-                {
-                    DialogResult = true;
-                }
-            }
-            else
-            {
-                DialogResult = false;
+                DialogResult = true;
             }
         }
 
@@ -319,7 +317,6 @@ namespace VideoCollection.Popups
                     if (!repeat)
                     {
                         UpdateMovieList();
-                        _changesSaved = true;
                         // Reselect the movie that is being edited
                         for (int i = 0; i < lvMovieList.Items.Count; i++)
                         {
@@ -403,6 +400,7 @@ namespace VideoCollection.Popups
                 {
                     DatabaseFunctions.DeleteMovie(movie);
                     UpdateMovieList();
+                    _movieDeleted = true;
                     panelMovieInfo.Visibility = Visibility.Collapsed;
                 }
                 Splash.Visibility = Visibility.Collapsed;

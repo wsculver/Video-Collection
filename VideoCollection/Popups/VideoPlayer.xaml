@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups"
         mc:Ignorable="d"
-        Title="VideoPlayer" Height="450" Width="800" Background="Black" WindowState="Maximized" WindowStartupLocation="CenterScreen" ShowInTaskbar="False">
+        Title="VideoPlayer" Height="450" Width="800" Background="Black" WindowState="Maximized" WindowStartupLocation="CenterScreen" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid>
         <MediaElement x:Name="meVideoPlayer"/>
     </Grid>

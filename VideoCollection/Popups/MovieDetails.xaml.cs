@@ -25,9 +25,7 @@ namespace VideoCollection.Popups
     /// </summary>
     public partial class MovieDetails : Window
     {
-        private const int _sideMargins = 16;
-        private const int _scrollViewerMargins = 24;
-        private double _scrollDistance = 0;
+        private double _scrollDistance = 770;
         private MovieDeserialized _movieDeserialized;
         private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
 
@@ -43,11 +41,12 @@ namespace VideoCollection.Popups
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + Id)[0];
                 _movieDeserialized = new MovieDeserialized(movie);
-                labelTitle.Content = _movieDeserialized.Title.ToUpper();
+                labelTitle.Content = _movieDeserialized.Title;
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
                 txtRuntime.Text = _movieDeserialized.Runtime;
                 txtRating.Text = _movieDeserialized.Rating;
                 string categories = "";
+                _movieDeserialized.Categories.Sort();
                 foreach(string category in _movieDeserialized.Categories)
                 {
                     categories += (CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.ToLower()) + ", ");
@@ -88,17 +87,6 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            double columnWidth = _scrollViewerMargins;
-            double tileWidth = 145;
-            while (columnWidth + tileWidth + _sideMargins < MainGrid.ActualWidth)
-            {
-                columnWidth += tileWidth;
-            }
-
-            colMiddle.Width = new GridLength(columnWidth);
-
-            _scrollDistance = columnWidth - _scrollViewerMargins;
-
             ScaleValue = _scaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 780f);
         }
 

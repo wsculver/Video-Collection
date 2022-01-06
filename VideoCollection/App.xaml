@@ -75,6 +75,30 @@
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
+            <Style x:Key="ViewAllButtonStyle" BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger
+                        Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}"
+                        Value="True">
+                        <Setter Property="Foreground" Value="#536DFE" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
             <Style x:Key="SettingsTextBlockStyle" BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontSize" Value="8"/>
@@ -124,7 +148,7 @@
                 </Setter>
             </Style>
             <Style TargetType="{x:Type ScrollBar}">
-                <Setter Property="Margin" Value="0,0,-3,3" />
+                <Setter Property="Margin" Value="-4,0,-3,3" />
                 <Setter Property="Stylus.IsFlicksEnabled" Value="false" />
                 <Setter Property="Foreground" Value="#FFA0A0A0" />
                 <Setter Property="Background" Value="Transparent" />
