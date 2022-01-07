@@ -27,9 +27,7 @@
         <Label x:Name="labelTitle" Grid.Row="0" HorizontalAlignment="Center" FontWeight="Bold" Margin="0,1,0,0">TITLE</Label>
         <Separator Grid.Row="0" VerticalAlignment="Bottom" MinHeight="1"/>
         <Button x:Name="btnClose" Grid.Row="0" Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="25" Height="20" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Right" VerticalAlignment="Top">
-            <Border Width="25" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-7,0,0,0">
-                <materialDesign:PackIcon Kind="WindowClose" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10"/>
-            </Border>
+            <materialDesign:PackIcon Kind="WindowClose" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10" Margin="-7,0,0,0"/>
         </Button>
 
         <Grid Grid.Row="1">

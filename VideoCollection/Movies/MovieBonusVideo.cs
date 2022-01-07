@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieBonusVideo
+    public class MovieBonusVideo
     {
         public string Title { get; set; }
         public string Thumbnail { get; set; }

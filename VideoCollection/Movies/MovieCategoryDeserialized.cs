@@ -7,7 +7,7 @@ using System.Web.Script.Serialization;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieCategoryDeserialized
+    public class MovieCategoryDeserialized
     {
         public int Id { get; set; }
         public int Position { get; set; }

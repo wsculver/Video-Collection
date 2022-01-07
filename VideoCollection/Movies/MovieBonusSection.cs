@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieBonusSection
+    public class MovieBonusSection
     {
         public string Name { get; set; }
         // JSON encoded SolidColorBrush

@@ -8,7 +8,7 @@ using VideoCollection.Helpers;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieBonusVideoDeserialized
+    public class MovieBonusVideoDeserialized
     {
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }

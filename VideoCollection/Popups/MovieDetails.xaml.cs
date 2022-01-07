@@ -117,7 +117,8 @@ namespace VideoCollection.Popups
         {
             if(e.ChangedButton == MouseButton.Left)
             {
-
+                VideoPlayer popup = new VideoPlayer(_movieDeserialized);
+                popup.Show();
             }
         }
 

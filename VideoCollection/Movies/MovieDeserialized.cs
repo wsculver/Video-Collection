@@ -11,7 +11,7 @@ using VideoCollection.Helpers;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieDeserialized
+    public class MovieDeserialized
     {
         public int Id { get; set; }
         public string Title { get; set; }

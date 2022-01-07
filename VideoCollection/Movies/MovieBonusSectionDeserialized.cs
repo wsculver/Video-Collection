@@ -8,7 +8,7 @@ using System.Windows.Media;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieBonusSectionDeserialized
+    public class MovieBonusSectionDeserialized
     {
         public string Name { get; set; }
         public SolidColorBrush Background { get; set; }

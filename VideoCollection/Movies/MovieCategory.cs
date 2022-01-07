@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Movies
 {
-    internal class MovieCategory
+    public class MovieCategory
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

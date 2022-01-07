@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Movies
 {
-    internal class Movie : IComparable
+    public class Movie : IComparable
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

@@ -1,12 +1,149 @@
-﻿<Window x:Class="VideoCollection.Popups.VideoPlayer"
+﻿<Window x:Name="videoPlayerWindow" x:Class="VideoCollection.Popups.VideoPlayer"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoCollection.Popups"
+        xmlns:local="clr-namespace:VideoCollection.Popups" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="VideoPlayer" Height="450" Width="800" Background="Black" WindowState="Maximized" WindowStartupLocation="CenterScreen" ShowInTaskbar="False" ResizeMode="NoResize">
-    <Grid>
-        <MediaElement x:Name="meVideoPlayer"/>
+        WindowStyle="None" Height="450" Width="800" Background="Black" WindowState="Maximized" WindowStartupLocation="CenterScreen" ShowInTaskbar="False" ResizeMode="NoResize">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style x:Key="SliderRepeatButton" TargetType="RepeatButton">
+                <Setter Property="SnapsToDevicePixels" Value="true" />
+                <Setter Property="OverridesDefaultStyle" Value="true" />
+                <Setter Property="IsTabStop" Value="false" />
+                <Setter Property="Focusable" Value="false" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RepeatButton">
+                            <Border Background="#FFA0A0A0" CornerRadius="1" Margin="-1,0,0,0"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="SliderRepeatButton1" TargetType="RepeatButton">
+                <Setter Property="SnapsToDevicePixels" Value="true" />
+                <Setter Property="OverridesDefaultStyle" Value="true" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RepeatButton">
+                            <Border SnapsToDevicePixels="True" Background="White" CornerRadius="1" Margin="0,0,-1,0"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <Style x:Key="SliderThumb" TargetType="Thumb">
+                <Setter Property="SnapsToDevicePixels" Value="true" />
+                <Setter Property="OverridesDefaultStyle" Value="true" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Thumb">
+                            <Ellipse Fill="White"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <ControlTemplate x:Key="Slider" TargetType="Slider">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Track Grid.Row="1" x:Name="PART_Track"   >
+                        <Track.DecreaseRepeatButton>
+                            <RepeatButton x:Name="repeatBtn1" Style="{StaticResource SliderRepeatButton1}" Height="2" Command="Slider.DecreaseLarge" />
+                        </Track.DecreaseRepeatButton>
+                        <Track.IncreaseRepeatButton>
+                            <RepeatButton x:Name="repeatBtn" Style="{StaticResource SliderRepeatButton}" Height="2" Command="Slider.IncreaseLarge" />
+                        </Track.IncreaseRepeatButton>
+                        <Track.Thumb>
+                            <Thumb x:Name="thumb" Style="{StaticResource SliderThumb}" Height="8" Width="8"/>
+                        </Track.Thumb>
+                    </Track>
+                </Grid>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="true">
+                        <Setter TargetName="repeatBtn1" Property="Height" Value="3"/>
+                        <Setter TargetName="repeatBtn" Property="Height" Value="3"/>
+                        <Setter TargetName="thumb" Property="Height" Value="10"/>
+                        <Setter TargetName="thumb" Property="Width" Value="10"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+
+            <Style x:Key="HorizontalSlider" TargetType="Slider">
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="SnapsToDevicePixels" Value="true" />
+                <Setter Property="OverridesDefaultStyle" Value="true" />
+                <Style.Triggers>
+                    <Trigger Property="Orientation" Value="Horizontal">
+                        <Setter Property="MinHeight" Value="21" />
+                        <Setter Property="MinWidth" Value="104" />
+                        <Setter Property="Template" Value="{StaticResource Slider}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="ApplicationScaleTransform"
+                        CenterX="0"
+                        CenterY="0"
+                        ScaleX="{Binding ElementName=videoPlayerWindow, Path=ScaleValue}"
+                        ScaleY="{Binding ElementName=videoPlayerWindow, Path=ScaleValue}" />
+        </Grid.LayoutTransform>
+        
+        <MediaElement x:Name="meVideoPlayer" LoadedBehavior="Manual"/>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="17"/>
+                <RowDefinition Height="35"/>
+            </Grid.RowDefinitions>
+
+            <Label x:Name="labelTitle" Grid.Row="0" HorizontalAlignment="Center" FontWeight="Bold" Margin="0,6,0,0">TITLE</Label>
+            <Button x:Name="btnClose" Grid.Row="0" Click="btnClose_Click" Width="28" Height="28" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="0,10,10,0">
+                <materialDesign:PackIcon Kind="WindowClose" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Margin="-7,0,0,0"/>
+            </Button>
+
+            <Slider x:Name="sliProgress" Style="{StaticResource HorizontalSlider}" Grid.Row="2" Thumb.DragStarted="sliProgress_DragStarted"  Thumb.DragCompleted="sliProgress_DragCompleted" ValueChanged="sliProgress_ValueChanged" IsMoveToPointEnabled="True" Margin="20,0,20,0" Height="10"/>
+
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="105"/>
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="btnPlay" Grid.Column="0" Click="btnPlay_Click" Width="40" Height="35" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="15,0,0,10" Visibility="Collapsed">
+                    <materialDesign:PackIcon Kind="Play" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Margin="-13,0,-10,2"/>
+                </Button>
+                <Button x:Name="btnPause" Grid.Column="0" Click="btnPause_Click" Width="40" Height="35" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="15,0,0,10">
+                    <materialDesign:PackIcon Kind="Pause" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20" Margin="-13,0,-10,2"/>
+                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,16">
+                    <TextBlock x:Name="txtTime" Foreground="White" VerticalAlignment="Bottom">0:00:00</TextBlock>
+                    <TextBlock Foreground="White" VerticalAlignment="Bottom" Text=" / "/>
+                    <TextBlock x:Name="txtDuration" Foreground="White" VerticalAlignment="Bottom">0:00:00</TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="btnMute" Grid.Column="0" Click="btnMute_Click" Width="20" Height="20" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-10,0,-10,0">
+                        <materialDesign:PackIcon Kind="VolumeHigh" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20"/>
+                    </Button>
+                    <Button x:Name="btnUnMute" Grid.Column="0" Click="btnUnMute_Click" Width="20" Height="20" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-10,0,-10,0" Visibility="Collapsed">
+                        <materialDesign:PackIcon Kind="Mute" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20"/>
+                    </Button>
+                    <Slider x:Name="sliVolume" Style="{StaticResource HorizontalSlider}" Value="{Binding ElementName=meVideoPlayer, Path=Volume}" IsMoveToPointEnabled="True" Margin="5,0,20,0" MinWidth="60" Maximum="1"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
