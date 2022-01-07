@@ -25,7 +25,9 @@ namespace VideoCollection.Popups
     /// </summary>
     public partial class MovieDetails : Window
     {
-        private double _scrollDistance = 770;
+        private static int _scrollViewerMargins = 24;
+        private static int _sideMargins = 16;
+        private double _scrollDistance = 0;
         private MovieDeserialized _movieDeserialized;
         private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
 
@@ -87,6 +89,22 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
+            double columnWidth = 0;
+
+            if (columnWidth == 0)
+            {
+                columnWidth = _scrollViewerMargins;
+                double tileWidth = 154;
+                while (columnWidth + tileWidth + _sideMargins < MainGrid.ActualWidth)
+                {
+                    columnWidth += tileWidth;
+                }
+            }
+
+            colMiddle.Width = new GridLength(columnWidth);
+
+            _scrollDistance = columnWidth - _scrollViewerMargins;
+
             ScaleValue = _scaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 780f);
         }
 
@@ -97,12 +115,18 @@ namespace VideoCollection.Popups
 
         private void imageMovieThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if(e.ChangedButton == MouseButton.Left)
+            {
 
+            }
         }
 
         private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton == MouseButton.Left)
+            {
 
+            }
         }
 
         private void btnPrevious_Click(object sender, RoutedEventArgs e)

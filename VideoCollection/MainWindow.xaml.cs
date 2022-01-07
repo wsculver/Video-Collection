@@ -114,5 +114,14 @@ namespace VideoCollection
             btnShows.Background = null;
             btnMovies.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
         }
+
+        // Allow the window to be dragged
+        private void myMainWindow_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                this.DragMove();
+            }
+        }
     }
 }

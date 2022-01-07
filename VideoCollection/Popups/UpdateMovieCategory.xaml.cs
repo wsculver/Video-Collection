@@ -81,7 +81,7 @@ namespace VideoCollection.Popups
             Window parentWindow = GetWindow(this).Owner;
             CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
             popup.Width = parentWindow.Width * 0.25;
-            popup.Height = parentWindow.Height * 0.25;
+            popup.Height = popup.Width * 0.55;
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.ShowDialog();

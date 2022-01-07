@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VideoCollection"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Video Collection" WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized">
+        Title="Video Collection" WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized" MouseDown="myMainWindow_MouseDown">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
@@ -19,12 +19,12 @@
                         ScaleX="{Binding ElementName=myMainWindow, Path=ScaleValue}"
                         ScaleY="{Binding ElementName=myMainWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
-        
+
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Height="32">
             <Button x:Name="btnShows" Click="btnShows_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Shows" Margin="0,0,5,3" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">SHOWS</Button>
             <Button x:Name="btnMovies" Click="btnMovies_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Command="{Binding UpdateViewCommand}" CommandParameter="Movies" Margin="5,0,0,3" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">MOVIES</Button>
         </StackPanel>
-        
+
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Hand" Height="16">
             <Button x:Name="btnMinimize" Click="btnMinimize_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Background="{x:Null}" BorderBrush="{x:Null}" Padding="7,0,7,0" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <materialDesign:PackIcon Kind="WindowMinimize" Foreground="White" Width="12" Height="10"/>

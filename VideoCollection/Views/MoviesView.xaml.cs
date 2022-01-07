@@ -30,7 +30,6 @@ namespace VideoCollection.Views
     /// </summary>
     public partial class MoviesView : UserControl
     {
-        private const double _popupHeightMult = 0.84;
         private const int _sideMargins = 24;
         private const int _scrollViewerMargins = 24;
         private double _scrollDistance = 0;
@@ -70,7 +69,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             AddMovieCategory popup = new AddMovieCategory();
             popup.Width = parentWindow.Width * 0.35;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 1.299;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -86,7 +85,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             AddMovie popup = new AddMovie();
             popup.Width = parentWindow.Width * 0.43;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 1.058;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -99,25 +98,39 @@ namespace VideoCollection.Views
         // Remove the category from the database and from all movie category lists
         private void btnDeleteCategory_Click(object sender, RoutedEventArgs e)
         {
+            bool deleted = false;
+            Window parentWindow = Window.GetWindow(this);
             JavaScriptSerializer jss = new JavaScriptSerializer();
             string categoryId = (sender as Button).Tag.ToString();
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-
                 MovieCategory category = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + categoryId)[0];
-                List<Movie> movies = connection.Table<Movie>().ToList();
-                foreach(Movie movie in movies)
+                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete the " + category.Name + " category?", CustomMessageBox.MessageBoxType.YesNo);
+                popup.Width = parentWindow.Width * 0.25;
+                popup.Height = popup.Width * 0.55;
+                popup.Owner = parentWindow;
+                splashBackground(true);
+                if (popup.ShowDialog() == true)
                 {
-                    List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
-                    categories.Remove(category.Name);
-                    movie.Categories = jss.Serialize(categories);
-                    connection.Update(movie);
+                    List<Movie> movies = connection.Table<Movie>().ToList();
+                    foreach (Movie movie in movies)
+                    {
+                        List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
+                        categories.Remove(category.Name);
+                        movie.Categories = jss.Serialize(categories);
+                        connection.Update(movie);
+                    }
+                    connection.Delete<MovieCategory>(categoryId);
+                    deleted = true;
                 }
-                connection.Delete<MovieCategory>(categoryId);
+                splashBackground(false);
             }
 
-            UpdateCategoryDisplay();
+            if (deleted)
+            {
+                UpdateCategoryDisplay();
+            }
         }
 
         // Popup update movie category window
@@ -126,7 +139,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString());
             popup.Width = parentWindow.Width * 0.35;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 1.299;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -166,7 +179,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             UpdateMovie popup = new UpdateMovie();
             popup.Width = parentWindow.Width * 0.73;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 0.623;
             popup.Owner = parentWindow;
             splashBackground(true);
             if (popup.ShowDialog() == true)
@@ -297,14 +310,17 @@ namespace VideoCollection.Views
         // Show the movie details when a movie thumbnail is clicked
         private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            Window parentWindow = Window.GetWindow(this);
-            MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
-            popup.Width = parentWindow.Width * 0.93;
-            popup.Height = parentWindow.Height * _popupHeightMult;
-            popup.Owner = parentWindow;
-            splashBackground(true);
-            popup.ShowDialog();
-            splashBackground(false);
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                Window parentWindow = Window.GetWindow(this);
+                MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
+                popup.Width = parentWindow.Width * 0.93;
+                popup.Height = popup.Width * 0.489;
+                popup.Owner = parentWindow;
+                splashBackground(true);
+                popup.ShowDialog();
+                splashBackground(false);
+            }
         }
 
         private void splashBackground(bool makeVisible)
@@ -437,7 +453,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString());
             popup.Width = parentWindow.Width * 0.93;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 0.489;
             popup.Owner = parentWindow;
             splashBackground(true);
             popup.ShowDialog();
@@ -457,7 +473,7 @@ namespace VideoCollection.Views
                 Window parentWindow = Window.GetWindow(this);
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
                 popup.Width = parentWindow.Width * 0.25;
-                popup.Height = parentWindow.Height * 0.25;
+                popup.Height = popup.Width * 0.55;
                 popup.Owner = parentWindow;
                 splashBackground(true);
                 if (popup.ShowDialog() == true)
@@ -476,7 +492,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             UpdateMovie popup = new UpdateMovie();
             popup.Width = parentWindow.Width * 0.73;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 0.623;
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
             {
                 MovieDeserialized movie = (MovieDeserialized)popup.lvMovieList.Items[i];
@@ -501,7 +517,7 @@ namespace VideoCollection.Views
             Window parentWindow = Window.GetWindow(this);
             MovieViewAll popup = new MovieViewAll(button.Tag.ToString());
             popup.Width = parentWindow.Width * 0.93;
-            popup.Height = parentWindow.Height * _popupHeightMult;
+            popup.Height = popup.Width * 0.489;
             popup.Owner = parentWindow;
             splashBackground(true);
             if(popup.ShowDialog() == true)
