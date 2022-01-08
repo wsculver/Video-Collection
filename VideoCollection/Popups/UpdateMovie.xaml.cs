@@ -32,10 +32,20 @@ namespace VideoCollection.Popups
         private string _rating;
         private string _originalMovieName;
         private bool _movieDeleted = false;
+        private Border _splash;
+        private Action _callback;
 
-        public UpdateMovie()
+        // Don't use this constructur. It is only here to make resizing work
+        public UpdateMovie() { }
+
+        public UpdateMovie(ref Border splash, Action callback)
         {
             InitializeComponent();
+
+            Closed += (a, b) => { Owner.Activate(); };
+
+            _splash = splash;
+            _callback = callback;
 
             _selectedCategories = new List<string>();
             _rating = "";
@@ -89,13 +99,12 @@ namespace VideoCollection.Popups
         // Close window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
+            _splash.Visibility = Visibility.Collapsed;
             if(_movieDeleted)
             {
-                DialogResult = true;
-            } else
-            {
-                DialogResult = false;
+                _callback();
             }
+            Close();
         }
 
         // If there are changes save them before closing
@@ -103,7 +112,9 @@ namespace VideoCollection.Popups
         {
             if (ApplyUpdate())
             {
-                DialogResult = true;
+                _splash.Visibility = Visibility.Collapsed;
+                _callback();
+                Close();
             }
         }
 
@@ -336,9 +347,8 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<UpdateMovie>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<UpdateMovie>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -347,7 +357,7 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(updateMovieWindow, 500f, 800f);
+            ScaleValue = ScaleValueHelper.CalculateScale(updateMovieWindow, 500f, 800f);
         }
 
         // Choose the whole movie folder

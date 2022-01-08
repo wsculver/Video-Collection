@@ -63,9 +63,8 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<CustomMessageBox>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<CustomMessageBox>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -74,7 +73,7 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(customMessageBoxWindow, 200f, 400f);
+            ScaleValue = ScaleValueHelper.CalculateScale(customMessageBoxWindow, 200f, 400f);
         }
 
         private void btnYes_Click(object sender, RoutedEventArgs e)

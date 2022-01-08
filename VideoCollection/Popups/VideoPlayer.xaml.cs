@@ -24,7 +24,11 @@ namespace VideoCollection.Popups
     public partial class VideoPlayer : Window
     {
         private bool _userIsDraggingSlider = false;
+        private bool _expanded = true;
+        private bool _playing = true;
         private double _restoreVolume = 0.5;
+        public double LeftMultiplier;
+        public double TopMultiplier;
 
         // Don't use this constructur. It is only here to make resizing work
         public VideoPlayer() { }
@@ -33,6 +37,12 @@ namespace VideoCollection.Popups
         {
             InitializeComponent();
 
+            updateVideo(movie);
+        }
+
+        // Allow the video in the player to be updated
+        public void updateVideo(MovieDeserialized movie)
+        {
             meVideoPlayer.Source = new Uri(movie.MovieFilePath);
             labelTitle.Content = movie.Title;
             txtDuration.Text = movie.Runtime;
@@ -50,19 +60,14 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<VideoPlayer>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<VideoPlayer>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
             set => SetValue(ScaleValueProperty, value);
         }
         #endregion
-        private void MainGrid_SizeChanged(object sender, EventArgs e)
-        {
-            ScaleValue = _scaleValueHelper.CalculateScale(videoPlayerWindow, 450f, 800f);
-        }
 
         // Tick to show video progress
         private void timer_Tick(object sender, EventArgs e)
@@ -92,6 +97,11 @@ namespace VideoCollection.Popups
         private void sliProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             txtTime.Text = TimeSpan.FromSeconds(sliProgress.Value).ToString(@"h\:mm\:ss");
+            if(!_playing)
+            {
+                meVideoPlayer.Play();
+                meVideoPlayer.Pause();
+            }
         }
 
         // Allow clicking the slider to set a position
@@ -108,42 +118,119 @@ namespace VideoCollection.Popups
         // Close the video player
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
+            App.videoPlayer = null;
             Close();
         }
 
-        // Play the video
+        // Play/Pause the video
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            meVideoPlayer.Play();
-            btnPlay.Visibility = Visibility.Collapsed;
-            btnPause.Visibility = Visibility.Visible;
-        }
-
-        // Pause the video
-        private void btnPause_Click(object sender, RoutedEventArgs e)
-        {
-            meVideoPlayer.Pause();
-            btnPause.Visibility = Visibility.Collapsed;
-            btnPlay.Visibility = Visibility.Visible;
+            if(_playing)
+            {
+                _playing = false;
+                meVideoPlayer.Pause();
+                iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Play;
+                iconPlay.Width = 44;
+                iconPlay.Height = 44;
+                iconPlay.Margin = new Thickness(16, 0, 0, 26);
+            }
+            else
+            {
+                _playing = true;
+                meVideoPlayer.Play();
+                iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Pause;
+                iconPlay.Width = 40;
+                iconPlay.Height = 40;
+                iconPlay.Margin = new Thickness(22, 0, 0, 26);
+            }
         }
 
         // Mute the video
         private void btnMute_Click(object sender, RoutedEventArgs e)
         {
-            meVideoPlayer.IsMuted = true;
-            _restoreVolume = meVideoPlayer.Volume;
-            meVideoPlayer.Volume = 0.0;
-            btnMute.Visibility = Visibility.Collapsed;
-            btnUnMute.Visibility = Visibility.Visible;
+            if(meVideoPlayer.IsMuted)
+            {
+                meVideoPlayer.IsMuted = false;
+                meVideoPlayer.Volume = _restoreVolume;
+                iconMute.Kind = MaterialDesignThemes.Wpf.PackIconKind.VolumeHigh;
+            }
+            else
+            {
+                meVideoPlayer.IsMuted = true;
+                _restoreVolume = meVideoPlayer.Volume;
+                meVideoPlayer.Volume = 0.0;
+                iconMute.Kind = MaterialDesignThemes.Wpf.PackIconKind.Mute;
+            }
         }
 
-        // Unmute the video
-        private void btnUnMute_Click(object sender, RoutedEventArgs e)
+        // Shrink/Expand the video player 
+        private void btnExpand_Click(object sender, RoutedEventArgs e)
         {
-            meVideoPlayer.IsMuted = false;
-            meVideoPlayer.Volume = _restoreVolume;
-            btnUnMute.Visibility = Visibility.Collapsed;
-            btnMute.Visibility = Visibility.Visible;
+            if(_expanded)
+            {
+                _expanded = false;
+                // Shift overlay to look good with widescreen videos
+                if (WindowState == WindowState.Maximized && Owner.WindowState == WindowState.Normal)
+                {
+                    ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1800f, 3200f);
+                }
+                gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -20, ScaleValue * -30, ScaleValue * -30);
+                iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
+                WindowState = WindowState.Normal;
+                iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
+                Width = Owner.Width * 0.4;
+                Height = Width * 0.5625;
+                Left = Owner.Left + (Owner.Width - (Owner.Width * 0.015625) - Width);
+                LeftMultiplier = (Left - Owner.Left) / Owner.Width;
+                Top = Owner.Top + (Owner.Height - (Owner.Width * 0.015625) - Height);
+                TopMultiplier = (Top - Owner.Top) / Owner.Height;
+                Topmost = true;
+            } 
+            else
+            {
+                _expanded = true;
+                Topmost = false;
+                iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
+                Width = Owner.Width;
+                Height = Owner.Height;
+                Left = LeftMultiplier = Owner.Left;
+                Top = TopMultiplier = Owner.Top;
+                gridOverlay.Margin = new Thickness(0, 0, 0, 0);
+            }
+        }
+
+        // Maximize/Restore the window
+        private void btnFullScreen_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+                iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
+            }
+            else
+            {
+                WindowState = WindowState.Maximized;
+                iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapseAll;
+                _expanded = true;
+                iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
+                Width = Owner.Width;
+                Height = Owner.Height;
+                Left = LeftMultiplier = Owner.Left;
+                Top = TopMultiplier = Owner.Top;
+                gridOverlay.Margin = new Thickness(0, 0, 0, 0);
+            }
+        }
+
+        private void gridOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_expanded)
+            {
+                ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 900f, 1600f);
+            }
+            else
+            {
+                Height = Width * 0.5625;
+            }
         }
     }
 }

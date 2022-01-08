@@ -12,7 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using VideoCollection.ViewModels;
+using VideoCollection.Helpers;
+using VideoCollection.Popups;
+using VideoCollection.Views;
 
 namespace VideoCollection
 {
@@ -21,46 +23,21 @@ namespace VideoCollection
     /// </summary>
     public partial class MainWindow : Window
     {
+        private double _restoreLeft = 0;
+        private double _restoreTop = 0;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            this.MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
-            this.Height = SystemParameters.MaximizedPrimaryScreenHeight / 2;
-            this.Width = SystemParameters.MaximizedPrimaryScreenWidth / 2;
-
-            DataContext = new MainViewModel();
+            MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
+            Height = SystemParameters.MaximizedPrimaryScreenHeight / 2;
+            Width = SystemParameters.MaximizedPrimaryScreenWidth / 2;
         }
 
+        // Scale based on the size of the window
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = DependencyProperty.Register("ScaleValue", typeof(double), typeof(MainWindow), new UIPropertyMetadata(1.0, new PropertyChangedCallback(OnScaleValueChanged), new CoerceValueCallback(OnCoerceScaleValue)));
-
-        private static object OnCoerceScaleValue(DependencyObject o, object value)
-        {
-            MainWindow mainWindow = o as MainWindow;
-            if (mainWindow != null)
-                return mainWindow.OnCoerceScaleValue((double)value);
-            else return value;
-        }
-
-        private static void OnScaleValueChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
-        {
-            MainWindow mainWindow = o as MainWindow;
-            if (mainWindow != null)
-                mainWindow.OnScaleValueChanged((double)e.OldValue, (double)e.NewValue);
-        }
-
-        protected virtual double OnCoerceScaleValue(double value)
-        {
-            if (double.IsNaN(value))
-                return 1.0f;
-
-            value = Math.Max(0.1, value);
-            return value;
-        }
-
-        protected virtual void OnScaleValueChanged(double oldValue, double newValue) { }
-
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<MainWindow>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -68,15 +45,15 @@ namespace VideoCollection
         }
         #endregion
 
-        private void MainGrid_SizeChanged(object sender, EventArgs e) => CalculateScale();
-
-        private void CalculateScale()
+        private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            double yScale = ActualHeight / (SystemParameters.MaximizedPrimaryScreenHeight / 2);
-            double xScale = ActualWidth / (SystemParameters.MaximizedPrimaryScreenWidth / 2);
-            double value = Math.Min(xScale, yScale);
+            ScaleValue = ScaleValueHelper.CalculateScale(myMainWindow, (float)SystemParameters.MaximizedPrimaryScreenHeight / 2, (float)SystemParameters.MaximizedPrimaryScreenWidth / 2);
 
-            ScaleValue = (double)OnCoerceScaleValue(myMainWindow, value);
+            if(App.videoPlayer != null)
+            {
+                App.videoPlayer.ScaleValue = ScaleValueHelper.CalculateScale(App.videoPlayer.videoPlayerWindow, 344f, 640f);
+                App.videoPlayer.videoPlayerWindow.gridOverlay.Margin = new Thickness(App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -20, App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -30);
+            }
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
@@ -87,17 +64,26 @@ namespace VideoCollection
         private void btnMinimize_Click(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Minimized;
+            if (App.videoPlayer != null) {
+                App.videoPlayer.Topmost = false;
+            }
         }
 
         private void btnMaximize_Click(object sender, RoutedEventArgs e)
         {
             if (WindowState == WindowState.Maximized)
             {
+                Left = _restoreLeft;
+                Top = _restoreTop;
                 WindowState = WindowState.Normal;
                 iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowMaximize;
             }
             else
             {
+                _restoreLeft = Left;
+                _restoreTop = Top;
+                Left = 0;
+                Top = 0;
                 WindowState = WindowState.Maximized;
                 iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowRestore;
             }
@@ -107,21 +93,47 @@ namespace VideoCollection
         {
             btnShows.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
             btnMovies.Background = null;
+            contentControl.Content = new ShowsView();
         }
 
         private void btnMovies_Click(object sender, RoutedEventArgs e)
         {
-            btnShows.Background = null;
+
             btnMovies.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+            btnShows.Background = null;
+            contentControl.Content = new MoviesView();
         }
 
         // Allow the window to be dragged
         private void myMainWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left)
+            if (Splash.Visibility == Visibility.Collapsed && e.ChangedButton == MouseButton.Left)
             {
-                this.DragMove();
+                DragMove();
             }
+        }
+
+        // Move the video player with the window
+        private void PositionVideoPlayer()
+        {
+            VideoPlayer videoPlayer = App.videoPlayer;
+            if (App.videoPlayer != null)
+            {
+                videoPlayer.Height = Height * 0.4;
+                videoPlayer.Width = Width * 0.4;
+                videoPlayer.Left = Left + (Width * videoPlayer.LeftMultiplier);
+                videoPlayer.Top = Top + (Height * videoPlayer.TopMultiplier);
+            }
+        }
+
+        private void myMainWindow_LocationChanged(object sender, EventArgs e)
+        {
+            PositionVideoPlayer();
+        }
+
+        private void myMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            PositionVideoPlayer();
         }
     }
 }

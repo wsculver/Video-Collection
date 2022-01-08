@@ -25,11 +25,20 @@ namespace VideoCollection.Popups
     public partial class AddMovieCategory : Window
     {
         private List<int> _selectedMovieIds;
+        private Border _splash;
+        private Action _callback;
 
-        public AddMovieCategory()
+        // Don't use this constructur. It is only here to make resizing work
+        public AddMovieCategory() { }
+
+        public AddMovieCategory(ref Border splash, Action callback)
         {
             InitializeComponent();
 
+            Closed += (a, b) => { Owner.Activate(); };
+
+            _splash = splash;
+            _callback = callback;
             _selectedMovieIds = new List<int>();
 
             UpdateMovieList();
@@ -54,7 +63,8 @@ namespace VideoCollection.Popups
         // Close window on cancel
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            _splash.Visibility = Visibility.Collapsed;
+            Close();
         }
 
         // Shows a custom OK message box
@@ -130,7 +140,9 @@ namespace VideoCollection.Popups
 
                 if (!repeat)
                 {
-                    DialogResult = true;
+                    _splash.Visibility = Visibility.Collapsed;
+                    _callback();
+                    Close();
                 }
             }
         }
@@ -149,9 +161,8 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<AddMovieCategory>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<AddMovieCategory>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -160,7 +171,7 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 350f);
+            ScaleValue = ScaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 350f);
         }
     }
 }

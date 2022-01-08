@@ -26,15 +26,21 @@ namespace VideoCollection.Popups
     {
         private string _categoryId;
         private bool _categoryChanged = false;
+        private Border _splash;
+        private Action _callback;
 
         // Don't use this constructur. It is only here to make resizing work
         public MovieViewAll() { }
 
-        public MovieViewAll(string Id)
+        public MovieViewAll(string Id, ref Border splash, Action callback)
         {
             InitializeComponent();
 
+            Closed += (a, b) => { Owner.Activate(); };
+
             _categoryId = Id;
+            _splash = splash;
+            _callback = callback;
 
             UpdateCategory();
         }
@@ -53,9 +59,8 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<MovieViewAll>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<MovieViewAll>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -64,18 +69,17 @@ namespace VideoCollection.Popups
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
-            ScaleValue = _scaleValueHelper.CalculateScale(movieViewAllWindow, 400f, 780f);
+            ScaleValue = ScaleValueHelper.CalculateScale(movieViewAllWindow, 400f, 780f);
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
+            _splash.Visibility = Visibility.Collapsed;
             if (_categoryChanged)
             {
-                DialogResult = true;
-            } else
-            {
-                DialogResult = false;
+                _callback();
             }
+            Close();
         }
 
         // Show the movie details when a movie thumbnail is clicked
@@ -84,13 +88,12 @@ namespace VideoCollection.Popups
             if (e.ChangedButton == MouseButton.Left)
             {
                 Window parentWindow = Window.GetWindow(this);
-                MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString());
+                MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString(), ref Splash, () => { });
                 popup.Width = parentWindow.Width;
                 popup.Height = parentWindow.Height;
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
-                popup.ShowDialog();
-                Splash.Visibility = Visibility.Collapsed;
+                popup.Show();
             }
         }
 
@@ -120,7 +123,7 @@ namespace VideoCollection.Popups
         private void btnDetails_Click(object sender, RoutedEventArgs e)
         {
             Window parentWindow = Window.GetWindow(this);
-            MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString());
+            MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString(), ref Splash, () => { });
             popup.Width = parentWindow.Width;
             popup.Height = parentWindow.Height;
             popup.Owner = parentWindow;
@@ -160,7 +163,11 @@ namespace VideoCollection.Popups
         {
             Button button = sender as Button;
             Window parentWindow = Window.GetWindow(this);
-            UpdateMovie popup = new UpdateMovie();
+            UpdateMovie popup = new UpdateMovie(ref Splash, () => 
+            { 
+                _categoryChanged = true;
+                UpdateCategory(); 
+            });
             popup.Width = parentWindow.Width * 0.67;
             popup.Height = popup.Width * 0.627;
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
@@ -173,12 +180,7 @@ namespace VideoCollection.Popups
             }
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
-            if (popup.ShowDialog() == true)
-            {
-                _categoryChanged = true;
-                UpdateCategory();
-            }
-            Splash.Visibility = Visibility.Collapsed;
+            popup.Show();
         }
 
         // Remove the movie from the category list and the category from the list for the movie
@@ -221,17 +223,16 @@ namespace VideoCollection.Popups
         private void btnUpdateCategory_Click(object sender, RoutedEventArgs e)
         {
             Window parentWindow = Window.GetWindow(this);
-            UpdateMovieCategory popup = new UpdateMovieCategory(_categoryId);
+            UpdateMovieCategory popup = new UpdateMovieCategory(_categoryId, ref Splash, () =>
+            {
+                _categoryChanged = true;
+                UpdateCategory();
+            });
             popup.Width = parentWindow.Width * 0.35;
             popup.Height = popup.Width * 1.201;
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
-            if (popup.ShowDialog() == true)
-            {
-                _categoryChanged = true;
-                UpdateCategory();
-            }
-            Splash.Visibility = Visibility.Collapsed;
+            popup.Show();
         }
 
         // Remove the category from the database and from all movie category lists
@@ -267,7 +268,9 @@ namespace VideoCollection.Popups
 
             if (deleted)
             {
-                DialogResult = true;
+                _splash.Visibility = Visibility.Collapsed;
+                _callback();
+                Close();
             }
         }
     }

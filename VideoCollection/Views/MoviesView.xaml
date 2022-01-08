@@ -155,7 +155,5 @@
                 </StackPanel>
             </materialDesign:PopupBox>
         </Button>
-
-        <Border x:Name="Splash" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </UserControl>

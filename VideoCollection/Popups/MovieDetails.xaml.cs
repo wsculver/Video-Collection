@@ -30,13 +30,20 @@ namespace VideoCollection.Popups
         private double _scrollDistance = 0;
         private MovieDeserialized _movieDeserialized;
         private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
+        private Border _splash;
+        private Action _callback;
 
         // Don't use this constructur. It is only here to make resizing work
         public MovieDetails() { }
 
-        public MovieDetails(string Id)
+        public MovieDetails(string Id, ref Border splash, Action callback)
         {
             InitializeComponent();
+
+            Closed += (a, b) => { Owner.Activate(); };
+
+            _splash = splash;
+            _callback = callback;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -78,9 +85,8 @@ namespace VideoCollection.Popups
         }
 
         // Scale based on the size of the window
-        private static ScaleValueHelper _scaleValueHelper = new ScaleValueHelper();
         #region ScaleValue Depdency Property
-        public static readonly DependencyProperty ScaleValueProperty = _scaleValueHelper.SetScaleValueProperty<MovieDetails>();
+        public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<MovieDetails>();
         public double ScaleValue
         {
             get => (double)GetValue(ScaleValueProperty);
@@ -105,20 +111,36 @@ namespace VideoCollection.Popups
 
             _scrollDistance = columnWidth - _scrollViewerMargins;
 
-            ScaleValue = _scaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 780f);
+            ScaleValue = ScaleValueHelper.CalculateScale(movieDetailsWindow, 400f, 780f);
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            _splash.Visibility = Visibility.Collapsed;
+            _callback();
+            Close();
         }
 
         private void imageMovieThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if(e.ChangedButton == MouseButton.Left)
             {
-                VideoPlayer popup = new VideoPlayer(_movieDeserialized);
-                popup.Show();
+                if (App.videoPlayer == null)
+                {
+                    Window parentWindow = Application.Current.MainWindow;
+                    VideoPlayer popup = new VideoPlayer(_movieDeserialized);
+                    App.videoPlayer = popup;
+                    popup.Width = parentWindow.Width;
+                    popup.Height = parentWindow.Height;
+                    popup.Owner = parentWindow;
+                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                    popup.Top = popup.TopMultiplier = parentWindow.Top;
+                    popup.Show();
+                }
+                else
+                {
+                    App.videoPlayer.updateVideo(_movieDeserialized);
+                }
             }
         }
 

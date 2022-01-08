@@ -118,7 +118,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Commands\UpdateViewCommand.cs" />
     <Compile Include="Database\DatabaseFunctions.cs" />
     <Compile Include="CustomTypes\AnimatedScrollViewer.cs" />
     <Compile Include="Helpers\ScaleValueHelper.cs" />
@@ -154,10 +153,6 @@
     <Compile Include="Popups\MovieViewAll.xaml.cs">
       <DependentUpon>MovieViewAll.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\BaseViewModel.cs" />
-    <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\MoviesViewModel.cs" />
-    <Compile Include="ViewModels\ShowsViewModel.cs" />
     <Compile Include="Views\MoviesView.xaml.cs">
       <DependentUpon>MoviesView.xaml</DependentUpon>
     </Compile>
