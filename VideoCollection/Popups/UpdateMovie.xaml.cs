@@ -18,6 +18,7 @@ using VideoCollection.Database;
 using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
+using VideoCollection.Subtitles;
 
 namespace VideoCollection.Popups
 {
@@ -155,6 +156,7 @@ namespace VideoCollection.Popups
                 txtFile.Text = movie.MovieFilePath;
                 _movieId = movie.Id;
                 _movie = movie;
+                txtSubtitleFile.Text = movie.SubtitlesFilePath;
                 switch(movie.Rating)
                 {
                     case "G":
@@ -248,6 +250,7 @@ namespace VideoCollection.Popups
                 else
                 {
                     JavaScriptSerializer jss = new JavaScriptSerializer();
+                    jss.MaxJsonLength = Int32.MaxValue;
 
                     using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                     {
@@ -301,6 +304,11 @@ namespace VideoCollection.Popups
                             movie.BonusVideos = jss.Serialize(bonusVideos);
                             movie.Rating = _rating;
                             movie.Categories = jss.Serialize(_selectedCategories);
+                            // Parse the subtitle file
+                            SubtitleParser subParser = new SubtitleParser();
+                            List<SubtitleSegment> subtitles = subParser.ExtractSubtitles(txtSubtitleFile.Text);
+                            movie.SubtitlesFilePath = txtSubtitleFile.Text;
+                            movie.Subtitles = jss.Serialize(subtitles);
                             connection.Update(movie);
 
                             // Update the MovieCateogry table
@@ -414,6 +422,15 @@ namespace VideoCollection.Popups
                     panelMovieInfo.Visibility = Visibility.Collapsed;
                 }
                 Splash.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void btnChooseSubtitleFile_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog filePath = StaticHelpers.CreateSubtitleFileDialog();
+            if (filePath.ShowDialog() == true)
+            {
+                txtSubtitleFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
             }
         }
     }

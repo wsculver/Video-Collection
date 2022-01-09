@@ -90,6 +90,7 @@ namespace VideoCollection.Popups
             else 
             { 
                 JavaScriptSerializer jss = new JavaScriptSerializer();
+                jss.MaxJsonLength = Int32.MaxValue;
 
                 bool repeat = false;
 

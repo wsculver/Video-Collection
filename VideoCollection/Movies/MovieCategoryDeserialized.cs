@@ -18,6 +18,7 @@ namespace VideoCollection.Movies
         public MovieCategoryDeserialized(MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             Id = category.Id;
             Position = category.Position;
             Name = category.Name;

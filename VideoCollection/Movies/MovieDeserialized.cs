@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.IO;
 using VideoCollection.Helpers;
+using VideoCollection.Subtitles;
 
 namespace VideoCollection.Movies
 {
@@ -23,6 +24,8 @@ namespace VideoCollection.Movies
         public List<MovieBonusVideoDeserialized> BonusVideos { get; set; }
         public string Rating { get; set; }
         public List<string> Categories { get; set; }
+        public string SubtitlesFilePath { get; set; }
+        public List<SubtitleSegment> Subtitles { get; set; }
         public bool IsChecked { get; set; }
 
         public MovieDeserialized(Movie movie)
@@ -50,6 +53,8 @@ namespace VideoCollection.Movies
             Runtime = movie.Runtime;
             Rating = movie.Rating;
             Categories = jss.Deserialize<List<string>>(movie.Categories);
+            SubtitlesFilePath = movie.SubtitlesFilePath;
+            Subtitles = jss.Deserialize<List<SubtitleSegment>>(movie.Subtitles);
             IsChecked = movie.IsChecked;
         }
     }

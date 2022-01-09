@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,6 +18,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
+using VideoCollection.Subtitles;
 
 namespace VideoCollection.Popups
 {
@@ -34,6 +36,8 @@ namespace VideoCollection.Popups
         private double _restoreTopMultiplier = 0;
         private DispatcherTimer _overlayHideTimer;
         private int _hideOverlaySeconds = 5;
+        private List<SubtitleSegment> _subtitles;
+        private int _subtitleIndex = 0;
         private HwndSource _mSource;
 
         public double VideoPlayerMargin = 25;
@@ -66,9 +70,10 @@ namespace VideoCollection.Popups
             meVideoPlayer.Source = new Uri(movie.MovieFilePath);
             labelTitle.Content = movie.Title;
             txtDuration.Text = movie.Runtime;
+            _subtitles = movie.Subtitles;
 
             DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Interval = TimeSpan.FromMilliseconds(1);
             timer.Tick += timer_Tick;
             timer.Start();
 
@@ -91,6 +96,13 @@ namespace VideoCollection.Popups
             get => (double)GetValue(ScaleValueProperty);
             set => SetValue(ScaleValueProperty, value);
         }
+
+        public static readonly DependencyProperty SubtitlesScaleValueProperty = DependencyProperty.Register("SubtitlesScaleValue", typeof(double), typeof(VideoPlayer), new UIPropertyMetadata(1.0, new PropertyChangedCallback(ScaleValueHelper.OnScaleValueChanged), new CoerceValueCallback(ScaleValueHelper.OnCoerceScaleValue)));
+        public double SubtitlesScaleValue
+        {
+            get => (double)GetValue(SubtitlesScaleValueProperty);
+            set => SetValue(SubtitlesScaleValueProperty, value);
+        }
         #endregion
 
         // Tick to show video progress
@@ -101,6 +113,42 @@ namespace VideoCollection.Popups
                 sliProgress.Minimum = 0;
                 sliProgress.Maximum = meVideoPlayer.NaturalDuration.TimeSpan.TotalSeconds;
                 sliProgress.Value = meVideoPlayer.Position.TotalSeconds;
+
+                txtSubtitles.Inlines.Clear();
+                if (TimeSpan.TryParseExact(_subtitles[_subtitleIndex].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
+                    TimeSpan.TryParseExact(_subtitles[_subtitleIndex].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
+                    start < end)
+                {
+                    if (meVideoPlayer.Position >= start && meVideoPlayer.Position < end)
+                    {
+                        string text = _subtitles[_subtitleIndex].Content;
+                        string[] lines = text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+                        
+                        for(int i = 0; i < lines.Length; i++)
+                        {
+                            if(lines[i].Contains("<i>"))
+                            {
+                                txtSubtitles.Inlines.Add(new Run(lines[i].Replace("<i>", "").Replace("</i>", "")) { FontStyle = FontStyles.Italic });
+                            }
+                            else
+                            {
+                                txtSubtitles.Inlines.Add(lines[i]);
+                            }
+
+                            if (i < lines.Length - 2)
+                            {
+                                txtSubtitles.Inlines.Add("\r\n");
+                            }
+                        }
+                    }
+                    else if (meVideoPlayer.Position >= end)
+                    {
+                        if (_subtitleIndex + 1 < _subtitles.Count)
+                        {
+                            _subtitleIndex++;
+                        }
+                    }
+                }
             }
         }
 
@@ -115,6 +163,7 @@ namespace VideoCollection.Popups
                 if (_playing && _expanded)
                 {
                     gridOverlay.Visibility = Visibility.Collapsed;
+                    borderSubtitles.Margin = new Thickness(0, 0, 0, 25);
                     Cursor = Cursors.None;
                 }
             }
@@ -131,17 +180,25 @@ namespace VideoCollection.Popups
         {
             _userIsDraggingSlider = false;
             meVideoPlayer.Position = TimeSpan.FromSeconds(sliProgress.Value);
+            for (int i = 0; i < _subtitles.Count; i++)
+            {
+                if (TimeSpan.TryParseExact(_subtitles[i].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
+                    TimeSpan.TryParseExact(_subtitles[i].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
+                    start < end)
+                {
+                    if (meVideoPlayer.Position <= end)
+                    {
+                        _subtitleIndex = i;
+                        break;
+                    }
+                }
+            }
         }
 
         // Set the display time
         private void sliProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             txtTime.Text = TimeSpan.FromSeconds(sliProgress.Value).ToString(@"h\:mm\:ss");
-            if(!_playing)
-            {
-                meVideoPlayer.Play();
-                meVideoPlayer.Pause();
-            }
         }
 
         // Allow clicking the slider to set a position
@@ -263,6 +320,7 @@ namespace VideoCollection.Popups
                 WindowState = WindowState.Maximized;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapseAll;
                 _expanded = true;
+                Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
                 Width = Owner.ActualWidth;
                 Height = Owner.ActualHeight;
@@ -411,6 +469,7 @@ namespace VideoCollection.Popups
         private void meVideoPlayer_MouseMove(object sender, MouseEventArgs e)
         {
             gridOverlay.Visibility = Visibility.Visible;
+            borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
             Cursor = Cursors.Arrow;
             _hideOverlaySeconds = 5;
             _overlayHideTimer.Start();
@@ -423,7 +482,13 @@ namespace VideoCollection.Popups
             if (_playing)
             {
                 gridOverlay.Visibility = Visibility.Collapsed;
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 25);
             }
+        }
+
+        private void gridSubtitles_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            SubtitlesScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 900f, 1600f);
         }
     }
 }

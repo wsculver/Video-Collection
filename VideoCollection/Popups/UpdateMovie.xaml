@@ -107,6 +107,12 @@
                 <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>
             </StackPanel>
 
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White" Margin="0,0,15,0">Subtitles File</Label>
+                <TextBox x:Name="txtSubtitleFile" Width="270" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
+                <Button x:Name="btnChooseSubtitleFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseSubtitleFile_Click">Choose File</Button>
+            </StackPanel>
+
             <Label Foreground="White">Rating:</Label>
             <StackPanel Orientation="Horizontal">
                 <RadioButton x:Name="btnG" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">G</RadioButton>

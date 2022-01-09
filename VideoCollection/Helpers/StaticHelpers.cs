@@ -20,6 +20,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VideoCollection.Movies;
+using VideoCollection.Subtitles;
 
 namespace VideoCollection.Helpers
 {
@@ -89,6 +90,19 @@ namespace VideoCollection.Helpers
             return dlg;
         }
 
+        // Create a file dialog to choose a subtitle file
+        public static OpenFileDialog CreateSubtitleFileDialog()
+        {
+            OpenFileDialog filePath = new OpenFileDialog();
+            filePath.DefaultExt = ".srt";
+            filePath.CheckFileExists = true;
+            filePath.CheckPathExists = true;
+            filePath.Multiselect = false;
+            filePath.ValidateNames = true;
+            filePath.Filter = "Subtitle Files|*.srt";
+            return filePath;
+        }
+
         // Convert a Uri into an ImageSource
         public static ImageSource BitmapFromUri(Uri source)
         {
@@ -106,6 +120,7 @@ namespace VideoCollection.Helpers
             JavaScriptSerializer jss = new JavaScriptSerializer();
 
             var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+            var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
 
             // The first video found should be the movie
             string movieFile = videoFiles.FirstOrDefault();
@@ -167,6 +182,14 @@ namespace VideoCollection.Helpers
                 movieThumbnail = CreateThumbnailFromVideoFile(movieFolderPath, movieFile, 60);
             }
 
+            // Get the subtitle file path
+            string subtitleFile = subtitleFiles.FirstOrDefault();
+            string subtitleFilePath = "";
+            if (movieFile != null)
+            {
+                subtitleFilePath = GetRelativePathStringFromCurrent(subtitleFile);
+            }
+
             Movie movie = new Movie()
             {
                 Title = movieTitle.ToUpper(),
@@ -175,6 +198,8 @@ namespace VideoCollection.Helpers
                 BonusSections = jss.Serialize(bonusSections),
                 BonusVideos = jss.Serialize(bonusVideos),
                 Categories = "",
+                SubtitlesFilePath = subtitleFilePath,
+                Subtitles = "",
                 IsChecked = false
             };
 

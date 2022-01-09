@@ -35,6 +35,7 @@ namespace VideoCollection.Database
         public static void AddMovieToCategory(Movie movie, MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {

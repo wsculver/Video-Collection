@@ -19,6 +19,7 @@ using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using System.IO;
+using VideoCollection.Subtitles;
 
 namespace VideoCollection.Popups
 {
@@ -118,6 +119,7 @@ namespace VideoCollection.Popups
             else
             {
                 JavaScriptSerializer jss = new JavaScriptSerializer();
+                jss.MaxJsonLength = Int32.MaxValue;
 
                 string thumbnail = "";
                 if (imgThumbnail.Source == null)
@@ -128,6 +130,10 @@ namespace VideoCollection.Popups
                 {
                     thumbnail = imgThumbnail.Source.ToString();
                 }
+
+                // Parse the subtitle file
+                SubtitleParser subParser = new SubtitleParser();
+                List<SubtitleSegment> subtitles = subParser.ExtractSubtitles(txtSubtitleFile.Text);
 
                 Movie movie = new Movie()
                 {
@@ -140,6 +146,8 @@ namespace VideoCollection.Popups
                     BonusVideos = _movie.BonusVideos,
                     Rating = _rating,
                     Categories = jss.Serialize(_selectedCategories),
+                    SubtitlesFilePath = txtSubtitleFile.Text,
+                    Subtitles = jss.Serialize(subtitles),
                     IsChecked = false
                 };
 
@@ -221,6 +229,7 @@ namespace VideoCollection.Popups
                     imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(_movie.Thumbnail));
                 }
                 txtFile.Text = _movie.MovieFilePath;
+                txtSubtitleFile.Text = _movie.SubtitlesFilePath;
 
                 panelMovieFields.Visibility = Visibility.Visible;
 
@@ -249,6 +258,16 @@ namespace VideoCollection.Popups
         private void RatingButtonClick(object sender, RoutedEventArgs e)
         {
             _rating = (sender as RadioButton).Content.ToString();
+        }
+
+        // Select a subtitle file
+        private void btnChooseSubtitleFile_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog filePath = StaticHelpers.CreateSubtitleFileDialog();
+            if (filePath.ShowDialog() == true)
+            {
+                txtSubtitleFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
+            }
         }
     }
 }
