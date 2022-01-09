@@ -68,7 +68,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.35;
+            popup.Width = parentWindow.ActualWidth * 0.35;
             popup.Height = popup.Width * 1.299;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
@@ -83,7 +83,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.43;
+            popup.Width = parentWindow.ActualWidth * 0.43;
             popup.Height = popup.Width * 1.058;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
@@ -102,7 +102,7 @@ namespace VideoCollection.Views
                 connection.CreateTable<MovieCategory>();
                 MovieCategory category = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + categoryId)[0];
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete the " + category.Name + " category?", CustomMessageBox.MessageBoxType.YesNo);
-                popup.Width = parentWindow.Width * 0.25;
+                popup.Width = parentWindow.ActualWidth * 0.25;
                 popup.Height = popup.Width * 0.55;
                 popup.Owner = parentWindow;
                 parentWindow.Splash.Visibility = Visibility.Visible;
@@ -136,7 +136,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.35;
+            popup.Width = parentWindow.ActualWidth * 0.35;
             popup.Height = popup.Width * 1.299;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
@@ -175,7 +175,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.73;
+            popup.Width = parentWindow.ActualWidth * 0.73;
             popup.Height = popup.Width * 0.623;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
@@ -307,7 +307,7 @@ namespace VideoCollection.Views
             {
                 MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
                 MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString(), ref parentWindow.Splash, () => { });
-                popup.Width = parentWindow.Width * 0.93;
+                popup.Width = parentWindow.ActualWidth * 0.93;
                 popup.Height = popup.Width * 0.489;
                 popup.Owner = parentWindow;
                 parentWindow.Splash.Visibility = Visibility.Visible;
@@ -430,7 +430,7 @@ namespace VideoCollection.Views
         {
             MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
             MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString(), ref parentWindow.Splash, () => { });
-            popup.Width = parentWindow.Width * 0.93;
+            popup.Width = parentWindow.ActualWidth * 0.93;
             popup.Height = popup.Width * 0.489;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
@@ -449,7 +449,7 @@ namespace VideoCollection.Views
 
                 MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.Width = parentWindow.Width * 0.25;
+                popup.Width = parentWindow.ActualWidth * 0.25;
                 popup.Height = popup.Width * 0.55;
                 popup.Owner = parentWindow;
                 parentWindow.Splash.Visibility = Visibility.Visible;
@@ -471,7 +471,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.73;
+            popup.Width = parentWindow.ActualWidth * 0.73;
             popup.Height = popup.Width * 0.623;
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
             {
@@ -495,7 +495,7 @@ namespace VideoCollection.Views
             {
                 UpdateCategoryDisplay();
             });
-            popup.Width = parentWindow.Width * 0.93;
+            popup.Width = parentWindow.ActualWidth * 0.93;
             popup.Height = popup.Width * 0.489;
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;

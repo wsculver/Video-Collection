@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VideoCollection.Popups" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="900" Width="1600" Background="Black" WindowStartupLocation="Manual" ShowInTaskbar="False" ResizeMode="NoResize">
+        WindowStyle="None" Height="900" Width="1600" Background="Black" WindowStartupLocation="Manual" ShowInTaskbar="False" ResizeMode="NoResize" MouseDown="videoPlayerWindow_MouseDown" MouseUp="videoPlayerWindow_MouseUp" LocationChanged="videoPlayerWindow_LocationChanged" MouseLeave="videoPlayerWindow_MouseLeave">
     <Window.Resources>
         <ResourceDictionary>
             <Style x:Key="SliderRepeatButton" TargetType="RepeatButton">
@@ -88,7 +88,7 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
-        <MediaElement x:Name="meVideoPlayer" LoadedBehavior="Manual"/>
+        <MediaElement x:Name="meVideoPlayer" LoadedBehavior="Manual" ScrubbingEnabled="True" MouseMove="meVideoPlayer_MouseMove"/>
 
         <Grid x:Name="gridOverlay" SizeChanged="gridOverlay_SizeChanged">
             <Grid.LayoutTransform>
@@ -118,7 +118,7 @@
             </StackPanel>
 
             <Label x:Name="labelTitle" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="Bold" Margin="35,0,0,0" FontSize="24">TITLE</Label>
-            <Slider x:Name="sliProgress" Style="{StaticResource HorizontalSlider}" Grid.Row="3" Thumb.DragStarted="sliProgress_DragStarted"  Thumb.DragCompleted="sliProgress_DragCompleted" ValueChanged="sliProgress_ValueChanged" IsMoveToPointEnabled="True" Margin="40,0,40,0" VerticalAlignment="Center"/>
+            <Slider x:Name="sliProgress" Style="{StaticResource HorizontalSlider}" Grid.Row="3" Cursor="Hand" Thumb.DragStarted="sliProgress_DragStarted"  Thumb.DragCompleted="sliProgress_DragCompleted" ValueChanged="sliProgress_ValueChanged" IsMoveToPointEnabled="True" Margin="40,0,40,0" VerticalAlignment="Center"/>
 
             <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
@@ -140,7 +140,7 @@
                     <Button x:Name="btnMute" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnMute_Click" Width="40" Height="40" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0">
                         <materialDesign:PackIcon x:Name="iconMute" Kind="VolumeHigh" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40"/>
                     </Button>
-                    <Slider x:Name="sliVolume" Style="{StaticResource HorizontalSlider}" Value="{Binding ElementName=meVideoPlayer, Path=Volume}" IsMoveToPointEnabled="True" Margin="10,11,40,0" MinWidth="120" MinHeight="20" Maximum="1"/>
+                    <Slider x:Name="sliVolume" Style="{StaticResource HorizontalSlider}" Value="{Binding ElementName=meVideoPlayer, Path=Volume}" Cursor="Hand" IsMoveToPointEnabled="True" Margin="10,11,40,0" MinWidth="120" MinHeight="20" Maximum="1"/>
                 </StackPanel>
             </Grid>
         </Grid>

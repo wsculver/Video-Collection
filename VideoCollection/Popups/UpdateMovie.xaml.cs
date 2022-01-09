@@ -208,7 +208,7 @@ namespace VideoCollection.Popups
         {
             Window parentWindow = GetWindow(this).Owner;
             CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.Width = parentWindow.Width * 0.25;
+            popup.Width = parentWindow.ActualWidth * 0.25;
             popup.Height = popup.Width * 0.55;
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
@@ -402,8 +402,8 @@ namespace VideoCollection.Popups
 
                 Window parentWindow = GetWindow(this).Owner;
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.Width = parentWindow.Width * 0.25;
-                popup.Height = parentWindow.Height * 0.25;
+                popup.Width = parentWindow.ActualWidth * 0.25;
+                popup.Height = parentWindow.ActualHeight * 0.25;
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 if (popup.ShowDialog() == true)

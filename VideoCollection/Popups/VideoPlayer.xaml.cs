@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -26,9 +28,27 @@ namespace VideoCollection.Popups
         private bool _userIsDraggingSlider = false;
         private bool _expanded = true;
         private bool _playing = true;
+        private bool _videoPlayerMoved = false;
         private double _restoreVolume = 0.5;
-        public double LeftMultiplier;
-        public double TopMultiplier;
+        private double _restoreLeftMultiplier = 0;
+        private double _restoreTopMultiplier = 0;
+        private DispatcherTimer _overlayHideTimer;
+        private int _hideOverlaySeconds = 5;
+        private HwndSource _mSource;
+
+        public double VideoPlayerMargin = 25;
+        public double LeftMultiplier = 0;
+        public double TopMultiplier = 0;
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+        enum WindowsMessage
+        {
+            WM_MOVING = 0x0216
+        }
 
         // Don't use this constructur. It is only here to make resizing work
         public VideoPlayer() { }
@@ -51,6 +71,10 @@ namespace VideoCollection.Popups
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += timer_Tick;
             timer.Start();
+
+            _overlayHideTimer = new DispatcherTimer();
+            _overlayHideTimer.Interval = TimeSpan.FromSeconds(1);
+            _overlayHideTimer.Tick += hideOverlayTimer_Tick;
 
             sliProgress.ApplyTemplate();
             Thumb thumb = (sliProgress.Template.FindName("PART_Track", sliProgress) as Track).Thumb;
@@ -77,6 +101,22 @@ namespace VideoCollection.Popups
                 sliProgress.Minimum = 0;
                 sliProgress.Maximum = meVideoPlayer.NaturalDuration.TimeSpan.TotalSeconds;
                 sliProgress.Value = meVideoPlayer.Position.TotalSeconds;
+            }
+        }
+
+        // Tick to countdown _hideOverlaySeconds
+        private void hideOverlayTimer_Tick(object sender, EventArgs e)
+        {
+            _hideOverlaySeconds--;
+            if (_hideOverlaySeconds == 0)
+            {
+                _overlayHideTimer.Stop();
+                // Only hide the overlay if the video is playing and expanded
+                if (_playing && _expanded)
+                {
+                    gridOverlay.Visibility = Visibility.Collapsed;
+                    Cursor = Cursors.None;
+                }
             }
         }
 
@@ -178,12 +218,21 @@ namespace VideoCollection.Popups
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
                 WindowState = WindowState.Normal;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
-                Width = Owner.Width * 0.4;
+                Width = Owner.ActualWidth * 0.4;
                 Height = Width * 0.5625;
-                Left = Owner.Left + (Owner.Width - (Owner.Width * 0.015625) - Width);
-                LeftMultiplier = (Left - Owner.Left) / Owner.Width;
-                Top = Owner.Top + (Owner.Height - (Owner.Width * 0.015625) - Height);
-                TopMultiplier = (Top - Owner.Top) / Owner.Height;
+                VideoPlayerMargin = Owner.ActualWidth * 0.015625;
+                if (!_videoPlayerMoved)
+                {
+                    Left = Owner.Left + (Owner.ActualWidth - VideoPlayerMargin - Width);
+                    LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
+                    Top = Owner.Top + (Owner.ActualHeight - VideoPlayerMargin - Height);
+                    TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                }
+                else
+                {
+                    Left = Owner.Left + (Owner.ActualWidth * _restoreLeftMultiplier);
+                    Top = Owner.Top + (Owner.ActualHeight * _restoreTopMultiplier);
+                }
                 Topmost = true;
             } 
             else
@@ -191,10 +240,12 @@ namespace VideoCollection.Popups
                 _expanded = true;
                 Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                Width = Owner.Width;
-                Height = Owner.Height;
-                Left = LeftMultiplier = Owner.Left;
-                Top = TopMultiplier = Owner.Top;
+                Width = Owner.ActualWidth;
+                Height = Owner.ActualHeight;
+                Left = Owner.Left;
+                Top = Owner.Top;
+                LeftMultiplier = Owner.Left;
+                TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
             }
         }
@@ -213,14 +264,17 @@ namespace VideoCollection.Popups
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapseAll;
                 _expanded = true;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                Width = Owner.Width;
-                Height = Owner.Height;
-                Left = LeftMultiplier = Owner.Left;
-                Top = TopMultiplier = Owner.Top;
+                Width = Owner.ActualWidth;
+                Height = Owner.ActualHeight;
+                Left = Owner.Left;
+                Top = Owner.Top;
+                LeftMultiplier = Owner.Left;
+                TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
             }
         }
 
+        // Scale the overlay correctly
         private void gridOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (_expanded)
@@ -230,6 +284,145 @@ namespace VideoCollection.Popups
             else
             {
                 Height = Width * 0.5625;
+            }
+        }
+
+        // Allow the video player to be dragged
+        private void videoPlayerWindow_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_expanded && e.ChangedButton == MouseButton.Left)
+            {
+                DragMove();
+            }
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            _mSource = (HwndSource)PresentationSource.FromVisual(this);
+            _mSource.AddHook(WndProc);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _mSource.RemoveHook(WndProc);
+            _mSource.Dispose();
+            _mSource = null;
+
+            base.OnClosed(e);
+        }
+
+        // Prevent the video player from moving outside the main window when draggin it
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == (int)WindowsMessage.WM_MOVING)
+            {
+                // The window dimensions are off in this function for some reason so this is a correction factor
+                double leftMultiplier = 1.255;
+                double rightMultiplier = 1.252;
+                double topMultiplier = 1.255;
+                double bottomMultiplier = 1.253;
+                RECT bounds = new RECT() { Left = (int)((Owner.Left + VideoPlayerMargin) * leftMultiplier), Top = (int)((Owner.Top + VideoPlayerMargin) * topMultiplier), Right = (int)((Owner.Left + Owner.ActualWidth - VideoPlayerMargin) * rightMultiplier), Bottom = (int)((Owner.Top + Owner.ActualHeight - VideoPlayerMargin) * bottomMultiplier) };
+
+                RECT window = (RECT)Marshal.PtrToStructure(lParam, typeof(RECT));
+                if (window.Left < bounds.Left)
+                {
+                    window.Right = window.Right + bounds.Left - window.Left;
+                    window.Left = bounds.Left;
+                }
+                if (window.Top < bounds.Top)
+                {
+                    window.Bottom = window.Bottom + bounds.Top - window.Top;
+                    window.Top = bounds.Top;
+                }
+                if (window.Right >= bounds.Right)
+                {
+                    window.Left = bounds.Right - window.Right + window.Left - 1;
+                    window.Right = bounds.Right - 1;
+                }
+                if (window.Bottom >= bounds.Bottom)
+                {
+                    window.Top = bounds.Bottom - window.Bottom + window.Top - 1;
+                    window.Bottom = bounds.Bottom - 1;
+                }
+                Marshal.StructureToPtr(window, lParam, true);
+
+                handled = true;
+                return new IntPtr(1);
+            }
+
+            handled = false;
+            return IntPtr.Zero;
+        }
+
+        // Keep track of where the video player is when moving the main window
+        private void videoPlayerWindow_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_expanded)
+            {
+                _videoPlayerMoved = true;
+                LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
+                TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                _restoreLeftMultiplier = LeftMultiplier;
+                _restoreTopMultiplier = TopMultiplier;
+            }
+        }
+
+        // Make sure the video player doesn't go outside of the main window when resizing the main window
+        private void videoPlayerWindow_LocationChanged(object sender, EventArgs e)
+        {
+            if(!_expanded && Width < Owner.ActualWidth - (2 * VideoPlayerMargin) && Height < Owner.ActualHeight - (2 * VideoPlayerMargin))
+            {
+                bool changeMultipliers = false;
+                if (Left + Width > Owner.Left + Owner.ActualWidth - VideoPlayerMargin)
+                {
+                    Left = Owner.Left + Owner.ActualWidth - VideoPlayerMargin - Width;
+                    changeMultipliers = true;
+                }
+
+                if (Left < Owner.Left + VideoPlayerMargin)
+                {
+                    Left = Owner.Left + VideoPlayerMargin;
+                    changeMultipliers = true;
+                }
+
+                if (Top + Height > Owner.Top + Owner.ActualHeight - VideoPlayerMargin)
+                {
+                    Top = Owner.Top + Owner.ActualHeight - VideoPlayerMargin - Height;
+                    changeMultipliers = true;
+                }
+
+                if (Top < Owner.Top + VideoPlayerMargin)
+                {
+                    Top = Owner.Top + VideoPlayerMargin;
+                    changeMultipliers = true;
+                }
+
+                if (changeMultipliers)
+                {
+                    LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
+                    TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                }
+            }
+        }
+
+        // Moving the mouse shows the overlay and starts a timer to hide it
+        private void meVideoPlayer_MouseMove(object sender, MouseEventArgs e)
+        {
+            gridOverlay.Visibility = Visibility.Visible;
+            Cursor = Cursors.Arrow;
+            _hideOverlaySeconds = 5;
+            _overlayHideTimer.Start();
+        }
+
+        // If the video player is collapsed and the mouse leaves it hide the overlay
+        private void videoPlayerWindow_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _overlayHideTimer.Stop();
+            if (_playing)
+            {
+                gridOverlay.Visibility = Visibility.Collapsed;
             }
         }
     }

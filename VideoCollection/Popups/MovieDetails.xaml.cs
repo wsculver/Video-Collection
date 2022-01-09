@@ -130,8 +130,8 @@ namespace VideoCollection.Popups
                     Window parentWindow = Application.Current.MainWindow;
                     VideoPlayer popup = new VideoPlayer(_movieDeserialized);
                     App.videoPlayer = popup;
-                    popup.Width = parentWindow.Width;
-                    popup.Height = parentWindow.Height;
+                    popup.Width = parentWindow.ActualWidth;
+                    popup.Height = parentWindow.ActualHeight;
                     popup.Owner = parentWindow;
                     popup.Left = popup.LeftMultiplier = parentWindow.Left;
                     popup.Top = popup.TopMultiplier = parentWindow.Top;

@@ -119,8 +119,9 @@ namespace VideoCollection
             VideoPlayer videoPlayer = App.videoPlayer;
             if (App.videoPlayer != null)
             {
-                videoPlayer.Height = Height * 0.4;
+                videoPlayer.VideoPlayerMargin = Width * 0.015625;
                 videoPlayer.Width = Width * 0.4;
+                videoPlayer.Height = videoPlayer.Width * 0.5625;
                 videoPlayer.Left = Left + (Width * videoPlayer.LeftMultiplier);
                 videoPlayer.Top = Top + (Height * videoPlayer.TopMultiplier);
             }
@@ -134,6 +135,11 @@ namespace VideoCollection
         private void myMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             PositionVideoPlayer();
+            // If the window is maximized by dragging the window to the top change the maximize button
+            if (WindowState == WindowState.Maximized)
+            {
+                iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowRestore;
+            }
         }
     }
 }
