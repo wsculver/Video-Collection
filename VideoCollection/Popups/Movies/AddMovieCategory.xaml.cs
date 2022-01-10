@@ -17,7 +17,7 @@ using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.Views;
 
-namespace VideoCollection.Popups
+namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for AddMovieCategory.xaml

@@ -15,7 +15,6 @@
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="BackgroundBrush" Color="#1e2126"/>
             <SolidColorBrush x:Key="SelectedButtonBackgroundBrush" Color="#FF4B4B4B"/>
-            <SolidColorBrush x:Key="SelectedButtonForegroundBrush" Color="#536DFE"/>
             <SolidColorBrush x:Key="PopupStackPanelBackgroundColor" Color="#263238"/>
             <Style x:Key="SplashStyle" TargetType="{x:Type Border}">
                 <Setter Property="Background" Value="Black"/>

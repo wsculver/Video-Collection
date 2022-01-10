@@ -24,7 +24,6 @@ namespace VideoCollection.Movies
         public string Rating { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }
-        public string SubtitlesFilePath { get; set; }
         // JSON encoded List<SubtitleSegment>
         public string Subtitles { get; set; }
         // Used for editing categories

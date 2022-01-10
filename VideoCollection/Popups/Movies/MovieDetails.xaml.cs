@@ -18,7 +18,7 @@ using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
-namespace VideoCollection.Popups
+namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for MovieDetails.xaml
@@ -148,7 +148,24 @@ namespace VideoCollection.Popups
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-
+                string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
+                MovieBonusVideoDeserialized bonusVideo = new MovieBonusVideoDeserialized(split[0], split[1], split[2], split[3]);
+                if (App.videoPlayer == null)
+                {
+                    Window parentWindow = Application.Current.MainWindow;
+                    VideoPlayer popup = new VideoPlayer(bonusVideo);
+                    App.videoPlayer = popup;
+                    popup.Width = parentWindow.ActualWidth;
+                    popup.Height = parentWindow.ActualHeight;
+                    popup.Owner = parentWindow;
+                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                    popup.Top = popup.TopMultiplier = parentWindow.Top;
+                    popup.Show();
+                }
+                else
+                {
+                    App.videoPlayer.updateVideo(bonusVideo);
+                }
             }
         }
 

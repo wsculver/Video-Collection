@@ -17,7 +17,7 @@ using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
-namespace VideoCollection.Popups
+namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for RenameMovieCategory.xaml

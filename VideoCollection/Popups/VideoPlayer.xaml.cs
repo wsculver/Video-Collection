@@ -38,6 +38,7 @@ namespace VideoCollection.Popups
         private int _hideOverlaySeconds = 5;
         private List<SubtitleSegment> _subtitles;
         private int _subtitleIndex = 0;
+        private bool _subtitlesOn = false;
         private HwndSource _mSource;
 
         public double VideoPlayerMargin = 25;
@@ -64,13 +65,26 @@ namespace VideoCollection.Popups
             updateVideo(movie);
         }
 
-        // Allow the video in the player to be updated
-        public void updateVideo(MovieDeserialized movie)
+        public VideoPlayer(MovieBonusVideoDeserialized movieBonusVideo)
         {
-            meVideoPlayer.Source = new Uri(movie.MovieFilePath);
-            labelTitle.Content = movie.Title;
-            txtDuration.Text = movie.Runtime;
-            _subtitles = movie.Subtitles;
+            InitializeComponent();
+
+            updateVideo(movieBonusVideo);
+        }
+
+        // Allow the video in the player to be updated
+        private void update()
+        {
+            if (_subtitles.Count == 0)
+            {
+                _subtitlesOn = false;
+                rectSubtitlesEnabled.Visibility = Visibility.Hidden;
+                btnSubtitles.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                btnSubtitles.Visibility = Visibility.Visible;
+            }
 
             DispatcherTimer timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(1);
@@ -86,6 +100,22 @@ namespace VideoCollection.Popups
             thumb.MouseEnter += new MouseEventHandler(thumb_MouseEnter);
 
             meVideoPlayer.Play();
+        }
+        public void updateVideo(MovieDeserialized movie)
+        {
+            meVideoPlayer.Source = new Uri(movie.MovieFilePath);
+            txtTitle.Text = movie.Title;
+            txtDuration.Text = movie.Runtime;
+            _subtitles = movie.Subtitles;
+            update();
+        }
+        public void updateVideo(MovieBonusVideoDeserialized movieBonusVideo)
+        {
+            meVideoPlayer.Source = new Uri(movieBonusVideo.FilePath);
+            txtTitle.Text = movieBonusVideo.Title;
+            txtDuration.Text = movieBonusVideo.Runtime;
+            _subtitles = movieBonusVideo.Subtitles;
+            update();
         }
 
         // Scale based on the size of the window
@@ -115,37 +145,40 @@ namespace VideoCollection.Popups
                 sliProgress.Value = meVideoPlayer.Position.TotalSeconds;
 
                 txtSubtitles.Inlines.Clear();
-                if (TimeSpan.TryParseExact(_subtitles[_subtitleIndex].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
-                    TimeSpan.TryParseExact(_subtitles[_subtitleIndex].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
-                    start < end)
+                if (_subtitlesOn)
                 {
-                    if (meVideoPlayer.Position >= start && meVideoPlayer.Position < end)
+                    if (TimeSpan.TryParseExact(_subtitles[_subtitleIndex].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
+                        TimeSpan.TryParseExact(_subtitles[_subtitleIndex].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
+                        start < end)
                     {
-                        string text = _subtitles[_subtitleIndex].Content;
-                        string[] lines = text.Split(new[] { "\r\n" }, StringSplitOptions.None);
-                        
-                        for(int i = 0; i < lines.Length; i++)
+                        if (meVideoPlayer.Position >= start && meVideoPlayer.Position < end)
                         {
-                            if(lines[i].Contains("<i>"))
-                            {
-                                txtSubtitles.Inlines.Add(new Run(lines[i].Replace("<i>", "").Replace("</i>", "")) { FontStyle = FontStyles.Italic });
-                            }
-                            else
-                            {
-                                txtSubtitles.Inlines.Add(lines[i]);
-                            }
+                            string text = _subtitles[_subtitleIndex].Content;
+                            string[] lines = text.Split(new[] { "\r\n" }, StringSplitOptions.None);
 
-                            if (i < lines.Length - 2)
+                            for (int i = 0; i < lines.Length; i++)
                             {
-                                txtSubtitles.Inlines.Add("\r\n");
+                                if (lines[i].Contains("<i>"))
+                                {
+                                    txtSubtitles.Inlines.Add(new Run(lines[i].Replace("<i>", "").Replace("</i>", "")) { FontStyle = FontStyles.Italic });
+                                }
+                                else
+                                {
+                                    txtSubtitles.Inlines.Add(lines[i]);
+                                }
+
+                                if (i < lines.Length - 2)
+                                {
+                                    txtSubtitles.Inlines.Add("\r\n");
+                                }
                             }
                         }
-                    }
-                    else if (meVideoPlayer.Position >= end)
-                    {
-                        if (_subtitleIndex + 1 < _subtitles.Count)
+                        else if (meVideoPlayer.Position >= end)
                         {
-                            _subtitleIndex++;
+                            if (_subtitleIndex + 1 < _subtitles.Count)
+                            {
+                                _subtitleIndex++;
+                            }
                         }
                     }
                 }
@@ -163,7 +196,7 @@ namespace VideoCollection.Popups
                 if (_playing && _expanded)
                 {
                     gridOverlay.Visibility = Visibility.Collapsed;
-                    borderSubtitles.Margin = new Thickness(0, 0, 0, 25);
+                    borderSubtitles.Margin = new Thickness(0, 0, 0, 30);
                     Cursor = Cursors.None;
                 }
             }
@@ -271,7 +304,7 @@ namespace VideoCollection.Popups
                 {
                     ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1800f, 3200f);
                 }
-                gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -20, ScaleValue * -30, ScaleValue * -30);
+                gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -15, ScaleValue * -30, ScaleValue * -25);
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
                 WindowState = WindowState.Normal;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
@@ -290,6 +323,7 @@ namespace VideoCollection.Popups
                     Left = Owner.Left + (Owner.ActualWidth * _restoreLeftMultiplier);
                     Top = Owner.Top + (Owner.ActualHeight * _restoreTopMultiplier);
                 }
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
                 Topmost = true;
             } 
             else
@@ -304,6 +338,7 @@ namespace VideoCollection.Popups
                 LeftMultiplier = Owner.Left;
                 TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
             }
         }
 
@@ -329,6 +364,7 @@ namespace VideoCollection.Popups
                 LeftMultiplier = Owner.Left;
                 TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
             }
         }
 
@@ -469,7 +505,14 @@ namespace VideoCollection.Popups
         private void meVideoPlayer_MouseMove(object sender, MouseEventArgs e)
         {
             gridOverlay.Visibility = Visibility.Visible;
-            borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
+            if(!_expanded)
+            {
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
+            }
+            else
+            {
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
+            }
             Cursor = Cursors.Arrow;
             _hideOverlaySeconds = 5;
             _overlayHideTimer.Start();
@@ -482,13 +525,28 @@ namespace VideoCollection.Popups
             if (_playing)
             {
                 gridOverlay.Visibility = Visibility.Collapsed;
-                borderSubtitles.Margin = new Thickness(0, 0, 0, 25);
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 30);
             }
         }
 
         private void gridSubtitles_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             SubtitlesScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 900f, 1600f);
+        }
+
+        // Toggle subtitles on/off
+        private void btnSubtitles_Click(object sender, RoutedEventArgs e)
+        {
+            if(_subtitlesOn)
+            {
+                _subtitlesOn = false;
+                rectSubtitlesEnabled.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                _subtitlesOn = true;
+                rectSubtitlesEnabled.Visibility = Visibility.Visible;
+            }
         }
     }
 }

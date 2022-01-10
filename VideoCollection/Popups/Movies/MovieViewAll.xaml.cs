@@ -17,7 +17,7 @@ using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
-namespace VideoCollection.Popups
+namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for ViewAll.xaml
@@ -116,7 +116,30 @@ namespace VideoCollection.Popups
         // Play the movie directly
         private void btnPlayMovie_Click(object sender, RoutedEventArgs e)
         {
+            string id = (sender as Button).Tag.ToString();
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Movie>();
+                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id)[0];
+                MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
 
+                if (App.videoPlayer == null)
+                {
+                    Window parentWindow = Application.Current.MainWindow;
+                    VideoPlayer popup = new VideoPlayer(movieDeserialized);
+                    App.videoPlayer = popup;
+                    popup.Width = parentWindow.ActualWidth;
+                    popup.Height = parentWindow.ActualHeight;
+                    popup.Owner = parentWindow;
+                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                    popup.Top = popup.TopMultiplier = parentWindow.Top;
+                    popup.Show();
+                }
+                else
+                {
+                    App.videoPlayer.updateVideo(movieDeserialized);
+                }
+            }
         }
 
         // Show the movie details when the details setting button is clicked

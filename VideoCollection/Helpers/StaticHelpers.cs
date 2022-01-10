@@ -118,6 +118,7 @@ namespace VideoCollection.Helpers
         public static Movie ParseMovieVideos(string movieFolderPath)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
 
             var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
             var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
@@ -132,8 +133,10 @@ namespace VideoCollection.Helpers
                 movieFilePath = GetRelativePathStringFromCurrent(movieFile);
             }
 
+            SubtitleParser subParser = new SubtitleParser();
+
             // All other videos are bonus
-            
+
             List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
             HashSet<string> bonusSectionsSet = new HashSet<string>();
             int numVideoFiles = videoFiles.Count();
@@ -142,6 +145,15 @@ namespace VideoCollection.Helpers
                 string videoFile = videoFiles.ElementAt(i);
                 string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
                 bonusSectionsSet.Add(bonusSection);
+                string bonusTitle = Path.GetFileNameWithoutExtension(videoFile);
+                string bonusSubtitleFile = "";
+                List<SubtitleSegment> bonusSubtitles = new List<SubtitleSegment>();
+                var bonusSubtitleFiles = subtitleFiles.Where(s => s.EndsWith(bonusTitle + ".srt"));
+                if (bonusSubtitleFiles.Any())
+                {
+                    bonusSubtitleFile = bonusSubtitleFiles.FirstOrDefault();
+                    bonusSubtitles = subParser.ExtractSubtitles(bonusSubtitleFile);
+                }
 
                 using (MemoryStream thumbnailStream = new MemoryStream())
                 {
@@ -150,10 +162,12 @@ namespace VideoCollection.Helpers
 
                     MovieBonusVideo video = new MovieBonusVideo()
                     {
-                        Title = Path.GetFileNameWithoutExtension(videoFile).ToUpper(),
+                        Title = bonusTitle.ToUpper(),
                         Thumbnail = ImageToBase64(image, ImageFormat.Jpeg),
                         FilePath = videoFile,
-                        Section = bonusSection
+                        Section = bonusSection,
+                        Runtime = GetVideoDuration(videoFile),
+                        Subtitles = jss.Serialize(bonusSubtitles)
                     };
                     bonusVideos.Add(video);
                 }
@@ -182,12 +196,12 @@ namespace VideoCollection.Helpers
                 movieThumbnail = CreateThumbnailFromVideoFile(movieFolderPath, movieFile, 60);
             }
 
-            // Get the subtitle file path
-            string subtitleFile = subtitleFiles.FirstOrDefault();
-            string subtitleFilePath = "";
-            if (movieFile != null)
+            // Get the subtitle file path and parse it
+            string subtitleFile = subtitleFiles.Where(s => s.EndsWith(movieTitle + ".srt")).FirstOrDefault();
+            List<SubtitleSegment> subtitles = new List<SubtitleSegment>();
+            if (subtitleFile != null)
             {
-                subtitleFilePath = GetRelativePathStringFromCurrent(subtitleFile);
+                subtitles = subParser.ExtractSubtitles(subtitleFile);
             }
 
             Movie movie = new Movie()
@@ -198,8 +212,7 @@ namespace VideoCollection.Helpers
                 BonusSections = jss.Serialize(bonusSections),
                 BonusVideos = jss.Serialize(bonusVideos),
                 Categories = "",
-                SubtitlesFilePath = subtitleFilePath,
-                Subtitles = "",
+                Subtitles = jss.Serialize(subtitles),
                 IsChecked = false
             };
 

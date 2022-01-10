@@ -130,19 +130,19 @@
     <Compile Include="Movies\MovieCategory.cs" />
     <Compile Include="Movies\MovieCategoryDeserialized.cs" />
     <Compile Include="Movies\MovieDeserialized.cs" />
-    <Compile Include="Popups\AddMovie.xaml.cs">
+    <Compile Include="Popups\Movies\AddMovie.xaml.cs">
       <DependentUpon>AddMovie.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\AddMovieCategory.xaml.cs">
+    <Compile Include="Popups\Movies\AddMovieCategory.xaml.cs">
       <DependentUpon>AddMovieCategory.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\MovieDetails.xaml.cs">
+    <Compile Include="Popups\Movies\MovieDetails.xaml.cs">
       <DependentUpon>MovieDetails.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\UpdateMovieCategory.xaml.cs">
+    <Compile Include="Popups\Movies\UpdateMovieCategory.xaml.cs">
       <DependentUpon>UpdateMovieCategory.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\UpdateMovie.xaml.cs">
+    <Compile Include="Popups\Movies\UpdateMovie.xaml.cs">
       <DependentUpon>UpdateMovie.xaml</DependentUpon>
     </Compile>
     <Compile Include="Popups\VideoPlayer.xaml.cs">
@@ -151,7 +151,7 @@
     <Compile Include="Popups\CustomMessageBox.xaml.cs">
       <DependentUpon>CustomMessageBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Popups\MovieViewAll.xaml.cs">
+    <Compile Include="Popups\Movies\MovieViewAll.xaml.cs">
       <DependentUpon>MovieViewAll.xaml</DependentUpon>
     </Compile>
     <Compile Include="Subtitles\SubtitleParser.cs" />
@@ -174,23 +174,23 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Popups\AddMovie.xaml">
+    <Page Include="Popups\Movies\AddMovie.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\AddMovieCategory.xaml">
+    <Page Include="Popups\Movies\AddMovieCategory.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\MovieDetails.xaml">
+    <Page Include="Popups\Movies\MovieDetails.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\UpdateMovieCategory.xaml">
+    <Page Include="Popups\Movies\UpdateMovieCategory.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\UpdateMovie.xaml">
+    <Page Include="Popups\Movies\UpdateMovie.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -202,7 +202,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Popups\MovieViewAll.xaml">
+    <Page Include="Popups\Movies\MovieViewAll.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -251,6 +251,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Images\" />
+    <Folder Include="Popups\Shows\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.4\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />
