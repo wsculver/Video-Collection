@@ -36,7 +36,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public UpdateMovie() { }
 
         public UpdateMovie(ref Border splash, Action callback)
@@ -77,7 +77,27 @@ namespace VideoCollection.Popups.Movies
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie));
+                    try
+                    {
+                        movies.Add(new MovieDeserialized(movie));
+                    }
+                    catch (Exception ex)
+                    {
+                        if (GetWindow(this).Owner != null)
+                        {
+                            ShowOKMessageBox("Error: " + ex.Message);
+                        }
+                        else
+                        {
+                            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                            CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
+                            popup.Width = parentWindow.ActualWidth * 0.25;
+                            popup.Height = popup.Width * 0.55;
+                            popup.Owner = parentWindow;
+                            popup.ShowDialog();
+                            _callback();
+                        }
+                    }
                 }
                 lvMovieList.ItemsSource = movies;
             }
@@ -274,7 +294,7 @@ namespace VideoCollection.Popups.Movies
                             bool movieContentChanged = MovieContentChanged(movie);
                             movie.Title = txtMovieName.Text.ToUpper();
                             movie.MovieFolderPath = txtMovieFolder.Text;
-                            movie.Thumbnail = imgThumbnail.Source.ToString();
+                            movie.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
                             movie.MovieFilePath = txtFile.Text;
                             movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
                             List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
@@ -366,14 +386,21 @@ namespace VideoCollection.Popups.Movies
         }
 
         // Choose the whole movie folder
-        private void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
+        private async void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
         {
             CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-                Movie movie = StaticHelpers.ParseMovieVideos(dlg.FileName);
-                _movie = new MovieDeserialized(movie);
+                Movie movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
+                try
+                {
+                    _movie = new MovieDeserialized(movie);
+                }
+                catch (Exception ex)
+                {
+                    ShowOKMessageBox("Error: " + ex.Message);
+                }
 
                 txtMovieName.Text = _movie.Title;
                 if (movie.Thumbnail != "")

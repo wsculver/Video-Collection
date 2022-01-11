@@ -9,6 +9,11 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
+using VideoCollection.Popups;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows;
+using VideoCollection.Database;
 
 namespace VideoCollection.Movies
 {
@@ -34,7 +39,13 @@ namespace VideoCollection.Movies
             Id = movie.Id;
             Title = movie.Title;
             MovieFolderPath = movie.MovieFolderPath;
-            Thumbnail = StaticHelpers.BitmapFromUri(new Uri(new Uri(Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar), movie.Thumbnail));
+            if (!File.Exists(movie.MovieFilePath))
+            {
+                DatabaseFunctions.DeleteMovie(movie);
+                throw new Exception("Could not find the movie file for " + Title + ". The movie was deleted from the database. To add the movie again you will need to click NEW MOVIE.");
+            }
+            MovieFilePath = movie.MovieFilePath;
+            Thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
             List<MovieBonusSection> movieBonusSections = jss.Deserialize<List<MovieBonusSection>>(movie.BonusSections);
             List<MovieBonusSectionDeserialized> movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
             foreach (MovieBonusSection section in movieBonusSections)
@@ -49,7 +60,6 @@ namespace VideoCollection.Movies
                 movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
             }
             BonusVideos = movieBonusVideosDeserialized;
-            MovieFilePath = movie.MovieFilePath;
             Runtime = movie.Runtime;
             Rating = movie.Rating;
             Categories = jss.Deserialize<List<string>>(movie.Categories);

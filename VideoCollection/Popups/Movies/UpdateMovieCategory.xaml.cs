@@ -29,7 +29,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public UpdateMovieCategory() { }
 
         public UpdateMovieCategory(string Id, ref Border splash, Action callback)
@@ -69,10 +69,25 @@ namespace VideoCollection.Popups.Movies
                     }
 
                     movie.IsChecked = check;
-                    movies.Add(new MovieDeserialized(movie));
+                    try
+                    {
+                        movies.Add(new MovieDeserialized(movie));
+                    }
+                    catch (Exception ex)
+                    {
+                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                        CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                        popup.Width = parentWindow.ActualWidth * 0.25;
+                        popup.Height = popup.Width * 0.55;
+                        popup.Owner = parentWindow;
+                        popup.ShowDialog();
+                        _callback();
+                    }
                 }
                 lvMovieList.ItemsSource = movies;
             }
+
+            txtCategoryName.Focus();
         }
 
         // Close the window on cancel

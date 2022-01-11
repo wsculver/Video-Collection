@@ -22,7 +22,7 @@ namespace VideoCollection.Popups
     {
         public enum MessageBoxType { YesNo, OK };
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public CustomMessageBox() { }
 
         public CustomMessageBox(string Message, MessageBoxType type)

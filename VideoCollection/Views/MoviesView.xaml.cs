@@ -428,23 +428,47 @@ namespace VideoCollection.Views
             {
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id)[0];
-                MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
-
-                if (App.videoPlayer == null)
+                try
                 {
-                    Window parentWindow = Application.Current.MainWindow;
-                    VideoPlayer popup = new VideoPlayer(movieDeserialized);
-                    App.videoPlayer = popup;
-                    popup.Width = parentWindow.ActualWidth;
-                    popup.Height = parentWindow.ActualHeight;
-                    popup.Owner = parentWindow;
-                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                    popup.Top = popup.TopMultiplier = parentWindow.Top;
-                    popup.Show();
+                    MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
+                    if (App.videoPlayer == null)
+                    {
+                        Window parentWindow = Application.Current.MainWindow;
+                        try
+                        {
+                            VideoPlayer popup = new VideoPlayer(movieDeserialized);
+                            App.videoPlayer = popup;
+                            popup.Width = parentWindow.ActualWidth;
+                            popup.Height = parentWindow.ActualHeight;
+                            popup.Owner = parentWindow;
+                            popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                            popup.Top = popup.TopMultiplier = parentWindow.Top;
+                            popup.Show();
+                        }
+                        catch (Exception ex)
+                        {
+                            CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
+                            popup.Width = parentWindow.ActualWidth * 0.25;
+                            popup.Height = popup.Width * 0.55;
+                            popup.Owner = parentWindow;
+                            popup.ShowDialog();
+                        }
+                    }
+                    else
+                    {
+                        App.videoPlayer.updateVideo(movieDeserialized);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    App.videoPlayer.updateVideo(movieDeserialized);
+                    MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
+                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                    popup.Width = parentWindow.ActualWidth * 0.25;
+                    popup.Height = popup.Width * 0.55;
+                    popup.Owner = parentWindow;
+                    parentWindow.Splash.Visibility = Visibility.Visible;
+                    popup.ShowDialog();
+                    parentWindow.Splash.Visibility = Visibility.Collapsed;
                 }
             }
         }

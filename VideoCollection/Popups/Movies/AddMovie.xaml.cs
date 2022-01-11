@@ -20,6 +20,8 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using System.IO;
 using VideoCollection.Subtitles;
+using System.Drawing.Imaging;
+using VideoCollection.Animations;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -35,7 +37,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public AddMovie() { }
 
         public AddMovie(ref Border splash, Action callback)
@@ -124,11 +126,16 @@ namespace VideoCollection.Popups.Movies
                 string thumbnail = "";
                 if (imgThumbnail.Source == null)
                 {
-                    thumbnail = StaticHelpers.CreateThumbnailFromVideoFile(txtMovieFolder.Text, txtFile.Text, 60);
+                    using (MemoryStream thumbnailStream = new MemoryStream())
+                    {
+                        StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, txtFile.Text, 60);
+                        System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
+                        thumbnail = StaticHelpers.ImageToBase64(image, ImageFormat.Jpeg);
+                    }
                 }
                 else
                 {
-                    thumbnail = imgThumbnail.Source.ToString();
+                    thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
                 }
 
                 Movie movie = new Movie()
@@ -216,21 +223,30 @@ namespace VideoCollection.Popups.Movies
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-                _movie = StaticHelpers.ParseMovieVideos(dlg.FileName);
-
-                txtMovieName.Text = _movie.Title;
-                if (_movie.Thumbnail != "")
+                loadingControl.Content = new LoadingSpinner();
+                loadingControl.Visibility = Visibility.Visible;
+                Task.Run(async () =>
                 {
-                    imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(_movie.Thumbnail));
-                }
-                txtFile.Text = _movie.MovieFilePath;
+                    _movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
+                       (Action)(() =>
+                       {
+                           txtMovieName.Text = _movie.Title;
+                           if (_movie.Thumbnail != "")
+                           {
+                               imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_movie.Thumbnail);
+                           }
+                           txtFile.Text = _movie.MovieFilePath;
 
-                panelMovieFields.Visibility = Visibility.Visible;
+                           panelMovieFields.Visibility = Visibility.Visible;
 
-                if(_movie.MovieFilePath == "")
-                {
-                    ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
-                }
+                           if (_movie.MovieFilePath == "")
+                           {
+                               ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
+                           }
+                           loadingControl.Visibility = Visibility.Collapsed;
+                       }));
+                });
             }
         }
 

@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoCollection.Popups"
+        xmlns:local="clr-namespace:VideoCollection.Popups.Movies"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         WindowStyle="None" Height="500" Width="500" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
@@ -68,13 +69,14 @@
                 </ItemsControl>
             </StackPanel>
         </StackPanel>
-        
 
-        <StackPanel x:Name="buttons" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel x:Name="buttons" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnOK_Click">OK</Button>
         </StackPanel>
 
+        <ContentControl x:Name="loadingControl" Grid.Row="0" Visibility="Collapsed"/>
+        
         <Border x:Name="Splash" Grid.RowSpan="2" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

@@ -33,7 +33,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public MovieDetails() { }
 
         public MovieDetails(string Id, ref Border splash, Action callback)
@@ -49,7 +49,20 @@ namespace VideoCollection.Popups.Movies
             {
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + Id)[0];
-                _movieDeserialized = new MovieDeserialized(movie);
+                try
+                {
+                    _movieDeserialized = new MovieDeserialized(movie);
+                }
+                catch (Exception ex)
+                {
+                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
+                    popup.Width = parentWindow.ActualWidth * 0.25;
+                    popup.Height = popup.Width * 0.55;
+                    popup.Owner = parentWindow;
+                    popup.ShowDialog();
+                    _callback();
+                }
                 labelTitle.Content = _movieDeserialized.Title;
                 imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
                 txtRuntime.Text = _movieDeserialized.Runtime;
@@ -128,14 +141,25 @@ namespace VideoCollection.Popups.Movies
                 if (App.videoPlayer == null)
                 {
                     Window parentWindow = Application.Current.MainWindow;
-                    VideoPlayer popup = new VideoPlayer(_movieDeserialized);
-                    App.videoPlayer = popup;
-                    popup.Width = parentWindow.ActualWidth;
-                    popup.Height = parentWindow.ActualHeight;
-                    popup.Owner = parentWindow;
-                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                    popup.Top = popup.TopMultiplier = parentWindow.Top;
-                    popup.Show();
+                    try
+                    {
+                        VideoPlayer popup = new VideoPlayer(_movieDeserialized);
+                        App.videoPlayer = popup;
+                        popup.Width = parentWindow.ActualWidth;
+                        popup.Height = parentWindow.ActualHeight;
+                        popup.Owner = parentWindow;
+                        popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                        popup.Top = popup.TopMultiplier = parentWindow.Top;
+                        popup.Show();
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
+                        popup.Width = parentWindow.ActualWidth * 0.25;
+                        popup.Height = popup.Width * 0.55;
+                        popup.Owner = parentWindow;
+                        popup.ShowDialog();
+                    }
                 }
                 else
                 {
@@ -153,14 +177,25 @@ namespace VideoCollection.Popups.Movies
                 if (App.videoPlayer == null)
                 {
                     Window parentWindow = Application.Current.MainWindow;
-                    VideoPlayer popup = new VideoPlayer(bonusVideo);
-                    App.videoPlayer = popup;
-                    popup.Width = parentWindow.ActualWidth;
-                    popup.Height = parentWindow.ActualHeight;
-                    popup.Owner = parentWindow;
-                    popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                    popup.Top = popup.TopMultiplier = parentWindow.Top;
-                    popup.Show();
+                    try
+                    {
+                        VideoPlayer popup = new VideoPlayer(bonusVideo);
+                        App.videoPlayer = popup;
+                        popup.Width = parentWindow.ActualWidth;
+                        popup.Height = parentWindow.ActualHeight;
+                        popup.Owner = parentWindow;
+                        popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                        popup.Top = popup.TopMultiplier = parentWindow.Top;
+                        popup.Show();
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
+                        popup.Width = parentWindow.ActualWidth * 0.25;
+                        popup.Height = popup.Width * 0.55;
+                        popup.Owner = parentWindow;
+                        popup.ShowDialog();
+                    }
                 }
                 else
                 {

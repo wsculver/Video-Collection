@@ -28,7 +28,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public AddMovieCategory() { }
 
         public AddMovieCategory(ref Border splash, Action callback)
@@ -42,7 +42,9 @@ namespace VideoCollection.Popups.Movies
             _selectedMovieIds = new List<int>();
 
             UpdateMovieList();
-        }
+
+            txtCategoryName.Focus();
+        }        
 
         // Load current movie list
         private void UpdateMovieList()
@@ -54,7 +56,27 @@ namespace VideoCollection.Popups.Movies
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
-                    movies.Add(new MovieDeserialized(movie));
+                    try
+                    {
+                        movies.Add(new MovieDeserialized(movie));
+                    }
+                    catch (Exception ex)
+                    {
+                        if (GetWindow(this).Owner != null)
+                        {
+                            ShowOKMessageBox("Error: " + ex.Message);
+                        }
+                        else
+                        {
+                            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                            CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                            popup.Width = parentWindow.ActualWidth * 0.25;
+                            popup.Height = popup.Width * 0.55;
+                            popup.Owner = parentWindow;
+                            popup.ShowDialog();
+                            _callback();
+                        }
+                    }
                 }
                 lvMovieList.ItemsSource = movies;
             }

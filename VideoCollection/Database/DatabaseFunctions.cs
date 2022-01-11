@@ -83,6 +83,7 @@ namespace VideoCollection.Database
         public static void DeleteMovie(Movie movie)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {

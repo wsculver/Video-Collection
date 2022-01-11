@@ -132,5 +132,7 @@
                 </Border>
             </Button>
         </Grid>
+
+        <Border x:Name="Splash" Grid.RowSpan="4" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

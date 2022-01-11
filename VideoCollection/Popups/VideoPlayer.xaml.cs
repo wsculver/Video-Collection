@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -55,7 +56,7 @@ namespace VideoCollection.Popups
             WM_MOVING = 0x0216
         }
 
-        // Don't use this constructur. It is only here to make resizing work
+        /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public VideoPlayer() { }
 
         public VideoPlayer(MovieDeserialized movie)
@@ -98,6 +99,12 @@ namespace VideoCollection.Popups
             sliProgress.ApplyTemplate();
             Thumb thumb = (sliProgress.Template.FindName("PART_Track", sliProgress) as Track).Thumb;
             thumb.MouseEnter += new MouseEventHandler(thumb_MouseEnter);
+
+
+            if (!File.Exists(meVideoPlayer.Source.ToString().Substring(8)))
+            {
+                throw new Exception("Video file not found. Make sure it is in the same location it was when you added it.");
+            }
 
             meVideoPlayer.Play();
         }
@@ -400,9 +407,12 @@ namespace VideoCollection.Popups
 
         protected override void OnClosed(EventArgs e)
         {
-            _mSource.RemoveHook(WndProc);
-            _mSource.Dispose();
-            _mSource = null;
+            if (_mSource != null)
+            {
+                _mSource.RemoveHook(WndProc);
+                _mSource.Dispose();
+                _mSource = null;
+            }
 
             base.OnClosed(e);
         }

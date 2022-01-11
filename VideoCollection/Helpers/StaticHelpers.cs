@@ -19,6 +19,7 @@ using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using VideoCollection.Movies;
 using VideoCollection.Subtitles;
 
@@ -114,8 +115,44 @@ namespace VideoCollection.Helpers
             return bitmap;
         }
 
+        private static async Task<Tuple<string, string, string, List<SubtitleSegment>, string>> ParseBonusVideo(string movieFolderPath, string videoFile, IEnumerable<string> subtitleFiles)
+        {
+            SubtitleParser subParser = new SubtitleParser();
+            string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
+            string bonusTitle = Path.GetFileNameWithoutExtension(videoFile);
+            string bonusSubtitleFile = "";
+            List<SubtitleSegment> bonusSubtitles = new List<SubtitleSegment>();
+            var bonusSubtitleFiles = subtitleFiles.Where(s => s.EndsWith(bonusTitle + ".srt"));
+            if (bonusSubtitleFiles.Any())
+            {
+                bonusSubtitleFile = bonusSubtitleFiles.FirstOrDefault();
+                bonusSubtitles = subParser.ExtractSubtitles(bonusSubtitleFile);
+            }
+
+            var bonusImageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(bonusTitle + ".png") || s.EndsWith(bonusTitle + ".jpg") || s.EndsWith(bonusTitle + ".jpeg"));
+            string bonusThumbnail = "";
+            if (bonusImageFiles.Any())
+            {
+                bonusThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(bonusImageFiles.First()))));
+            }
+            else
+            {
+                await Task.Run(() =>
+                {
+                    using (MemoryStream thumbnailStream = new MemoryStream())
+                    {
+                        CreateThumbnailFromVideoFile(thumbnailStream, videoFile, 5);
+                        Image image = Image.FromStream(thumbnailStream);
+                        bonusThumbnail = ImageToBase64(image, ImageFormat.Jpeg);
+                    }
+                });
+            }
+
+            return Tuple.Create(bonusSection, bonusTitle, bonusThumbnail, bonusSubtitles, videoFile);
+        }
+
         // Parse a movie bonus folder to format all videos in it
-        public static Movie ParseMovieVideos(string movieFolderPath)
+        public static async Task<Movie> ParseMovieVideos(string movieFolderPath)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
             jss.MaxJsonLength = Int32.MaxValue;
@@ -133,44 +170,29 @@ namespace VideoCollection.Helpers
                 movieFilePath = GetRelativePathStringFromCurrent(movieFile);
             }
 
-            SubtitleParser subParser = new SubtitleParser();
-
             // All other videos are bonus
-
             List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
             HashSet<string> bonusSectionsSet = new HashSet<string>();
             int numVideoFiles = videoFiles.Count();
+            var tasks = new List<Task<Tuple<string, string, string, List<SubtitleSegment>, string>>>();
             for(int i = 1; i < numVideoFiles; i++)
             {
                 string videoFile = videoFiles.ElementAt(i);
-                string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
-                bonusSectionsSet.Add(bonusSection);
-                string bonusTitle = Path.GetFileNameWithoutExtension(videoFile);
-                string bonusSubtitleFile = "";
-                List<SubtitleSegment> bonusSubtitles = new List<SubtitleSegment>();
-                var bonusSubtitleFiles = subtitleFiles.Where(s => s.EndsWith(bonusTitle + ".srt"));
-                if (bonusSubtitleFiles.Any())
+                tasks.Add(ParseBonusVideo(movieFolderPath, videoFile, subtitleFiles));
+            }
+            foreach (var task in await Task.WhenAll(tasks))
+            {
+                bonusSectionsSet.Add(task.Item1);
+                MovieBonusVideo video = new MovieBonusVideo()
                 {
-                    bonusSubtitleFile = bonusSubtitleFiles.FirstOrDefault();
-                    bonusSubtitles = subParser.ExtractSubtitles(bonusSubtitleFile);
-                }
-
-                using (MemoryStream thumbnailStream = new MemoryStream())
-                {
-                    CreateThumbnailFromVideoFile(thumbnailStream, videoFile, 5);
-                    Image image = Image.FromStream(thumbnailStream);
-
-                    MovieBonusVideo video = new MovieBonusVideo()
-                    {
-                        Title = bonusTitle.ToUpper(),
-                        Thumbnail = ImageToBase64(image, ImageFormat.Jpeg),
-                        FilePath = videoFile,
-                        Section = bonusSection,
-                        Runtime = GetVideoDuration(videoFile),
-                        Subtitles = jss.Serialize(bonusSubtitles)
-                    };
-                    bonusVideos.Add(video);
-                }
+                    Title = task.Item2.ToUpper(),
+                    Thumbnail = task.Item3,
+                    FilePath = task.Item5,
+                    Section = task.Item1,
+                    Runtime = GetVideoDuration(task.Item5),
+                    Subtitles = jss.Serialize(task.Item4)
+                };
+                bonusVideos.Add(video);
             }
 
             List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
@@ -185,17 +207,23 @@ namespace VideoCollection.Helpers
             }
 
             // Get the thumbnail file if it exists, otherwise create one
-            var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".png") || s.EndsWith(".jpg") || s.EndsWith(".jpeg"));
+            var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(movieTitle + ".png") || s.EndsWith(movieTitle + ".jpg") || s.EndsWith(movieTitle + ".jpeg"));
             string movieThumbnail = "";
             if (imageFiles.Any())
             {
-                movieThumbnail = GetRelativePathStringFromCurrent(imageFiles.First());
+                movieThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(imageFiles.First()))));
             }
             else if(movieFile != null)
             {
-                movieThumbnail = CreateThumbnailFromVideoFile(movieFolderPath, movieFile, 60);
+                using (MemoryStream thumbnailStream = new MemoryStream())
+                {
+                    CreateThumbnailFromVideoFile(thumbnailStream, movieFile, 60);
+                    Image image = Image.FromStream(thumbnailStream);
+                    movieThumbnail = ImageToBase64(image, ImageFormat.Jpeg);
+                }
             }
 
+            SubtitleParser subParser = new SubtitleParser();
             // Get the subtitle file path and parse it
             string subtitleFile = subtitleFiles.Where(s => s.EndsWith(movieTitle + ".srt")).FirstOrDefault();
             List<SubtitleSegment> subtitles = new List<SubtitleSegment>();
@@ -217,20 +245,6 @@ namespace VideoCollection.Helpers
             };
 
             return movie;
-        }
-
-        // Create a thumbnail from a provided video file at the frame seconds in
-        // Return a relative path to the new image in pathToDirectory
-        public static string CreateThumbnailFromVideoFile(string pathToDirectory, string videoFile, int seconds)
-        {
-            var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
-            NReco.VideoConverter.ConvertSettings convertSettings = new NReco.VideoConverter.ConvertSettings()
-            {
-                VideoFrameSize = "640x360"
-            };
-            string thumbnailPath = pathToDirectory + "/" + Path.GetFileNameWithoutExtension(videoFile) + " Thumbnail.jpg";
-            ffMpeg.GetVideoThumbnail(videoFile, thumbnailPath, seconds, convertSettings);
-            return GetRelativePathStringFromCurrent(thumbnailPath);
         }
 
         // Create a thumbnail from a provided video file at the frame seconds in
@@ -352,9 +366,13 @@ namespace VideoCollection.Helpers
         // Get the duration of a video file
         public static string GetVideoDuration(string filePath)
         {
-            var ffProbe = new FFProbe();
-            var videoInfo = ffProbe.GetMediaInfo(filePath);
-            return videoInfo.Duration.ToString(@"h\:mm\:ss");
+            if (File.Exists(filePath))
+            {
+                var ffProbe = new FFProbe();
+                var videoInfo = ffProbe.GetMediaInfo(filePath);
+                return videoInfo.Duration.ToString(@"h\:mm\:ss");
+            }
+            return "0:00:00";
         }
     }
 }
