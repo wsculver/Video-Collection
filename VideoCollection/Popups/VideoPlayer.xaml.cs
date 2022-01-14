@@ -40,7 +40,11 @@ namespace VideoCollection.Popups
         private List<SubtitleSegment> _subtitles;
         private int _subtitleIndex = 0;
         private bool _subtitlesOn = false;
+        private string _timeFormat = "";
         private HwndSource _mSource;
+        private DispatcherTimer _imageFrameTimer;
+        private int _imageFrameMilliseconds = 5;
+        private Point _lastMousePos;
 
         public double VideoPlayerMargin = 25;
         public double LeftMultiplier = 0;
@@ -96,10 +100,15 @@ namespace VideoCollection.Popups
             _overlayHideTimer.Interval = TimeSpan.FromSeconds(1);
             _overlayHideTimer.Tick += hideOverlayTimer_Tick;
 
-            sliProgress.ApplyTemplate();
-            Thumb thumb = (sliProgress.Template.FindName("PART_Track", sliProgress) as Track).Thumb;
-            thumb.MouseEnter += new MouseEventHandler(thumb_MouseEnter);
+            _imageFrameTimer = new DispatcherTimer();
+            _imageFrameTimer.Interval = TimeSpan.FromMilliseconds(1);
+            _imageFrameTimer.Tick += imageFrameTimer_Tick;
 
+            sliProgress.ApplyTemplate();
+            Thumb thumb = sliProgress.Template.FindName("thumb", sliProgress) as Thumb;
+            thumb.MouseEnter += thumb_MouseEnter;
+
+            _lastMousePos = new Point(0, 0);
 
             if (!File.Exists(meVideoPlayer.Source.ToString().Substring(8)))
             {
@@ -113,6 +122,7 @@ namespace VideoCollection.Popups
             meVideoPlayer.Source = new Uri(movie.MovieFilePath);
             txtTitle.Text = movie.Title;
             txtDuration.Text = movie.Runtime;
+            setTimeFormat(movie.Runtime);
             _subtitles = movie.Subtitles;
             update();
         }
@@ -121,8 +131,29 @@ namespace VideoCollection.Popups
             meVideoPlayer.Source = new Uri(movieBonusVideo.FilePath);
             txtTitle.Text = movieBonusVideo.Title;
             txtDuration.Text = movieBonusVideo.Runtime;
+            setTimeFormat(movieBonusVideo.Runtime);
             _subtitles = movieBonusVideo.Subtitles;
             update();
+        }
+
+        // Set the left side of the time display based on the runtime of the video
+        public void setTimeFormat(string runtime)
+        {
+            switch (runtime.Length)
+            {
+                case 7:
+                    _timeFormat = @"h\:mm\:ss";
+                    break;
+                case 5:
+                    _timeFormat = @"mm\:ss";
+                    break;
+                case 4:
+                    _timeFormat = @"m\:ss";
+                    break;
+                default:
+                    _timeFormat = @"hh\:mm\:ss";
+                    break;
+            }
         }
 
         // Scale based on the size of the window
@@ -167,7 +198,16 @@ namespace VideoCollection.Popups
                             {
                                 if (lines[i].Contains("<i>"))
                                 {
-                                    txtSubtitles.Inlines.Add(new Run(lines[i].Replace("<i>", "").Replace("</i>", "")) { FontStyle = FontStyles.Italic });
+                                    string line = lines[i];
+                                    while (line.Contains("<i>"))
+                                    {
+                                        int openTagIndex = line.IndexOf("<i>");
+                                        int closeTagIndex = line.IndexOf("</i>");
+                                        txtSubtitles.Inlines.Add(line.Substring(0, openTagIndex));
+                                        txtSubtitles.Inlines.Add(new Run(line.Substring(openTagIndex + 3, closeTagIndex - (openTagIndex + 3))) { FontStyle = FontStyles.Italic });
+                                        line = line.Substring(closeTagIndex + 4);
+                                    }
+                                    txtSubtitles.Inlines.Add(line);
                                 }
                                 else
                                 {
@@ -209,6 +249,25 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Tick to countdown _imageFrameMilliseconds
+        private void imageFrameTimer_Tick(object sender, EventArgs e)
+        {
+            _imageFrameMilliseconds--;
+            if (_imageFrameMilliseconds == 0)
+            {
+                _imageFrameTimer.Stop();
+
+                Track track = sliProgress.Template.FindName("PART_Track", sliProgress) as Track;
+                TimeSpan time = TimeSpan.FromSeconds(track.ValueFromPoint(_lastMousePos));
+                using (MemoryStream thumbnailStream = new MemoryStream())
+                {
+                    StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, meVideoPlayer.Source.OriginalString, (int)time.TotalSeconds);
+                    System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
+                    imgVideoFrame.Source = StaticHelpers.ImageToImageSource(image);
+                }
+            }
+        }
+
         // Stop ticking while dragging the slider
         private void sliProgress_DragStarted(object sender, DragStartedEventArgs e)
         {
@@ -238,7 +297,7 @@ namespace VideoCollection.Popups
         // Set the display time
         private void sliProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            txtTime.Text = TimeSpan.FromSeconds(sliProgress.Value).ToString(@"h\:mm\:ss");
+            txtTime.Text = TimeSpan.FromSeconds(sliProgress.Value).ToString(_timeFormat);
         }
 
         // Allow clicking the slider to set a position
@@ -557,6 +616,43 @@ namespace VideoCollection.Popups
                 _subtitlesOn = true;
                 rectSubtitlesEnabled.Visibility = Visibility.Visible;
             }
+        }
+
+        // Show a popup with the frame and time at the hovered location
+        private void sliProgress_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!floatingFrame.IsOpen) { floatingFrame.IsOpen = true; }
+
+            Point currentPos = e.GetPosition(sliProgress);
+
+            if (_lastMousePos != currentPos)
+            {
+                imgVideoFrame.Source = null;
+                _imageFrameMilliseconds = 5;
+                _imageFrameTimer.Start();
+                _lastMousePos = currentPos;
+
+                Track track = sliProgress.Template.FindName("PART_Track", sliProgress) as Track;
+
+                TimeSpan time = TimeSpan.FromSeconds(track.ValueFromPoint(currentPos));
+                hoverTime.Text = time.ToString(_timeFormat);
+
+                floatingFrame.HorizontalOffset = currentPos.X - (floatingFrameBorder.ActualWidth / 2);
+                floatingFrame.VerticalOffset = -155;
+            }
+        }
+
+        // Close the frame preview when the mouse is not over the progress slider
+        private void sliProgress_MouseLeave(object sender, MouseEventArgs e)
+        {
+            floatingFrame.IsOpen = false;
+            _imageFrameTimer.Stop();
+        }
+
+        // Prevent the overlay from hiding when the mouse is over a control
+        private void meVideoPlayer_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _overlayHideTimer.Stop();
         }
     }
 }

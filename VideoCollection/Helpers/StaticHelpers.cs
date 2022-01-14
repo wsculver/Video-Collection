@@ -315,6 +315,24 @@ namespace VideoCollection.Helpers
             }
         }
 
+        // Convert a System.Drawing.Image to ImageSource
+        public static ImageSource ImageToImageSource(Image image)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, ImageFormat.Jpeg);
+                ms.Seek(0, SeekOrigin.Begin);
+
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = ms;
+                bitmapImage.EndInit();
+
+                return bitmapImage;
+            }
+        }
+
         // Get the first child of type T
         public static T GetObject<T>(DependencyObject o)
             where T : DependencyObject
@@ -370,7 +388,17 @@ namespace VideoCollection.Helpers
             {
                 var ffProbe = new FFProbe();
                 var videoInfo = ffProbe.GetMediaInfo(filePath);
-                return videoInfo.Duration.ToString(@"h\:mm\:ss");
+                string duration = "";
+                TimeSpan videoDuration = videoInfo.Duration;
+                if(videoDuration.Hours > 0)
+                {
+                    duration = videoDuration.ToString(@"h\:mm\:ss");
+                }
+                else
+                {
+                    duration = videoDuration.ToString(@"m\:ss");
+                }
+                return duration;
             }
             return "0:00:00";
         }
