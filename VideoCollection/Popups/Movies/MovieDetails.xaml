@@ -119,7 +119,7 @@
                                         <materialDesign:PackIcon Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
+                                <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

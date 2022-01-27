@@ -52,7 +52,7 @@ namespace VideoCollection
             if(App.videoPlayer != null)
             {
                 App.videoPlayer.ScaleValue = ScaleValueHelper.CalculateScale(App.videoPlayer.videoPlayerWindow, 344f, 640f);
-                App.videoPlayer.videoPlayerWindow.gridOverlay.Margin = new Thickness(App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -20, App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -30);
+                App.videoPlayer.videoPlayerWindow.gridOverlay.Margin = new Thickness(App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -15, App.videoPlayer.ScaleValue * -30, App.videoPlayer.ScaleValue * -20);
             }
         }
 
