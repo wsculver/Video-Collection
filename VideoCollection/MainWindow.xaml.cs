@@ -122,8 +122,10 @@ namespace VideoCollection
                 videoPlayer.VideoPlayerMargin = Width * 0.015625;
                 videoPlayer.Width = Width * 0.4;
                 videoPlayer.Height = videoPlayer.Width * 0.5625;
+                videoPlayer.Moving = true;
                 videoPlayer.Left = Left + (Width * videoPlayer.LeftMultiplier);
                 videoPlayer.Top = Top + (Height * videoPlayer.TopMultiplier);
+                videoPlayer.Moving = false;
             }
         }
 

@@ -7,7 +7,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:VideoCollection.Helpers"
         mc:Ignorable="d"
-        WindowStyle="None" Height="900" Width="1600" Background="Black" WindowStartupLocation="Manual" ShowInTaskbar="False" ResizeMode="NoResize" MouseDown="videoPlayerWindow_MouseDown" MouseUp="videoPlayerWindow_MouseUp" LocationChanged="videoPlayerWindow_LocationChanged" MouseLeave="videoPlayerWindow_MouseLeave">
+        WindowStyle="None" Height="900" Width="1600" Background="Black" WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" MouseDown="videoPlayerWindow_MouseDown" MouseUp="videoPlayerWindow_MouseUp" LocationChanged="videoPlayerWindow_LocationChanged" MouseLeave="videoPlayerWindow_MouseLeave">
     <Window.Resources>
         <ResourceDictionary>
             <Style x:Key="SliderRepeatButton" TargetType="RepeatButton">
@@ -93,8 +93,20 @@
             </Style>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid>
-        <MediaElement x:Name="meVideoPlayer" LoadedBehavior="Manual" ScrubbingEnabled="True" MouseMove="meVideoPlayer_MouseMove" MouseLeave="meVideoPlayer_MouseLeave"/>
+    <Grid>        
+        <MediaElement x:Name="meVideoPlayer" LoadedBehavior="Manual" ScrubbingEnabled="True"/>
+
+        <Border x:Name="borderGradient" Background="Black">
+            <Border.OpacityMask>
+                <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                    <GradientStop Color="#FFFFFFFF"/>
+                    <GradientStop Color="Transparent" Offset="0.7"/>
+                    <GradientStop Color="#FFFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.OpacityMask>
+        </Border>
+
+        <Border x:Name="borderHover" Background="Transparent" MouseMove="borderHover_MouseMove" MouseLeave="borderHover_MouseLeave"/>
 
         <Grid x:Name="gridOverlay" SizeChanged="gridOverlay_SizeChanged">
             <Grid.LayoutTransform>
@@ -126,7 +138,7 @@
             <TextBlock x:Name="txtTitle" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontWeight="Bold" Margin="40,0,0,0" FontSize="24" Foreground="White" TextWrapping="WrapWithOverflow">TITLE</TextBlock>
             <Slider x:Name="sliProgress" Grid.Row="3" Style="{StaticResource HorizontalSlider}" MinHeight="40" Cursor="Hand" Thumb.DragStarted="sliProgress_DragStarted"  Thumb.DragCompleted="sliProgress_DragCompleted" ValueChanged="sliProgress_ValueChanged" IsMoveToPointEnabled="True" Margin="40,0,40,-40" VerticalAlignment="Center" MouseMove="sliProgress_MouseMove" MouseLeave="sliProgress_MouseLeave"/>
 
-            <Popup x:Name="floatingFrame" AllowsTransparency="True" IsHitTestVisible="False" Placement="Relative"  PlacementTarget="{Binding ElementName=sliProgress}">
+            <Popup x:Name="floatingFrame" AllowsTransparency="True" IsHitTestVisible="False" Placement="Relative"  PlacementTarget="{Binding ElementName=sliProgress}" MouseEnter="floatingFrame_MouseEnter">
                 <Border Name="floatingFrameBorder" BorderThickness="0" Background="Black">
                     <Grid>
                         <Image x:Name="imgVideoFrame" Width="267" Height="150" />
@@ -151,7 +163,7 @@
                     <ColumnDefinition Width="210"/>
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="btnPlay" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="{x:Null}" BorderBrush="{x:Null}" Padding="-20,0,-20,0">
+                <Button x:Name="btnPlay" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0">
                     <materialDesign:PackIcon x:Name="iconPlay" Kind="Pause" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="22,0,0,26"/>
                 </Button>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,32">
@@ -169,7 +181,7 @@
                 </Button>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
-                    <Button x:Name="btnMute" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnMute_Click" Width="40" Height="40" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0">
+                    <Button x:Name="btnMute" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnMute_Click" Width="40" Height="40" Background="Transparent" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0">
                         <materialDesign:PackIcon x:Name="iconMute" Kind="VolumeHigh" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40"/>
                     </Button>
                     <Slider x:Name="sliVolume" Style="{StaticResource HorizontalSlider}" Value="{Binding ElementName=meVideoPlayer, Path=Volume}" Cursor="Hand" IsMoveToPointEnabled="True" Margin="10,6,40,0" MinWidth="120" MinHeight="20" Maximum="1" Padding="0,-10,0,-10"/>
@@ -195,7 +207,7 @@
             <Border x:Name="borderSubtitles" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" BorderBrush="{x:Null}" Margin="0,0,0,150">
                 <TextBlock x:Name="txtSubtitles" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" FontSize="36" Foreground="White" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial">
                     <TextBlock.Background>
-                        <SolidColorBrush Color="Black" Opacity="0.4"/>
+                        <SolidColorBrush Color="Black" Opacity="0.5"/>
                     </TextBlock.Background>
                 </TextBlock>
             </Border>

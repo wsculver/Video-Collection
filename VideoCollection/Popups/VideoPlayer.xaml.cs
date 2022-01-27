@@ -49,6 +49,7 @@ namespace VideoCollection.Popups
         public double VideoPlayerMargin = 25;
         public double LeftMultiplier = 0;
         public double TopMultiplier = 0;
+        public bool Moving = false;
 
         [StructLayout(LayoutKind.Sequential)]
         struct RECT
@@ -114,6 +115,9 @@ namespace VideoCollection.Popups
             {
                 throw new Exception("Video file not found. Make sure it is in the same location it was when you added it.");
             }
+
+            iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Pause;
+            _playing = true;
 
             meVideoPlayer.Play();
         }
@@ -242,6 +246,7 @@ namespace VideoCollection.Popups
                 // Only hide the overlay if the video is playing and expanded
                 if (_playing && _expanded)
                 {
+                    borderGradient.Visibility = Visibility.Collapsed;
                     gridOverlay.Visibility = Visibility.Collapsed;
                     borderSubtitles.Margin = new Thickness(0, 0, 0, 30);
                     Cursor = Cursors.None;
@@ -308,6 +313,7 @@ namespace VideoCollection.Popups
                 MouseButtonEventArgs args = new MouseButtonEventArgs(e.MouseDevice, e.Timestamp, MouseButton.Left);
                 args.RoutedEvent = MouseLeftButtonDownEvent;
                 (sender as Thumb).RaiseEvent(args);
+                meVideoPlayer.Position = TimeSpan.FromSeconds(sliProgress.Value);
             }
         }
 
@@ -370,7 +376,7 @@ namespace VideoCollection.Popups
                 {
                     ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1800f, 3200f);
                 }
-                gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -15, ScaleValue * -30, ScaleValue * -25);
+                gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -15, ScaleValue * -30, ScaleValue * -20);
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
                 WindowState = WindowState.Normal;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
@@ -562,7 +568,7 @@ namespace VideoCollection.Popups
                     changeMultipliers = true;
                 }
 
-                if (changeMultipliers)
+                if (changeMultipliers && !Moving)
                 {
                     LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
                     TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
@@ -571,10 +577,11 @@ namespace VideoCollection.Popups
         }
 
         // Moving the mouse shows the overlay and starts a timer to hide it
-        private void meVideoPlayer_MouseMove(object sender, MouseEventArgs e)
+        private void borderHover_MouseMove(object sender, MouseEventArgs e)
         {
+            borderGradient.Visibility = Visibility.Visible;
             gridOverlay.Visibility = Visibility.Visible;
-            if(!_expanded)
+            if (!_expanded)
             {
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
             }
@@ -593,6 +600,7 @@ namespace VideoCollection.Popups
             _overlayHideTimer.Stop();
             if (_playing)
             {
+                borderGradient.Visibility = Visibility.Collapsed;
                 gridOverlay.Visibility = Visibility.Collapsed;
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 30);
             }
@@ -650,9 +658,24 @@ namespace VideoCollection.Popups
         }
 
         // Prevent the overlay from hiding when the mouse is over a control
-        private void meVideoPlayer_MouseLeave(object sender, MouseEventArgs e)
+        private void borderHover_MouseLeave(object sender, MouseEventArgs e)
         {
             _overlayHideTimer.Stop();
+        }
+
+        private void floatingFrame_MouseEnter(object sender, MouseEventArgs e)
+        {
+            _overlayHideTimer.Stop();
+            borderGradient.Visibility = Visibility.Visible;
+            gridOverlay.Visibility = Visibility.Visible;
+            if (!_expanded)
+            {
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
+            }
+            else
+            {
+                borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
+            }
         }
     }
 }
