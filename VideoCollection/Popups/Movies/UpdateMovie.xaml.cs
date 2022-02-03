@@ -220,7 +220,7 @@ namespace VideoCollection.Popups.Movies
         private bool MovieContentChanged(Movie movie)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
-
+            jss.MaxJsonLength = Int32.MaxValue;
             return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != jss.Serialize(_selectedCategories));
         }
 
@@ -316,7 +316,9 @@ namespace VideoCollection.Popups.Movies
                                     Title = video.Title,
                                     Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
                                     FilePath = video.FilePath,
-                                    Section = video.Section
+                                    Section = video.Section,
+                                    Runtime = video.Runtime,
+                                    Subtitles = video.SubtitlesSerialized
                                 };
                                 bonusVideos.Add(vid);
                             }

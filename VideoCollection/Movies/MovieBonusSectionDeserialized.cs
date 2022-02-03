@@ -16,6 +16,7 @@ namespace VideoCollection.Movies
         public MovieBonusSectionDeserialized(MovieBonusSection section)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             Name = section.Name;
             Color backgroundColor = jss.Deserialize<Color>(section.Background);
             Background = new SolidColorBrush(backgroundColor);

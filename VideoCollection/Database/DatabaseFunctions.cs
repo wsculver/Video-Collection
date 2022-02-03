@@ -15,6 +15,7 @@ namespace VideoCollection.Database
         public static void RemoveMovieFromCategory(string movieId, MovieCategory category)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -58,6 +59,7 @@ namespace VideoCollection.Database
         public static void UpdateCategoryInMovies(string oldName, string newName, List<Movie> selectedMovies)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {

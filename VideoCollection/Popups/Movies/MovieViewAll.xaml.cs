@@ -235,6 +235,7 @@ namespace VideoCollection.Popups.Movies
         private void btnRemoveMovieFromCategory_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             string movieId = (sender as Button).Tag.ToString();
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -289,6 +290,7 @@ namespace VideoCollection.Popups.Movies
             bool deleted = false;
             Window parentWindow = Window.GetWindow(this).Owner;
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();

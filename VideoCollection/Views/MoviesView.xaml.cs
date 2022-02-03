@@ -97,6 +97,7 @@ namespace VideoCollection.Views
             bool deleted = false;
             MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             string categoryId = (sender as Button).Tag.ToString();
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -148,6 +149,7 @@ namespace VideoCollection.Views
         private void btnRemoveMovieFromCategory_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             string[] split = (sender as Button).Tag.ToString().Split(',');
             string categoryId = split[0];
             string movieId = split[1];
@@ -187,6 +189,7 @@ namespace VideoCollection.Views
         private void btnMoveUp_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             int categoryId = (int)(sender as Button).Tag;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -219,6 +222,7 @@ namespace VideoCollection.Views
         private void btnMoveDown_Click(object sender, RoutedEventArgs e)
         {
             JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.MaxJsonLength = Int32.MaxValue;
             int categoryId = (int)(sender as Button).Tag;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
