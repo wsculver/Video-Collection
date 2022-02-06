@@ -46,6 +46,23 @@ namespace VideoCollection.Popups
         private int _imageFrameMilliseconds = 5;
         private Point _lastMousePos;
 
+        private const string _fullScreenLabel = "FULL SCREEN";
+        private const string _exitFullScreenLabel = "EXIT FULL SCREEN";
+        private const int _fullScreenHorizontalOffset = -35;
+        private const int _exitFullScreenHorizontalOffset = -52;
+        private const string _expandLabel = "EXPAND";
+        private const string _collapseLabel = "COLLAPSE";
+        private const int _expandHorizontalOffset = -11;
+        private const int _collapseHorizontalOffset = -20;
+        private const string _playLabel = "PLAY";
+        private const string _pauseLabel = "PAUSE";
+        private const int _playHorizontalOffset = 23;
+        private const int _pauseHorizontalOffset = 17;
+        private const string _muteLabel = "MUTE";
+        private const string _unmuteLabel = "UNMUTE";
+        private const int _muteHorizontalOffset = -10;
+        private const int _unmuteHorizontalOffset = -23;
+
         public double VideoPlayerMargin = 25;
         public double LeftMultiplier = 0;
         public double TopMultiplier = 0;
@@ -118,6 +135,8 @@ namespace VideoCollection.Popups
 
             iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Pause;
             _playing = true;
+            txtPlay.Text = _pauseLabel;
+            popupPlay.HorizontalOffset = _pauseHorizontalOffset;
 
             meVideoPlayer.Play();
         }
@@ -335,6 +354,8 @@ namespace VideoCollection.Popups
                 iconPlay.Width = 44;
                 iconPlay.Height = 44;
                 iconPlay.Margin = new Thickness(16, 0, 0, 26);
+                popupPlay.HorizontalOffset = _playHorizontalOffset;
+                txtPlay.Text = _playLabel;
             }
             else
             {
@@ -344,6 +365,8 @@ namespace VideoCollection.Popups
                 iconPlay.Width = 40;
                 iconPlay.Height = 40;
                 iconPlay.Margin = new Thickness(22, 0, 0, 26);
+                popupPlay.HorizontalOffset = _pauseHorizontalOffset;
+                txtPlay.Text = _pauseLabel;
             }
         }
 
@@ -355,6 +378,8 @@ namespace VideoCollection.Popups
                 meVideoPlayer.IsMuted = false;
                 meVideoPlayer.Volume = _restoreVolume;
                 iconMute.Kind = MaterialDesignThemes.Wpf.PackIconKind.VolumeHigh;
+                popupMute.HorizontalOffset = _muteHorizontalOffset;
+                txtMute.Text = _muteLabel;
             }
             else
             {
@@ -362,6 +387,8 @@ namespace VideoCollection.Popups
                 _restoreVolume = meVideoPlayer.Volume;
                 meVideoPlayer.Volume = 0.0;
                 iconMute.Kind = MaterialDesignThemes.Wpf.PackIconKind.Mute;
+                popupMute.HorizontalOffset = _unmuteHorizontalOffset;
+                txtMute.Text = _unmuteLabel;
             }
         }
 
@@ -397,6 +424,10 @@ namespace VideoCollection.Popups
                 }
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
                 Topmost = true;
+                popupExpand.HorizontalOffset = _expandHorizontalOffset;
+                txtExpand.Text = _expandLabel;
+                popupFullScreen.HorizontalOffset = _fullScreenHorizontalOffset;
+                txtFullScreen.Text = _fullScreenLabel;
             } 
             else
             {
@@ -411,6 +442,8 @@ namespace VideoCollection.Popups
                 TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
+                popupExpand.HorizontalOffset = _collapseHorizontalOffset;
+                txtExpand.Text = _collapseLabel;
             }
         }
 
@@ -421,6 +454,8 @@ namespace VideoCollection.Popups
             {
                 WindowState = WindowState.Normal;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
+                popupFullScreen.HorizontalOffset = _fullScreenHorizontalOffset;
+                txtFullScreen.Text = _fullScreenLabel;
             }
             else
             {
@@ -437,6 +472,10 @@ namespace VideoCollection.Popups
                 TopMultiplier = Owner.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
+                popupFullScreen.HorizontalOffset = _exitFullScreenHorizontalOffset;
+                txtFullScreen.Text = _exitFullScreenLabel;
+                popupExpand.HorizontalOffset = _collapseHorizontalOffset;
+                txtExpand.Text = _collapseLabel;
             }
         }
 
@@ -676,6 +715,61 @@ namespace VideoCollection.Popups
             {
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
             }
+        }
+
+        // Labels for control buttons
+        private void btnFullScreen_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupFullScreen.IsOpen = true;
+        }
+        private void btnFullScreen_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupFullScreen.IsOpen = false;
+        }
+
+        private void btnExpand_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupExpand.IsOpen = true;
+        }
+        private void btnExpand_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupExpand.IsOpen = false;
+        }
+
+        private void btnClose_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupClose.IsOpen = true;
+        }
+        private void btnClose_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupClose.IsOpen = false;
+        }
+
+        private void btnPlay_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupPlay.IsOpen = true;
+        }
+        private void btnPlay_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupPlay.IsOpen = false;
+        }
+
+        private void btnSubtitles_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupSubtitles.IsOpen = true;
+        }
+        private void btnSubtitles_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupSubtitles.IsOpen = false;
+        }
+
+        private void btnMute_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupMute.IsOpen = true;
+        }
+        private void btnMute_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupMute.IsOpen = false;
         }
     }
 }

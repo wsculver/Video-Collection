@@ -124,15 +124,26 @@
                 <RowDefinition Height="70"/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,20,0">
-                <Button x:Name="btnFullScreen" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnFullScreen_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Button x:Name="btnFullScreen" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnFullScreen_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}" MouseEnter="btnFullScreen_MouseEnter" MouseLeave="btnFullScreen_MouseLeave">
                     <materialDesign:PackIcon x:Name="iconFullScreen" Kind="ArrowExpandAll" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
                 </Button>
-                <Button x:Name="btnExpand" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnExpand_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Popup x:Name="popupFullScreen" IsHitTestVisible="False" Placement="Bottom" PlacementTarget="{Binding ElementName=btnFullScreen}" HorizontalOffset="-35" VerticalOffset="-15">
+                    <TextBlock x:Name="txtFullScreen" Text="FULL SCREEN" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                </Popup>
+
+                <Button x:Name="btnExpand" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnExpand_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}" MouseEnter="btnExpand_MouseEnter" MouseLeave="btnExpand_MouseLeave">
                     <materialDesign:PackIcon x:Name="iconExpand" Kind="ArrowCollapse" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
                 </Button>
-                <Button x:Name="btnClose" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnClose_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Popup x:Name="popupExpand" IsHitTestVisible="False" Placement="Bottom" PlacementTarget="{Binding ElementName=btnExpand}" HorizontalOffset="-20" VerticalOffset="-15">
+                    <TextBlock x:Name="txtExpand" Text="COLLAPSE" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                </Popup>
+                
+                <Button x:Name="btnClose" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnClose_Click" Width="56" Height="76" Background="{x:Null}" BorderBrush="{x:Null}" MouseEnter="btnClose_MouseEnter" MouseLeave="btnClose_MouseLeave">
                     <materialDesign:PackIcon Kind="WindowClose" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40"/>
                 </Button>
+                <Popup x:Name="popupClose" IsHitTestVisible="False" Placement="Bottom" PlacementTarget="{Binding ElementName=btnClose}" HorizontalOffset="-5" VerticalOffset="-15">
+                    <TextBlock Text="CLOSE" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                </Popup>
             </StackPanel>
 
             <TextBlock x:Name="txtTitle" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontWeight="Bold" Margin="40,0,0,0" FontSize="24" Foreground="White" TextWrapping="WrapWithOverflow">TITLE</TextBlock>
@@ -163,9 +174,13 @@
                     <ColumnDefinition Width="210"/>
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="btnPlay" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0">
+                <Button x:Name="btnPlay" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0" MouseEnter="btnPlay_MouseEnter" MouseLeave="btnPlay_MouseLeave">
                     <materialDesign:PackIcon x:Name="iconPlay" Kind="Pause" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="22,0,0,26"/>
                 </Button>
+                <Popup x:Name="popupPlay" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnPlay}">
+                    <TextBlock x:Name="txtPlay" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                </Popup>
+
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,32">
                     <TextBlock x:Name="txtTime" Foreground="#FFD8D8D9" VerticalAlignment="Bottom" FontSize="24"></TextBlock>
                     <TextBlock Foreground="#FFD8D8D9" VerticalAlignment="Bottom" Text=" / " FontSize="24"/>
@@ -173,17 +188,24 @@
                 </StackPanel>
 
 
-                <Button x:Name="btnSubtitles" Grid.Column="2" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnSubtitles_Click" Width="40" Height="45" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0">
+                <Button x:Name="btnSubtitles" Grid.Column="2" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnSubtitles_Click" Width="40" Height="45" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0" MouseEnter="btnSubtitles_MouseEnter" MouseLeave="btnSubtitles_MouseLeave">
                     <StackPanel>
                         <materialDesign:PackIcon x:Name="iconSubtitles" Kind="ClosedCaption" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40"/>
                         <Rectangle x:Name="rectSubtitlesEnabled" Fill="#536DFE" Width="30" Height="5" Visibility="Hidden"/>
                     </StackPanel>
                 </Button>
+                <Popup x:Name="popupSubtitles" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnSubtitles}" HorizontalOffset="-32">
+                    <TextBlock Text="SUBTITLES" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                </Popup>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
-                    <Button x:Name="btnMute" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnMute_Click" Width="40" Height="40" Background="Transparent" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0">
+                    <Button x:Name="btnMute" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnMute_Click" Width="40" Height="40" Background="Transparent" BorderBrush="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="-20,0,-20,0" MouseEnter="btnMute_MouseEnter" MouseLeave="btnMute_MouseLeave">
                         <materialDesign:PackIcon x:Name="iconMute" Kind="VolumeHigh" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40"/>
                     </Button>
+                    <Popup x:Name="popupMute" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnMute}" HorizontalOffset="-10">
+                        <TextBlock x:Name="txtMute" Text="MUTE" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                    </Popup>
+
                     <Slider x:Name="sliVolume" Style="{StaticResource HorizontalSlider}" Value="{Binding ElementName=meVideoPlayer, Path=Volume}" Cursor="Hand" IsMoveToPointEnabled="True" Margin="10,6,40,0" MinWidth="120" MinHeight="20" Maximum="1" Padding="0,-10,0,-10"/>
                 </StackPanel>
             </Grid>
