@@ -45,6 +45,8 @@ namespace VideoCollection.Popups
         private DispatcherTimer _imageFrameTimer;
         private int _imageFrameMilliseconds = 5;
         private Point _lastMousePos;
+        private bool _fastForwarding = false;
+        private int _fastForwardSpeed = 1;
 
         private const string _fullScreenLabel = "FULL SCREEN";
         private const string _exitFullScreenLabel = "EXIT FULL SCREEN";
@@ -110,7 +112,7 @@ namespace VideoCollection.Popups
             }
 
             DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(1);
+            timer.Interval = TimeSpan.FromMilliseconds(100);
             timer.Tick += timer_Tick;
             timer.Start();
 
@@ -203,6 +205,10 @@ namespace VideoCollection.Popups
             {
                 sliProgress.Minimum = 0;
                 sliProgress.Maximum = meVideoPlayer.NaturalDuration.TimeSpan.TotalSeconds;
+                if (_fastForwarding && (_fastForwardSpeed > 1 || _fastForwardSpeed < 0))
+                {
+                    meVideoPlayer.Position += TimeSpan.FromMilliseconds(100 * _fastForwardSpeed);
+                }
                 sliProgress.Value = meVideoPlayer.Position.TotalSeconds;
 
                 txtSubtitles.Inlines.Clear();
@@ -303,19 +309,7 @@ namespace VideoCollection.Popups
         {
             _userIsDraggingSlider = false;
             meVideoPlayer.Position = TimeSpan.FromSeconds(sliProgress.Value);
-            for (int i = 0; i < _subtitles.Count; i++)
-            {
-                if (TimeSpan.TryParseExact(_subtitles[i].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
-                    TimeSpan.TryParseExact(_subtitles[i].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
-                    start < end)
-                {
-                    if (meVideoPlayer.Position <= end)
-                    {
-                        _subtitleIndex = i;
-                        break;
-                    }
-                }
-            }
+            stopRewind();
         }
 
         // Set the display time
@@ -348,26 +342,37 @@ namespace VideoCollection.Popups
         {
             if(_playing)
             {
-                _playing = false;
-                meVideoPlayer.Pause();
-                iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Play;
-                iconPlay.Width = 44;
-                iconPlay.Height = 44;
-                iconPlay.Margin = new Thickness(16, 0, 0, 26);
-                popupPlay.HorizontalOffset = _playHorizontalOffset;
-                txtPlay.Text = _playLabel;
+                pause();
             }
             else
             {
-                _playing = true;
-                meVideoPlayer.Play();
-                iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Pause;
-                iconPlay.Width = 40;
-                iconPlay.Height = 40;
-                iconPlay.Margin = new Thickness(22, 0, 0, 26);
-                popupPlay.HorizontalOffset = _pauseHorizontalOffset;
-                txtPlay.Text = _pauseLabel;
+                play();
             }
+        }
+        private void play()
+        {
+            _playing = true;
+            meVideoPlayer.Play();
+            iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Pause;
+            iconPlay.Width = 40;
+            iconPlay.Height = 40;
+            iconPlay.Margin = new Thickness(22, 0, 0, 26);
+            popupPlay.HorizontalOffset = _pauseHorizontalOffset;
+            txtPlay.Text = _pauseLabel;
+            _fastForwarding = false;
+            _fastForwardSpeed = 1;
+            setSubtitles();
+        }
+        private void pause()
+        {
+            _playing = false;
+            meVideoPlayer.Pause();
+            iconPlay.Kind = MaterialDesignThemes.Wpf.PackIconKind.Play;
+            iconPlay.Width = 44;
+            iconPlay.Height = 44;
+            iconPlay.Margin = new Thickness(16, 0, 0, 26);
+            popupPlay.HorizontalOffset = _playHorizontalOffset;
+            txtPlay.Text = _playLabel;
         }
 
         // Mute the video
@@ -770,6 +775,92 @@ namespace VideoCollection.Popups
         private void btnMute_MouseLeave(object sender, MouseEventArgs e)
         {
             popupMute.IsOpen = false;
+        }
+
+        private void btnRewind_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupRewind.IsOpen = true;
+        }
+        private void btnRewind_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupRewind.IsOpen = false;
+        }
+
+        private void btnForward_MouseEnter(object sender, MouseEventArgs e)
+        {
+            popupForward.IsOpen = true;
+        }
+        private void btnForward_MouseLeave(object sender, MouseEventArgs e)
+        {
+            popupForward.IsOpen = false;
+        }
+
+        // Fast forward and rewind controls
+        private void btnRewind_Click(object sender, RoutedEventArgs e)
+        {
+            if (_fastForwarding)
+            {
+                stopRewind();
+            }
+            else
+            {
+                rewind();
+            }
+        }
+        private void btnForward_Click(object sender, RoutedEventArgs e)
+        {
+            if (_fastForwarding)
+            {
+                stopFastForward();
+            }
+            else
+            {
+                fastForward();
+            }
+        }
+        private void fastForward()
+        {
+            _fastForwarding = true;
+            _fastForwardSpeed = 8;
+            pause();
+        }
+        private void rewind()
+        {
+            _fastForwarding = true;
+            _fastForwardSpeed = -8;
+            pause();
+        }
+        private void stopFastForward()
+        {
+            _fastForwarding = false;
+            _fastForwardSpeed = 1;
+        }
+        private void stopRewind()
+        {
+            _fastForwarding = false;
+            _fastForwardSpeed = 1;
+            setSubtitles();
+        }
+
+        // Fix subtitles after rewinding
+        private void setSubtitles()
+        {
+            if (_subtitles != null)
+            {
+                for (int i = 0; i < _subtitles.Count; i++)
+                {
+                    if (TimeSpan.TryParseExact(_subtitles[i].Start, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var start) &&
+                        TimeSpan.TryParseExact(_subtitles[i].End, @"hh\:mm\:ss\:fff", DateTimeFormatInfo.InvariantInfo, out var end) &&
+                        start < end)
+                    {
+                        if (meVideoPlayer.Position <= end)
+                        {
+                            _subtitleIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 }

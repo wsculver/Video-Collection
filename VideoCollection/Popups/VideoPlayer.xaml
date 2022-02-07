@@ -168,18 +168,34 @@
 
             <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="210"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="210"/>
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="btnPlay" Grid.Column="0" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0" MouseEnter="btnPlay_MouseEnter" MouseLeave="btnPlay_MouseLeave">
-                    <materialDesign:PackIcon x:Name="iconPlay" Kind="Pause" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="22,0,0,26"/>
-                </Button>
-                <Popup x:Name="popupPlay" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnPlay}">
-                    <TextBlock x:Name="txtPlay" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
-                </Popup>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button x:Name="btnPlay" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnPlay_Click" Width="80" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0" MouseEnter="btnPlay_MouseEnter" MouseLeave="btnPlay_MouseLeave">
+                        <materialDesign:PackIcon x:Name="iconPlay" Kind="Pause" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="22,0,0,26"/>
+                    </Button>
+                    <Popup x:Name="popupPlay" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnPlay}">
+                        <TextBlock x:Name="txtPlay" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                    </Popup>
+
+                    <Button x:Name="btnRewind" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnRewind_Click" Width="60" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0" MouseEnter="btnRewind_MouseEnter" MouseLeave="btnRewind_MouseLeave">
+                        <materialDesign:PackIcon x:Name="iconRewind" Kind="Rewind" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="0,0,0,26"/>
+                    </Button>
+                    <Popup x:Name="popupRewind" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnRewind}" HorizontalOffset="-10">
+                        <TextBlock x:Name="txtRewind" Text="REWIND" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                    </Popup>
+
+                    <Button x:Name="btnForward" Style="{StaticResource GreyToWhiteButtonStyle}" materialDesign:RippleAssist.RippleSizeMultiplier="0" Click="btnForward_Click" Width="60" Height="70" Background="Transparent" BorderBrush="{x:Null}" Padding="-20,0,-20,0" MouseEnter="btnForward_MouseEnter" MouseLeave="btnForward_MouseLeave">
+                        <materialDesign:PackIcon x:Name="iconForward" Kind="FastForward" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="40" Height="40" Margin="0,0,0,26"/>
+                    </Button>
+                    <Popup x:Name="popupForward" IsHitTestVisible="False" Placement="Top" PlacementTarget="{Binding ElementName=btnForward}" HorizontalOffset="-37">
+                        <TextBlock x:Name="txtForward" Text="FAST FORWARD" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White" Background="Black" FontStyle="Normal" FontWeight="Normal" FontFamily="Arial" Padding="7,7,7,7"/>
+                    </Popup>
+                </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,32">
                     <TextBlock x:Name="txtTime" Foreground="#FFD8D8D9" VerticalAlignment="Bottom" FontSize="24"></TextBlock>
