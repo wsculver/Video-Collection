@@ -3,7 +3,7 @@
 # DVD Download Process
 ## Useful Software
 * [MakeMKV](https://www.makemkv.com/) - Converts DVD to MKV file
-  * Make sure you set minimum title length in view->preferences. Often times videos can be less than the default 120 seconds. I recommend setting this to 5 seconds.
+  * Make sure you set minimum title length in view->preferences. Oftentimes videos can be less than the default 120 seconds. I recommend setting this to 5 seconds.
 * [HandBrake](https://handbrake.fr/) - Converts MKV files to MP4
 * [MKVCleaver](https://www.videohelp.com/software/MKVcleaver) - Extracts subtitle files from MKV
 * [Subtitle Edit](https://nikse.dk/SubtitleEdit/) - Edit subtitle files
@@ -20,4 +20,5 @@
    1. Open the original downloaded MKV files in MKVCleaver and select which subtitles to extract ([UTF-8] will give srt files)
    2. Download srt files online - This method is best if MKVCleaver gives you image subtitle files rather than srt or if you want different languages
    3. Edit subtitle files using Subtitle Edit - Remove added subtitles from beginning/end, adjust times, and convert sub and idx files to srt (beware of incorrect characters)
+   4. [Convert sub/idx files to srt online](https://subtitletools.com/convert-sub-idx-to-srt-online) - This tool is more reliable for converting files than Subtitle Edit. The limit for free conversions is 3 per day
 7. Download thumbnails and format files to be used with Video Collection
