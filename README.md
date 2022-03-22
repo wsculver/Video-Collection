@@ -5,7 +5,7 @@
 * [MakeMKV](https://www.makemkv.com/) - Converts DVD to MKV file
   * Make sure you set minimum title length in view->preferences. Oftentimes videos can be less than the default 120 seconds. I recommend setting this to 5 seconds.
 * [HandBrake](https://handbrake.fr/) - Converts MKV files to MP4
-* [MKVCleaver](https://www.videohelp.com/software/MKVcleaver) - Extracts subtitle files from MKV
+* [MKVCleaver](https://www.videohelp.com/software/MKVcleaver) - Extracts subtitle files from MKV (requires [MKVToolNix](https://www.videohelp.com/software/MKVToolNix)
 * [Subtitle Edit](https://nikse.dk/SubtitleEdit/) - Edit subtitle files
 ## Steps to Download
 1. Connect DVD player to PC and insert disc to download
