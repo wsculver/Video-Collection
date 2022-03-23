@@ -1,9 +1,8 @@
-﻿using DirectShowLib;
-using DirectShowLib.DES;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
+using Newtonsoft.Json;
 using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
@@ -15,8 +14,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -139,12 +138,8 @@ namespace VideoCollection.Helpers
             {
                 await Task.Run(() =>
                 {
-                    using (MemoryStream thumbnailStream = new MemoryStream())
-                    {
-                        CreateThumbnailFromVideoFile(thumbnailStream, videoFile, 5);
-                        Image image = Image.FromStream(thumbnailStream);
-                        bonusThumbnail = ImageToBase64(image, ImageFormat.Jpeg);
-                    }
+                    ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(5));
+                    bonusThumbnail = ImageSourceToBase64(image);
                 });
             }
 
@@ -154,9 +149,6 @@ namespace VideoCollection.Helpers
         // Parse a movie bonus folder to format all videos in it
         public static async Task<Movie> ParseMovieVideos(string movieFolderPath)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-
             var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
             var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
 
@@ -190,7 +182,7 @@ namespace VideoCollection.Helpers
                     FilePath = task.Item5,
                     Section = task.Item1,
                     Runtime = GetVideoDuration(task.Item5),
-                    Subtitles = jss.Serialize(task.Item4)
+                    Subtitles = JsonConvert.SerializeObject(task.Item4)
                 };
                 bonusVideos.Add(video);
             }
@@ -201,7 +193,7 @@ namespace VideoCollection.Helpers
                 MovieBonusSection section = new MovieBonusSection()
                 {
                     Name = sectionName,
-                    Background = jss.Serialize(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
+                    Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
                 };
                 bonusSections.Add(section);
             }
@@ -215,12 +207,8 @@ namespace VideoCollection.Helpers
             }
             else if(movieFile != null)
             {
-                using (MemoryStream thumbnailStream = new MemoryStream())
-                {
-                    CreateThumbnailFromVideoFile(thumbnailStream, movieFile, 60);
-                    Image image = Image.FromStream(thumbnailStream);
-                    movieThumbnail = ImageToBase64(image, ImageFormat.Jpeg);
-                }
+                ImageSource image = CreateThumbnailFromVideoFile(movieFile, TimeSpan.FromSeconds(60));
+                movieThumbnail = ImageSourceToBase64(image);
             }
 
             SubtitleParser subParser = new SubtitleParser();
@@ -237,10 +225,10 @@ namespace VideoCollection.Helpers
                 Title = movieTitle.ToUpper(),
                 Thumbnail = movieThumbnail,
                 MovieFilePath = movieFilePath,
-                BonusSections = jss.Serialize(bonusSections),
-                BonusVideos = jss.Serialize(bonusVideos),
+                BonusSections = JsonConvert.SerializeObject(bonusSections),
+                BonusVideos = JsonConvert.SerializeObject(bonusVideos),
                 Categories = "",
-                Subtitles = jss.Serialize(subtitles),
+                Subtitles = JsonConvert.SerializeObject(subtitles),
                 IsChecked = false
             };
 
@@ -248,15 +236,28 @@ namespace VideoCollection.Helpers
         }
 
         // Create a thumbnail from a provided video file at the frame seconds in
-        // Output thumbnail to provided thumbnailStream
-        public static void CreateThumbnailFromVideoFile(Stream thumbnailStream, string videoFile, int seconds)
+        // Output thumbnail to temp file and return it as an ImageSource
+        public static ImageSource CreateThumbnailFromVideoFile(string videoFile, TimeSpan time)
         {
-            var ffMpeg = new NReco.VideoConverter.FFMpegConverter();
-            NReco.VideoConverter.ConvertSettings convertSettings = new NReco.VideoConverter.ConvertSettings()
+            string output = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".jpg");
+
+            var startInfo = new ProcessStartInfo
             {
-                VideoFrameSize = "640x360"
+                FileName = $"ffmpeg.exe",
+                Arguments = $"-ss " + time.ToString(@"hh\:mm\:ss") + " -i \"" + videoFile + "\" -an -vf scale=200x112 -vframes 1 " + output,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                WorkingDirectory = Directory.GetCurrentDirectory()
             };
-            ffMpeg.GetVideoThumbnail(videoFile, thumbnailStream, seconds, convertSettings);
+
+            using (var process = new Process { StartInfo = startInfo })
+            {
+                process.Start();
+                process.WaitForExit();
+            }
+
+            var ms = new MemoryStream(File.ReadAllBytes(output));
+            return ImageToImageSource(Image.FromStream(ms));
         }
 
         // Convert an Image to a base 64 string

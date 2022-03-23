@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -22,6 +21,7 @@ using System.IO;
 using VideoCollection.Subtitles;
 using System.Drawing.Imaging;
 using VideoCollection.Animations;
+using Newtonsoft.Json;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -120,18 +120,11 @@ namespace VideoCollection.Popups.Movies
             }
             else
             {
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-                jss.MaxJsonLength = Int32.MaxValue;
-
                 string thumbnail = "";
                 if (imgThumbnail.Source == null)
                 {
-                    using (MemoryStream thumbnailStream = new MemoryStream())
-                    {
-                        StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, txtFile.Text, 60);
-                        System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
-                        thumbnail = StaticHelpers.ImageToBase64(image, ImageFormat.Jpeg);
-                    }
+                    ImageSource image = StaticHelpers.CreateThumbnailFromVideoFile(txtFile.Text, TimeSpan.FromSeconds(60));
+                    thumbnail = StaticHelpers.ImageSourceToBase64(image);
                 }
                 else
                 {
@@ -148,7 +141,7 @@ namespace VideoCollection.Popups.Movies
                     BonusSections = _movie.BonusSections,
                     BonusVideos = _movie.BonusVideos,
                     Rating = _rating,
-                    Categories = jss.Serialize(_selectedCategories),
+                    Categories = JsonConvert.SerializeObject(_selectedCategories),
                     Subtitles = _movie.Subtitles,
                     IsChecked = false
                 };

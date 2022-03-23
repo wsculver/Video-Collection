@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,6 +18,7 @@ using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
+using Newtonsoft.Json;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -219,9 +219,7 @@ namespace VideoCollection.Popups.Movies
         // Check if any movie content has changed from what was already saved
         private bool MovieContentChanged(Movie movie)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-            return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != jss.Serialize(_selectedCategories));
+            return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != JsonConvert.SerializeObject(_selectedCategories));
         }
 
         // Shows a custom OK message box
@@ -268,9 +266,6 @@ namespace VideoCollection.Popups.Movies
                 }
                 else
                 {
-                    JavaScriptSerializer jss = new JavaScriptSerializer();
-                    jss.MaxJsonLength = Int32.MaxValue;
-
                     using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                     {
                         connection.CreateTable<Movie>();
@@ -303,11 +298,11 @@ namespace VideoCollection.Popups.Movies
                                 MovieBonusSection sec = new MovieBonusSection()
                                 {
                                     Name = section.Name,
-                                    Background = jss.Serialize(Color.FromArgb(0, 0, 0, 0))
+                                    Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
                                 };
                                 bonusSections.Add(sec);
                             }
-                            movie.BonusSections = jss.Serialize(bonusSections);
+                            movie.BonusSections = JsonConvert.SerializeObject(bonusSections);
                             List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
                             foreach (MovieBonusVideoDeserialized video in _movie.BonusVideos)
                             {
@@ -322,12 +317,12 @@ namespace VideoCollection.Popups.Movies
                                 };
                                 bonusVideos.Add(vid);
                             }
-                            movie.BonusVideos = jss.Serialize(bonusVideos);
+                            movie.BonusVideos = JsonConvert.SerializeObject(bonusVideos);
                             movie.Rating = _rating;
-                            movie.Categories = jss.Serialize(_selectedCategories);
+                            movie.Categories = JsonConvert.SerializeObject(_selectedCategories);
                             // Parse the subtitle file
                             SubtitleParser subParser = new SubtitleParser();
-                            movie.Subtitles = jss.Serialize(_movie.Subtitles);
+                            movie.Subtitles = JsonConvert.SerializeObject(_movie.Subtitles);
                             connection.Update(movie);
 
                             // Update the MovieCateogry table

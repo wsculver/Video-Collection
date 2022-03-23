@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
 using VideoCollection.Popups;
 
@@ -19,12 +19,10 @@ namespace VideoCollection.Movies
 
         public MovieCategoryDeserialized(MovieCategory category)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             Id = category.Id;
             Position = category.Position;
             Name = category.Name;
-            List<Movie> moviesList = jss.Deserialize<List<Movie>>(category.Movies);
+            List<Movie> moviesList = JsonConvert.DeserializeObject<List<Movie>>(category.Movies);
             List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
             foreach (Movie movie in moviesList)
             {

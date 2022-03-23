@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Media;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
@@ -22,25 +22,21 @@ namespace VideoCollection.Movies
 
         public MovieBonusVideoDeserialized(MovieBonusVideo video)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             Title = video.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
             FilePath = video.FilePath;
             Section = video.Section;
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
-            Subtitles = jss.Deserialize<List<SubtitleSegment>>(video.Subtitles);
+            Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
         }
 
         public MovieBonusVideoDeserialized(string title, string filePath, string runtime, string subtitles)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             Title = title;
             FilePath = filePath;
             Runtime = runtime;
-            Subtitles = jss.Deserialize<List<SubtitleSegment>>(subtitles);
+            Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
         }
     }
 }

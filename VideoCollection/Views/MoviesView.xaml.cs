@@ -1,10 +1,10 @@
-﻿using SQLite;
+﻿using Newtonsoft.Json;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -96,8 +96,6 @@ namespace VideoCollection.Views
         {
             bool deleted = false;
             MainWindow parentWindow = (MainWindow)Window.GetWindow(this);
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             string categoryId = (sender as Button).Tag.ToString();
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -113,9 +111,9 @@ namespace VideoCollection.Views
                     List<Movie> movies = connection.Table<Movie>().ToList();
                     foreach (Movie movie in movies)
                     {
-                        List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
+                        List<string> categories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                         categories.Remove(category.Name);
-                        movie.Categories = jss.Serialize(categories);
+                        movie.Categories = JsonConvert.SerializeObject(categories);
                         connection.Update(movie);
                     }
                     connection.Delete<MovieCategory>(categoryId);
@@ -148,8 +146,6 @@ namespace VideoCollection.Views
         // Remove the movie from the category list and the category from the list for the movie
         private void btnRemoveMovieFromCategory_Click(object sender, RoutedEventArgs e)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             string[] split = (sender as Button).Tag.ToString().Split(',');
             string categoryId = split[0];
             string movieId = split[1];
@@ -161,9 +157,9 @@ namespace VideoCollection.Views
 
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
-                List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
+                List<string> categories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                 categories.Remove(category.Name);
-                movie.Categories = jss.Serialize(categories);
+                movie.Categories = JsonConvert.SerializeObject(categories);
                 connection.Update(movie);
             }
 
@@ -188,8 +184,6 @@ namespace VideoCollection.Views
         // Shift a category up by one
         private void btnMoveUp_Click(object sender, RoutedEventArgs e)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             int categoryId = (int)(sender as Button).Tag;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
@@ -221,8 +215,6 @@ namespace VideoCollection.Views
         // Shift a category down by one
         private void btnMoveDown_Click(object sender, RoutedEventArgs e)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
             int categoryId = (int)(sender as Button).Tag;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {

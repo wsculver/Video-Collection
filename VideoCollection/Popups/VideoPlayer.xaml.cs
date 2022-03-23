@@ -289,12 +289,13 @@ namespace VideoCollection.Popups
 
                 Track track = sliProgress.Template.FindName("PART_Track", sliProgress) as Track;
                 TimeSpan time = TimeSpan.FromSeconds(track.ValueFromPoint(_lastMousePos));
-                using (MemoryStream thumbnailStream = new MemoryStream())
-                {
-                    StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, meVideoPlayer.Source.OriginalString, (int)time.TotalSeconds);
-                    System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
-                    imgVideoFrame.Source = StaticHelpers.ImageToImageSource(image);
-                }
+                //using (MemoryStream thumbnailStream = new MemoryStream())
+                //{
+                //StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, meVideoPlayer.Source.OriginalString, (int)time.TotalSeconds);
+                //System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
+                //imgVideoFrame.Source = StaticHelpers.ImageToImageSource(image);
+                //}
+                imgVideoFrame.Source = StaticHelpers.CreateThumbnailFromVideoFile(meVideoPlayer.Source.OriginalString, time);
             }
         }
 

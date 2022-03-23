@@ -1,10 +1,10 @@
-﻿using SQLite;
+﻿using Newtonsoft.Json;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -111,9 +111,6 @@ namespace VideoCollection.Popups.Movies
             }
             else 
             { 
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-                jss.MaxJsonLength = Int32.MaxValue;
-
                 bool repeat = false;
 
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -140,9 +137,9 @@ namespace VideoCollection.Popups.Movies
                             selectedMovies.Add(movie);
 
                             // Add category to selected movie
-                            List<string> movieCategories = jss.Deserialize<List<string>>(movie.Categories);
+                            List<string> movieCategories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                             movieCategories.Add(txtCategoryName.Text.ToUpper());
-                            movie.Categories = jss.Serialize(movieCategories);
+                            movie.Categories = JsonConvert.SerializeObject(movieCategories);
                             connection.Update(movie);
                         }
 
@@ -151,7 +148,7 @@ namespace VideoCollection.Popups.Movies
                         MovieCategory category = new MovieCategory()
                         {
                             Name = txtCategoryName.Text.ToUpper(),
-                            Movies = jss.Serialize(selectedMovies),
+                            Movies = JsonConvert.SerializeObject(selectedMovies),
                             IsChecked = false
                         };
 

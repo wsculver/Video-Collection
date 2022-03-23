@@ -1,10 +1,10 @@
-﻿using SQLite;
+﻿using Newtonsoft.Json;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using VideoCollection.Movies;
 
 namespace VideoCollection.Database
@@ -14,12 +14,9 @@ namespace VideoCollection.Database
         // Remove movie with movieId from category
         public static void RemoveMovieFromCategory(string movieId, MovieCategory category)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<Movie> deserializedMovies = jss.Deserialize<List<Movie>>(category.Movies);
+                List<Movie> deserializedMovies = JsonConvert.DeserializeObject<List<Movie>>(category.Movies);
                 for (int i = 0; i < deserializedMovies.Count; i++)
                 {
                     if (deserializedMovies[i].Id.ToString() == movieId)
@@ -27,7 +24,7 @@ namespace VideoCollection.Database
                         deserializedMovies.RemoveAt(i);
                     }
                 }
-                category.Movies = jss.Serialize(deserializedMovies);
+                category.Movies = JsonConvert.SerializeObject(deserializedMovies);
                 connection.Update(category);
             }
         }
@@ -35,15 +32,12 @@ namespace VideoCollection.Database
         // Add movie object to category
         public static void AddMovieToCategory(Movie movie, MovieCategory category)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<Movie> movies = jss.Deserialize<List<Movie>>(category.Movies);
+                List<Movie> movies = JsonConvert.DeserializeObject<List<Movie>>(category.Movies);
                 movies.Add(movie);
                 movies.Sort();
-                category.Movies = jss.Serialize(movies);
+                category.Movies = JsonConvert.SerializeObject(movies);
                 connection.Update(category);
             }
         }
@@ -58,15 +52,12 @@ namespace VideoCollection.Database
         // Update all movies with the updated category
         public static void UpdateCategoryInMovies(string oldName, string newName, List<Movie> selectedMovies)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 List<Movie> movies = (connection.Table<Movie>().ToList()).ToList();
                 foreach(Movie movie in movies)
                 {
-                    List<string> categories = jss.Deserialize<List<string>>(movie.Categories);
+                    List<string> categories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                     categories.Remove(oldName);
                     foreach (Movie selectedMovie in selectedMovies)
                     {
@@ -75,7 +66,7 @@ namespace VideoCollection.Database
                             categories.Add(newName);
                         }
                     }
-                    movie.Categories = jss.Serialize(categories);
+                    movie.Categories = JsonConvert.SerializeObject(categories);
                     connection.Update(movie);
                 }
             }
@@ -84,15 +75,12 @@ namespace VideoCollection.Database
         // Delete a movie from the database
         public static void DeleteMovie(Movie movie)
         {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.MaxJsonLength = Int32.MaxValue;
-
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 List<MovieCategory> movieCategories = connection.Table<MovieCategory>().ToList();
                 foreach (MovieCategory category in movieCategories)
                 {
-                    List<Movie> movies = jss.Deserialize<List<Movie>>(category.Movies);
+                    List<Movie> movies = JsonConvert.DeserializeObject<List<Movie>>(category.Movies);
                     foreach (Movie m in movies)
                     {
                         if (m.Id == movie.Id)
@@ -101,7 +89,7 @@ namespace VideoCollection.Database
                             break;
                         }
                     }
-                    category.Movies = jss.Serialize(movies);
+                    category.Movies = JsonConvert.SerializeObject(movies);
                     connection.Update(category);
                 }
                 connection.Delete<Movie>(movie.Id);
