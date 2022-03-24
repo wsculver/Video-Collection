@@ -20,13 +20,14 @@ using System.Windows.Threading;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.Subtitles;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection.Popups
 {
     /// <summary>
     /// Interaction logic for VideoPlayer.xaml
     /// </summary>
-    public partial class VideoPlayer : Window
+    public partial class VideoPlayer : Window, ScaleableWindow
     {
         private bool _userIsDraggingSlider = false;
         private bool _expanded = true;
@@ -70,6 +71,10 @@ namespace VideoCollection.Popups
         public double TopMultiplier = 0;
         public bool Moving = false;
 
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
+
         [StructLayout(LayoutKind.Sequential)]
         struct RECT
         {
@@ -87,12 +92,20 @@ namespace VideoCollection.Popups
         {
             InitializeComponent();
 
+            WidthScale = 1.0;
+            HeightScale = 1.0;
+            HeightToWidthRatio = 0.5375;
+
             updateVideo(movie);
         }
 
         public VideoPlayer(MovieBonusVideoDeserialized movieBonusVideo)
         {
             InitializeComponent();
+
+            WidthScale = 1.0;
+            HeightScale = 1.0;
+            HeightToWidthRatio = 0.5375;
 
             updateVideo(movieBonusVideo);
         }
@@ -289,12 +302,6 @@ namespace VideoCollection.Popups
 
                 Track track = sliProgress.Template.FindName("PART_Track", sliProgress) as Track;
                 TimeSpan time = TimeSpan.FromSeconds(track.ValueFromPoint(_lastMousePos));
-                //using (MemoryStream thumbnailStream = new MemoryStream())
-                //{
-                //StaticHelpers.CreateThumbnailFromVideoFile(thumbnailStream, meVideoPlayer.Source.OriginalString, (int)time.TotalSeconds);
-                //System.Drawing.Image image = System.Drawing.Image.FromStream(thumbnailStream);
-                //imgVideoFrame.Source = StaticHelpers.ImageToImageSource(image);
-                //}
                 imgVideoFrame.Source = StaticHelpers.CreateThumbnailFromVideoFile(meVideoPlayer.Source.OriginalString, time);
             }
         }
@@ -335,6 +342,8 @@ namespace VideoCollection.Popups
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             App.videoPlayer = null;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             Close();
         }
 
@@ -401,11 +410,12 @@ namespace VideoCollection.Popups
         // Shrink/Expand the video player 
         private void btnExpand_Click(object sender, RoutedEventArgs e)
         {
-            if(_expanded)
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            if (_expanded)
             {
                 _expanded = false;
                 // Shift overlay to look good with widescreen videos
-                if (WindowState == WindowState.Maximized && Owner.WindowState == WindowState.Normal)
+                if (WindowState == WindowState.Maximized && parentWindow.WindowState == WindowState.Normal)
                 {
                     ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1800f, 3200f);
                 }
@@ -413,20 +423,22 @@ namespace VideoCollection.Popups
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
                 WindowState = WindowState.Normal;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
-                Width = Owner.ActualWidth * 0.4;
-                Height = Width * 0.5625;
-                VideoPlayerMargin = Owner.ActualWidth * 0.015625;
+                WidthScale = 0.4;
+                HeightScale = 0.42;
+                HeightToWidthRatio = 0.5625;
+                scaleWindow(parentWindow);
+                VideoPlayerMargin = parentWindow.ActualWidth * 0.015625;
                 if (!_videoPlayerMoved)
                 {
-                    Left = Owner.Left + (Owner.ActualWidth - VideoPlayerMargin - Width);
-                    LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
-                    Top = Owner.Top + (Owner.ActualHeight - VideoPlayerMargin - Height);
-                    TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                    Left = parentWindow.Left + (parentWindow.ActualWidth - VideoPlayerMargin - Width);
+                    LeftMultiplier = (Left - parentWindow.Left) / parentWindow.ActualWidth;
+                    Top = parentWindow.Top + (parentWindow.ActualHeight - VideoPlayerMargin - Height);
+                    TopMultiplier = (Top - parentWindow.Top) / parentWindow.ActualHeight;
                 }
                 else
                 {
-                    Left = Owner.Left + (Owner.ActualWidth * _restoreLeftMultiplier);
-                    Top = Owner.Top + (Owner.ActualHeight * _restoreTopMultiplier);
+                    Left = parentWindow.Left + (parentWindow.ActualWidth * _restoreLeftMultiplier);
+                    Top = parentWindow.Top + (parentWindow.ActualHeight * _restoreTopMultiplier);
                 }
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
                 Topmost = true;
@@ -440,12 +452,14 @@ namespace VideoCollection.Popups
                 _expanded = true;
                 Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                Width = Owner.ActualWidth;
-                Height = Owner.ActualHeight;
-                Left = Owner.Left;
-                Top = Owner.Top;
-                LeftMultiplier = Owner.Left;
-                TopMultiplier = Owner.Top;
+                WidthScale = 1.0;
+                HeightScale = 1.0;
+                HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                scaleWindow(parentWindow);
+                Left = parentWindow.Left;
+                Top = parentWindow.Top;
+                LeftMultiplier = parentWindow.Left;
+                TopMultiplier = parentWindow.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupExpand.HorizontalOffset = _collapseHorizontalOffset;
@@ -456,6 +470,7 @@ namespace VideoCollection.Popups
         // Maximize/Restore the window
         private void btnFullScreen_Click(object sender, RoutedEventArgs e)
         {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             if (WindowState == WindowState.Maximized)
             {
                 WindowState = WindowState.Normal;
@@ -470,12 +485,14 @@ namespace VideoCollection.Popups
                 _expanded = true;
                 Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                Width = Owner.ActualWidth;
-                Height = Owner.ActualHeight;
-                Left = Owner.Left;
-                Top = Owner.Top;
-                LeftMultiplier = Owner.Left;
-                TopMultiplier = Owner.Top;
+                WidthScale = 1.0;
+                HeightScale = 1.0;
+                HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                scaleWindow(parentWindow);
+                Left = parentWindow.Left;
+                Top = parentWindow.Top;
+                LeftMultiplier = parentWindow.Left;
+                TopMultiplier = parentWindow.Top;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupFullScreen.HorizontalOffset = _exitFullScreenHorizontalOffset;
@@ -501,10 +518,25 @@ namespace VideoCollection.Popups
         // Allow the video player to be dragged
         private void videoPlayerWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (!_expanded && e.ChangedButton == MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left)
             {
-                DragMove();
-            }
+                if (!_expanded)
+                {
+                    DragMove();
+                } 
+                else
+                {
+                    // Allow user to play/pause video by clicking in middle while expanded
+                    if (_playing)
+                    {
+                        pause();
+                    }
+                    else
+                    {
+                        play();
+                    }
+                }
+            } 
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -575,6 +607,7 @@ namespace VideoCollection.Popups
         {
             if (!_expanded)
             {
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                 _videoPlayerMoved = true;
                 LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
                 TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
@@ -862,6 +895,22 @@ namespace VideoCollection.Popups
                     }
                 }
             }
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if (Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Moving = true;
+            Left = parent.Left + (parent.Width * LeftMultiplier);
+            Top = parent.Top + (parent.Height * TopMultiplier);
+            Moving = false;
         }
     }
 }

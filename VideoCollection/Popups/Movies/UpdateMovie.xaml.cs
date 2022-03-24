@@ -19,13 +19,14 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
 using Newtonsoft.Json;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for UpdateMovie.xaml
     /// </summary>
-    public partial class UpdateMovie : Window
+    public partial class UpdateMovie : Window, ScaleableWindow
     {
         private List<string> _selectedCategories;
         private int _movieId;
@@ -35,6 +36,10 @@ namespace VideoCollection.Popups.Movies
         private bool _movieDeleted = false;
         private Border _splash;
         private Action _callback;
+
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
 
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public UpdateMovie() { }
@@ -50,6 +55,10 @@ namespace VideoCollection.Popups.Movies
 
             _selectedCategories = new List<string>();
             _rating = "";
+
+            WidthScale = 0.73;
+            HeightScale = 0.85;
+            HeightToWidthRatio = 0.623;
 
             UpdateMovieList();
 
@@ -91,8 +100,8 @@ namespace VideoCollection.Popups.Movies
                         {
                             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                             CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                            popup.Width = parentWindow.ActualWidth * 0.25;
-                            popup.Height = popup.Width * 0.55;
+                            popup.scaleWindow(parentWindow);
+                            parentWindow.addChild(popup);
                             popup.Owner = parentWindow;
                             popup.ShowDialog();
                             _callback();
@@ -125,6 +134,8 @@ namespace VideoCollection.Popups.Movies
             {
                 _callback();
             }
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             Close();
         }
 
@@ -135,6 +146,8 @@ namespace VideoCollection.Popups.Movies
             {
                 _splash.Visibility = Visibility.Collapsed;
                 _callback();
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                parentWindow.removeChild(this);
                 Close();
             }
         }
@@ -225,10 +238,10 @@ namespace VideoCollection.Popups.Movies
         // Shows a custom OK message box
         private void ShowOKMessageBox(string message)
         {
-            Window parentWindow = GetWindow(this).Owner;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.Width = parentWindow.ActualWidth * 0.25;
-            popup.Height = popup.Width * 0.55;
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.ShowDialog();
@@ -429,10 +442,10 @@ namespace VideoCollection.Popups.Movies
                 connection.CreateTable<Movie>();
                 Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
 
-                Window parentWindow = GetWindow(this).Owner;
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.Width = parentWindow.ActualWidth * 0.25;
-                popup.Height = parentWindow.ActualHeight * 0.25;
+                popup.scaleWindow(parentWindow);
+                parentWindow.addChild(popup);
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 if (popup.ShowDialog() == true)
@@ -444,6 +457,20 @@ namespace VideoCollection.Popups.Movies
                 }
                 Splash.Visibility = Visibility.Collapsed;
             }
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if (Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Left = parent.Left + (parent.Width - ActualWidth) / 2;
+            Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
     }
 }

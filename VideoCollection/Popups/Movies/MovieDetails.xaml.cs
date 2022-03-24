@@ -23,7 +23,7 @@ namespace VideoCollection.Popups.Movies
     /// <summary>
     /// Interaction logic for MovieDetails.xaml
     /// </summary>
-    public partial class MovieDetails : Window
+    public partial class MovieDetails : Window, ScaleableWindow
     {
         private static int _scrollViewerMargins = 24;
         private static int _sideMargins = 16;
@@ -32,6 +32,10 @@ namespace VideoCollection.Popups.Movies
         private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
         private Border _splash;
         private Action _callback;
+
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
 
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public MovieDetails() { }
@@ -45,6 +49,10 @@ namespace VideoCollection.Popups.Movies
             _splash = splash;
             _callback = callback;
 
+            WidthScale = 0.93;
+            HeightScale = 0.85;
+            HeightToWidthRatio = 0.489;
+
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Movie>();
@@ -57,8 +65,8 @@ namespace VideoCollection.Popups.Movies
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                    popup.Width = parentWindow.ActualWidth * 0.25;
-                    popup.Height = popup.Width * 0.55;
+                    popup.scaleWindow(parentWindow);
+                    parentWindow.addChild(popup);
                     popup.Owner = parentWindow;
                     popup.ShowDialog();
                     _callback();
@@ -105,6 +113,7 @@ namespace VideoCollection.Popups.Movies
             get => (double)GetValue(ScaleValueProperty);
             set => SetValue(ScaleValueProperty, value);
         }
+        
         #endregion
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
@@ -131,6 +140,8 @@ namespace VideoCollection.Popups.Movies
         {
             _splash.Visibility = Visibility.Collapsed;
             _callback();
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             Close();
         }
 
@@ -140,13 +151,16 @@ namespace VideoCollection.Popups.Movies
             {
                 if (App.videoPlayer == null)
                 {
-                    Window parentWindow = Application.Current.MainWindow;
+                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     try
                     {
                         VideoPlayer popup = new VideoPlayer(_movieDeserialized);
                         App.videoPlayer = popup;
-                        popup.Width = parentWindow.ActualWidth;
-                        popup.Height = parentWindow.ActualHeight;
+                        popup.WidthScale = 1.0;
+                        popup.HeightScale = 1.0;
+                        popup.HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
                         popup.Owner = parentWindow;
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
@@ -155,8 +169,8 @@ namespace VideoCollection.Popups.Movies
                     catch (Exception ex)
                     {
                         CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
-                        popup.Width = parentWindow.ActualWidth * 0.25;
-                        popup.Height = popup.Width * 0.55;
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
                         popup.Owner = parentWindow;
                         popup.ShowDialog();
                     }
@@ -176,13 +190,16 @@ namespace VideoCollection.Popups.Movies
                 MovieBonusVideoDeserialized bonusVideo = new MovieBonusVideoDeserialized(split[0], split[1], split[2], split[3]);
                 if (App.videoPlayer == null)
                 {
-                    Window parentWindow = Application.Current.MainWindow;
+                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     try
                     {
                         VideoPlayer popup = new VideoPlayer(bonusVideo);
                         App.videoPlayer = popup;
-                        popup.Width = parentWindow.ActualWidth;
-                        popup.Height = parentWindow.ActualHeight;
+                        popup.WidthScale = 1.0;
+                        popup.HeightScale = 1.0;
+                        popup.HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
                         popup.Owner = parentWindow;
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
@@ -191,8 +208,8 @@ namespace VideoCollection.Popups.Movies
                     catch (Exception ex)
                     {
                         CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
-                        popup.Width = parentWindow.ActualWidth * 0.25;
-                        popup.Height = popup.Width * 0.55;
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
                         popup.Owner = parentWindow;
                         popup.ShowDialog();
                     }
@@ -328,6 +345,20 @@ namespace VideoCollection.Popups.Movies
             StaticHelpers.GetObject<Rectangle>((sender as Image).Parent, "rectPlayBackground").Visibility = Visibility.Collapsed;
             StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayBonus").Visibility = Visibility.Collapsed;
             StaticHelpers.GetObject<Border>((sender as Image).Parent, "bonusSplash").Visibility = Visibility.Collapsed;
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if (Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Left = parent.Left + (parent.Width - ActualWidth) / 2;
+            Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
     }
 }

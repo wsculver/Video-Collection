@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.Views;
@@ -22,11 +23,15 @@ namespace VideoCollection.Popups.Movies
     /// <summary>
     /// Interaction logic for AddMovieCategory.xaml
     /// </summary>
-    public partial class AddMovieCategory : Window
+    public partial class AddMovieCategory : Window, ScaleableWindow
     {
         private List<int> _selectedMovieIds;
         private Border _splash;
         private Action _callback;
+
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
 
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public AddMovieCategory() { }
@@ -44,6 +49,10 @@ namespace VideoCollection.Popups.Movies
             UpdateMovieList();
 
             txtCategoryName.Focus();
+
+            WidthScale = 0.35;
+            HeightScale = 0.85;
+            HeightToWidthRatio = 1.299;
         }        
 
         // Load current movie list
@@ -70,8 +79,8 @@ namespace VideoCollection.Popups.Movies
                         {
                             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                             CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                            popup.Width = parentWindow.ActualWidth * 0.25;
-                            popup.Height = popup.Width * 0.55;
+                            popup.scaleWindow(parentWindow);
+                            parentWindow.addChild(popup);
                             popup.Owner = parentWindow;
                             popup.ShowDialog();
                             _callback();
@@ -86,16 +95,18 @@ namespace VideoCollection.Popups.Movies
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             Close();
         }
 
         // Shows a custom OK message box
         private void ShowOKMessageBox(string message)
         {
-            Window parentWindow = GetWindow(this).Owner;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.Width = parentWindow.ActualWidth * 0.25;
-            popup.Height = popup.Width * 0.55;
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.ShowDialog();
@@ -162,6 +173,8 @@ namespace VideoCollection.Popups.Movies
                 {
                     _splash.Visibility = Visibility.Collapsed;
                     _callback();
+                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                    parentWindow.removeChild(this);
                     Close();
                 }
             }
@@ -192,6 +205,20 @@ namespace VideoCollection.Popups.Movies
         private void MainGrid_SizeChanged(object sender, EventArgs e)
         {
             ScaleValue = ScaleValueHelper.CalculateScale(addMovieCategoryWindow, 500f, 350f);
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if (Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Left = parent.Left + (parent.Width - ActualWidth) / 2;
+            Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
     }
 }

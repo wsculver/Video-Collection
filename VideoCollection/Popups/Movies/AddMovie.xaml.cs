@@ -22,13 +22,14 @@ using VideoCollection.Subtitles;
 using System.Drawing.Imaging;
 using VideoCollection.Animations;
 using Newtonsoft.Json;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection.Popups.Movies
 {
     /// <summary>
     /// Interaction logic for AddMovie.xaml
     /// </summary>
-    public partial class AddMovie : Window
+    public partial class AddMovie : Window, ScaleableWindow
     {
         private List<MovieCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
@@ -36,6 +37,10 @@ namespace VideoCollection.Popups.Movies
         private string _rating = "";
         private Border _splash;
         private Action _callback;
+
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
 
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public AddMovie() { }
@@ -50,6 +55,10 @@ namespace VideoCollection.Popups.Movies
             _callback = callback;
             _selectedCategories = new List<string>();
             _movie = new Movie();
+
+            WidthScale = 0.43;
+            HeightScale = 0.85;
+            HeightToWidthRatio = 1.058;
 
             // Load categories to display
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -83,16 +92,18 @@ namespace VideoCollection.Popups.Movies
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             Close();
         }
 
         // Shows a custom OK message box
         private void ShowOKMessageBox(string message)
         {
-            Window parentWindow = GetWindow(this).Owner;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.Width = parentWindow.ActualWidth * 0.25;
-            popup.Height = popup.Width * 0.55;
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.ShowDialog();
@@ -184,6 +195,8 @@ namespace VideoCollection.Popups.Movies
                 {
                     _splash.Visibility = Visibility.Collapsed;
                     _callback();
+                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                    parentWindow.removeChild(this);
                     Close();
                 }
             }
@@ -261,6 +274,20 @@ namespace VideoCollection.Popups.Movies
         private void RatingButtonClick(object sender, RoutedEventArgs e)
         {
             _rating = (sender as RadioButton).Content.ToString();
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if (Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Left = parent.Left + (parent.Width - ActualWidth) / 2;
+            Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
     }
 }

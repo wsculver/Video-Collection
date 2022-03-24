@@ -12,15 +12,20 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoCollection.Helpers;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection.Popups
 {
     /// <summary>
     /// Interaction logic for YesNoMessageBox.xaml
     /// </summary>
-    public partial class CustomMessageBox : Window
+    public partial class CustomMessageBox : Window, ScaleableWindow
     {
         public enum MessageBoxType { YesNo, OK };
+
+        public double WidthScale { get; set; }
+        public double HeightScale { get; set; }
+        public double HeightToWidthRatio { get; set; }
 
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public CustomMessageBox() { }
@@ -30,6 +35,10 @@ namespace VideoCollection.Popups
             InitializeComponent();
 
             txtMessage.Text = Message;
+
+            WidthScale = 0.25;
+            HeightScale = 0.26;
+            HeightToWidthRatio = 0.55;
 
             switch(type)
             {
@@ -78,17 +87,37 @@ namespace VideoCollection.Popups
 
         private void btnYes_Click(object sender, RoutedEventArgs e)
         {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             DialogResult = true;
         }
 
         private void btnNo_Click(object sender, RoutedEventArgs e)
         {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             DialogResult = false;
         }
 
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            parentWindow.removeChild(this);
             DialogResult = true;
+        }
+
+        public void scaleWindow(Window parent)
+        {
+            Width = parent.ActualWidth * WidthScale;
+            Height = Width * HeightToWidthRatio;
+            if(Height > parent.ActualHeight * HeightScale)
+            {
+                Height = parent.ActualHeight * HeightScale;
+                Width = Height / HeightToWidthRatio;
+            }
+
+            Left = parent.Left + (parent.Width - ActualWidth) / 2;
+            Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
     }
 }

@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using VideoCollection.Helpers;
 using VideoCollection.Popups;
 using VideoCollection.Views;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection
 {
@@ -25,6 +26,7 @@ namespace VideoCollection
     {
         private double _restoreLeft = 0;
         private double _restoreTop = 0;
+        private List<ScaleableWindow> _children = new List<ScaleableWindow>();
 
         public MainWindow()
         {
@@ -107,41 +109,45 @@ namespace VideoCollection
         // Allow the window to be dragged
         private void myMainWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (Splash.Visibility == Visibility.Collapsed && e.ChangedButton == MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left)
             {
                 DragMove();
             }
         }
 
-        // Move the video player with the window
-        private void PositionVideoPlayer()
-        {
-            VideoPlayer videoPlayer = App.videoPlayer;
-            if (App.videoPlayer != null)
-            {
-                videoPlayer.VideoPlayerMargin = Width * 0.015625;
-                videoPlayer.Width = Width * 0.4;
-                videoPlayer.Height = videoPlayer.Width * 0.5625;
-                videoPlayer.Moving = true;
-                videoPlayer.Left = Left + (Width * videoPlayer.LeftMultiplier);
-                videoPlayer.Top = Top + (Height * videoPlayer.TopMultiplier);
-                videoPlayer.Moving = false;
-            }
-        }
-
         private void myMainWindow_LocationChanged(object sender, EventArgs e)
         {
-            PositionVideoPlayer();
+            // Scale child windows
+            foreach (ScaleableWindow window in _children)
+            {
+                window.scaleWindow(this);
+            }
         }
 
         private void myMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            PositionVideoPlayer();
             // If the window is maximized by dragging the window to the top change the maximize button
             if (WindowState == WindowState.Maximized)
             {
                 iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowRestore;
             }
+
+            // Scale child windows
+            foreach(ScaleableWindow window in _children)
+            {
+                window.scaleWindow(this);
+            }
         }
+
+        public void addChild(ScaleableWindow child)
+        {
+            _children.Add(child);
+        }
+
+        public void removeChild(ScaleableWindow child)
+        {
+            _children.Remove(child);
+        }
+
     }
 }
