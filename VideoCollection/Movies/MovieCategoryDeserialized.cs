@@ -34,8 +34,8 @@ namespace VideoCollection.Movies
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                    popup.Width = parentWindow.ActualWidth * 0.25;
-                    popup.Height = popup.Width * 0.55;
+                    popup.scaleWindow(parentWindow);
+                    parentWindow.addChild(popup);
                     popup.Owner = parentWindow;
                     parentWindow.Splash.Visibility = Visibility.Visible;
                     popup.ShowDialog();
