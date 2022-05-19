@@ -20,6 +20,8 @@ namespace VideoCollection
         static string databaseName = "VideoCollection.db";
         public static string databasePath = Path.Combine(databaseFolderPath, databaseName);
         public static VideoPlayer videoPlayer = null;
+        public static double dpiWidthFactor = 1.0;
+        public static double dpiHeightFactor = 1.0;
 
         private void Application_Activated(object sender, EventArgs e)
         {

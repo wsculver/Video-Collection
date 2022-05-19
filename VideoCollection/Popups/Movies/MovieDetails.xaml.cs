@@ -49,9 +49,9 @@ namespace VideoCollection.Popups.Movies
             _splash = splash;
             _callback = callback;
 
-            WidthScale = 0.93;
-            HeightScale = 0.85;
-            HeightToWidthRatio = 0.489;
+            WidthScale = 0.94;
+            HeightScale = 0.86;
+            HeightToWidthRatio = 0.49;
 
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {

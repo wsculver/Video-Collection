@@ -131,6 +131,8 @@
             </ItemsControl>
         </StackPanel>
 
+        <ContentControl x:Name="loadingControl" Grid.Row="0" Grid.Column="1" Visibility="Collapsed"/>
+
         <StackPanel x:Name="buttons" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,10,0" Click="btnOK_Click">OK</Button>

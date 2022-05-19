@@ -20,6 +20,7 @@ using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
+using VideoCollection.Animations;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -402,27 +403,36 @@ namespace VideoCollection.Popups.Movies
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-                Movie movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
-                try
-                {
-                    _movie = new MovieDeserialized(movie);
-                }
-                catch (Exception ex)
-                {
-                    ShowOKMessageBox("Error: " + ex.Message);
-                }
+                loadingControl.Content = new LoadingSpinner();
+                loadingControl.Visibility = Visibility.Visible;
+                _ = Task.Run(async () =>
+                  {
+                      Movie movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
+                      try
+                      {
+                          _movie = new MovieDeserialized(movie);
+                      }
+                      catch (Exception ex)
+                      {
+                          ShowOKMessageBox("Error: " + ex.Message);
+                      }
+                      Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
+                         (Action)(() =>
+                         {
+                             txtMovieName.Text = _movie.Title;
+                             if (movie.Thumbnail != "")
+                             {
+                                 imgThumbnail.Source = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+                             }
+                             txtFile.Text = _movie.MovieFilePath;
 
-                txtMovieName.Text = _movie.Title;
-                if (movie.Thumbnail != "")
-                {
-                    imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(movie.Thumbnail));
-                }
-                txtFile.Text = _movie.MovieFilePath;
-
-                if (_movie.MovieFilePath == "")
-                {
-                    ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
-                }
+                             if (_movie.MovieFilePath == "")
+                             {
+                                 ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
+                             }
+                             loadingControl.Visibility = Visibility.Collapsed;
+                         }));
+                  });
             }
         }
 

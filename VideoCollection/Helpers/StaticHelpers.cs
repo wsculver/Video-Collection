@@ -20,6 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using VideoCollection.Movies;
+using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 
 namespace VideoCollection.Helpers
@@ -233,6 +234,93 @@ namespace VideoCollection.Helpers
             };
 
             return movie;
+        }
+
+        // Parse a show folder to format all videos in it
+        public static async Task<Show> ParseShowVideos(string showFolderPath)
+        {
+            var videoFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+            var subtitleFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
+
+            // The first video found should be the movie
+            string showFile = videoFiles.FirstOrDefault();
+            string showTitle = "";
+            string showFilePath = "";
+            if (showFile != null)
+            {
+                showTitle = Path.GetFileNameWithoutExtension(showFile);
+                showFilePath = GetRelativePathStringFromCurrent(showFile);
+            }
+
+            // All other videos are bonus
+            List<ShowBonusVideo> bonusVideos = new List<ShowBonusVideo>();
+            HashSet<string> bonusSectionsSet = new HashSet<string>();
+            int numVideoFiles = videoFiles.Count();
+            var tasks = new List<Task<Tuple<string, string, string, List<SubtitleSegment>, string>>>();
+            for (int i = 1; i < numVideoFiles; i++)
+            {
+                string videoFile = videoFiles.ElementAt(i);
+                tasks.Add(ParseBonusVideo(showFolderPath, videoFile, subtitleFiles));
+            }
+            foreach (var task in await Task.WhenAll(tasks))
+            {
+                bonusSectionsSet.Add(task.Item1);
+                ShowBonusVideo video = new ShowBonusVideo()
+                {
+                    Title = task.Item2.ToUpper(),
+                    Thumbnail = task.Item3,
+                    FilePath = task.Item5,
+                    Section = task.Item1,
+                    Runtime = GetVideoDuration(task.Item5),
+                    Subtitles = JsonConvert.SerializeObject(task.Item4)
+                };
+                bonusVideos.Add(video);
+            }
+
+            List<ShowBonusSection> bonusSections = new List<ShowBonusSection>();
+            foreach (string sectionName in bonusSectionsSet)
+            {
+                ShowBonusSection section = new ShowBonusSection()
+                {
+                    Name = sectionName,
+                    Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
+                };
+                bonusSections.Add(section);
+            }
+
+            // Get the thumbnail file if it exists, otherwise create one
+            var imageFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(showTitle + ".png") || s.EndsWith(showTitle + ".jpg") || s.EndsWith(showTitle + ".jpeg"));
+            string showThumbnail = "";
+            if (imageFiles.Any())
+            {
+                showThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(imageFiles.First()))));
+            }
+            else if (showFile != null)
+            {
+                ImageSource image = CreateThumbnailFromVideoFile(showFile, TimeSpan.FromSeconds(60));
+                showThumbnail = ImageSourceToBase64(image);
+            }
+
+            SubtitleParser subParser = new SubtitleParser();
+            // Get the subtitle file path and parse it
+            string subtitleFile = subtitleFiles.Where(s => s.EndsWith(showTitle + ".srt")).FirstOrDefault();
+            List<SubtitleSegment> subtitles = new List<SubtitleSegment>();
+            if (subtitleFile != null)
+            {
+                subtitles = subParser.ExtractSubtitles(subtitleFile);
+            }
+
+            Show show = new Show()
+            {
+                Title = showTitle.ToUpper(),
+                Thumbnail = showThumbnail,
+                BonusSections = JsonConvert.SerializeObject(bonusSections),
+                BonusVideos = JsonConvert.SerializeObject(bonusVideos),
+                Categories = "",
+                IsChecked = false
+            };
+
+            return show;
         }
 
         // Create a thumbnail from a provided video file at the frame seconds in

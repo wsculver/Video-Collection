@@ -6,7 +6,10 @@
         xmlns:local="clr-namespace:VideoCollection"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Video Collection" WindowStyle="None" Height="430" Width="800" WindowStartupLocation="CenterScreen" Background="{StaticResource BackgroundBrush}" WindowState="Maximized" MouseDown="myMainWindow_MouseDown" SizeChanged="myMainWindow_SizeChanged" LocationChanged="myMainWindow_LocationChanged">
+        Title="Video Collection" WindowStyle="None" d:DesignHeight="430" d:DesignWidth="800" 
+        WindowStartupLocation="Manual" Background="{StaticResource BackgroundBrush}" 
+        MouseDown="myMainWindow_MouseDown" SizeChanged="myMainWindow_SizeChanged" 
+        LocationChanged="myMainWindow_LocationChanged" Loaded="myMainWindow_Loaded">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>

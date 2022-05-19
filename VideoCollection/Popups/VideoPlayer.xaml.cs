@@ -19,6 +19,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
+using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 using VideoCollection.CustomTypes;
 
@@ -70,6 +71,8 @@ namespace VideoCollection.Popups
         public double LeftMultiplier = 0;
         public double TopMultiplier = 0;
         public bool Moving = false;
+        private static double thisDpiWidthFactor;
+        private static double thisDpiHeightFactor;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -108,6 +111,28 @@ namespace VideoCollection.Popups
             HeightToWidthRatio = 0.5375;
 
             updateVideo(movieBonusVideo);
+        }
+
+        public VideoPlayer(ShowDeserialized show)
+        {
+            InitializeComponent();
+
+            WidthScale = 1.0;
+            HeightScale = 1.0;
+            HeightToWidthRatio = 0.5375;
+
+            updateVideo(show);
+        }
+
+        public VideoPlayer(ShowBonusVideoDeserialized showBonusVideo)
+        {
+            InitializeComponent();
+
+            WidthScale = 1.0;
+            HeightScale = 1.0;
+            HeightToWidthRatio = 0.5375;
+
+            updateVideo(showBonusVideo);
         }
 
         // Allow the video in the player to be updated
@@ -171,6 +196,21 @@ namespace VideoCollection.Popups
             txtDuration.Text = movieBonusVideo.Runtime;
             setTimeFormat(movieBonusVideo.Runtime);
             _subtitles = movieBonusVideo.Subtitles;
+            update();
+        }
+
+        public void updateVideo(ShowDeserialized show)
+        {
+            txtTitle.Text = show.Title;
+            update();
+        }
+        public void updateVideo(ShowBonusVideoDeserialized showBonusVideo)
+        {
+            meVideoPlayer.Source = new Uri(showBonusVideo.FilePath);
+            txtTitle.Text = showBonusVideo.Title;
+            txtDuration.Text = showBonusVideo.Runtime;
+            setTimeFormat(showBonusVideo.Runtime);
+            _subtitles = showBonusVideo.Subtitles;
             update();
         }
 
@@ -407,6 +447,16 @@ namespace VideoCollection.Popups
             }
         }
 
+        // Calculate dpi for the monitor to position video player correctly
+        private static void CalculateDpiFactors()
+        {
+            Window MainWindow = Application.Current.MainWindow;
+            PresentationSource MainWindowPresentationSource = PresentationSource.FromVisual(MainWindow);
+            Matrix m = MainWindowPresentationSource.CompositionTarget.TransformToDevice;
+            thisDpiWidthFactor = m.M11;
+            thisDpiHeightFactor = m.M22;
+        }
+
         // Shrink/Expand the video player 
         private void btnExpand_Click(object sender, RoutedEventArgs e)
         {
@@ -428,17 +478,37 @@ namespace VideoCollection.Popups
                 HeightToWidthRatio = 0.5625;
                 scaleWindow(parentWindow);
                 VideoPlayerMargin = parentWindow.ActualWidth * 0.015625;
-                if (!_videoPlayerMoved)
+                Rect parentRect = parentWindow.GetAbsoluteRect();
+                if (parentWindow.WindowState == WindowState.Maximized)
                 {
-                    Left = parentWindow.Left + (parentWindow.ActualWidth - VideoPlayerMargin - Width);
-                    LeftMultiplier = (Left - parentWindow.Left) / parentWindow.ActualWidth;
-                    Top = parentWindow.Top + (parentWindow.ActualHeight - VideoPlayerMargin - Height);
-                    TopMultiplier = (Top - parentWindow.Top) / parentWindow.ActualHeight;
-                }
+                    CalculateDpiFactors();
+                    if (!_videoPlayerMoved)
+                    {
+                        Left = (parentRect.Left / thisDpiWidthFactor) + ((parentRect.Width / thisDpiWidthFactor) - VideoPlayerMargin - Width);
+                        Top = (parentRect.Top / thisDpiHeightFactor) + ((parentRect.Height / thisDpiHeightFactor) - VideoPlayerMargin - Height);
+                    }
+                    else
+                    {
+                        Left = (parentRect.Left / thisDpiWidthFactor) + ((parentRect.Width / thisDpiWidthFactor) * _restoreLeftMultiplier);
+                        Top = (parentRect.Top / thisDpiHeightFactor) + ((parentRect.Height / thisDpiHeightFactor) * _restoreTopMultiplier);
+                    }
+                    LeftMultiplier = (Left - (parentRect.Left / thisDpiWidthFactor)) / (parentRect.Width / thisDpiWidthFactor);
+                    TopMultiplier = (Top - (parentRect.Top / thisDpiHeightFactor)) / (parentRect.Height / thisDpiHeightFactor);
+                } 
                 else
                 {
-                    Left = parentWindow.Left + (parentWindow.ActualWidth * _restoreLeftMultiplier);
-                    Top = parentWindow.Top + (parentWindow.ActualHeight * _restoreTopMultiplier);
+                    if (!_videoPlayerMoved)
+                    {
+                        Left = parentRect.Left + (parentRect.Width - VideoPlayerMargin - Width);
+                        Top = parentRect.Top + (parentRect.Height - VideoPlayerMargin - Height);
+                    }
+                    else
+                    {
+                        Left = parentRect.Left + (parentRect.Width * _restoreLeftMultiplier);
+                        Top = parentRect.Top + (parentRect.Height * _restoreTopMultiplier);
+                    }
+                    LeftMultiplier = (Left - parentRect.Left) / parentRect.Width;
+                    TopMultiplier = (Top - parentRect.Top) / parentRect.Height;
                 }
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
                 Topmost = true;
@@ -456,10 +526,20 @@ namespace VideoCollection.Popups
                 HeightScale = 1.0;
                 HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
                 scaleWindow(parentWindow);
-                Left = parentWindow.Left;
-                Top = parentWindow.Top;
-                LeftMultiplier = parentWindow.Left;
-                TopMultiplier = parentWindow.Top;
+                Rect parentRect = parentWindow.GetAbsoluteRect();
+                if (parentWindow.WindowState == WindowState.Maximized)
+                {
+                    CalculateDpiFactors();
+                    Left = parentRect.Left / thisDpiWidthFactor;
+                    Top = parentRect.Top / thisDpiHeightFactor;
+                }
+                else
+                {
+                    Left = parentRect.Left;
+                    Top = parentRect.Top;
+                }
+                LeftMultiplier = 0;
+                TopMultiplier = 0;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupExpand.HorizontalOffset = _collapseHorizontalOffset;
@@ -477,6 +557,19 @@ namespace VideoCollection.Popups
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpandAll;
                 popupFullScreen.HorizontalOffset = _fullScreenHorizontalOffset;
                 txtFullScreen.Text = _fullScreenLabel;
+                scaleWindow(parentWindow);
+                Rect parentRect = parentWindow.GetAbsoluteRect();
+                if (parentWindow.WindowState == WindowState.Maximized)
+                {
+                    CalculateDpiFactors();
+                    Left = parentRect.Left / thisDpiWidthFactor;
+                    Top = parentRect.Top / thisDpiHeightFactor;
+                } 
+                else
+                {
+                    Left = parentRect.Left;
+                    Top = parentRect.Top;
+                }
             }
             else
             {
@@ -489,10 +582,10 @@ namespace VideoCollection.Popups
                 HeightScale = 1.0;
                 HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
                 scaleWindow(parentWindow);
-                Left = parentWindow.Left;
-                Top = parentWindow.Top;
-                LeftMultiplier = parentWindow.Left;
-                TopMultiplier = parentWindow.Top;
+                Rect parentRect = parentWindow.GetAbsoluteRect();
+                CalculateDpiFactors();
+                LeftMultiplier = 0;
+                TopMultiplier = 0;
                 gridOverlay.Margin = new Thickness(0, 0, 0, 0);
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupFullScreen.HorizontalOffset = _exitFullScreenHorizontalOffset;
@@ -559,17 +652,22 @@ namespace VideoCollection.Popups
             base.OnClosed(e);
         }
 
-        // Prevent the video player from moving outside the main window when draggin it
+        // Prevent the video player from moving outside the main window when dragging it
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (msg == (int)WindowsMessage.WM_MOVING)
             {
-                // The window dimensions are off in this function for some reason so this is a correction factor
-                double leftMultiplier = 1.255;
-                double rightMultiplier = 1.252;
-                double topMultiplier = 1.255;
-                double bottomMultiplier = 1.253;
-                RECT bounds = new RECT() { Left = (int)((Owner.Left + VideoPlayerMargin) * leftMultiplier), Top = (int)((Owner.Top + VideoPlayerMargin) * topMultiplier), Right = (int)((Owner.Left + Owner.ActualWidth - VideoPlayerMargin) * rightMultiplier), Bottom = (int)((Owner.Top + Owner.ActualHeight - VideoPlayerMargin) * bottomMultiplier) };
+                RECT bounds;
+                if (Owner.WindowState == WindowState.Maximized)
+                {
+                    Rect parentRect = Owner.GetAbsoluteRect();
+                    bounds = new RECT() { Left = (int)(parentRect.Left + VideoPlayerMargin), Top = (int)(parentRect.Top + VideoPlayerMargin), Right = (int)(parentRect.Right - VideoPlayerMargin), Bottom = (int)(parentRect.Bottom - VideoPlayerMargin) };
+                }
+                else
+                {
+                    CalculateDpiFactors();
+                    bounds = new RECT() { Left = (int)((Owner.Left + VideoPlayerMargin) * thisDpiWidthFactor), Top = (int)((Owner.Top + VideoPlayerMargin) * thisDpiHeightFactor), Right = (int)((Owner.Left + Owner.ActualWidth - VideoPlayerMargin) * thisDpiWidthFactor), Bottom = (int)((Owner.Top + Owner.ActualHeight - VideoPlayerMargin) * thisDpiHeightFactor) };
+                }
 
                 RECT window = (RECT)Marshal.PtrToStructure(lParam, typeof(RECT));
                 if (window.Left < bounds.Left)
@@ -607,10 +705,19 @@ namespace VideoCollection.Popups
         {
             if (!_expanded)
             {
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                 _videoPlayerMoved = true;
-                LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
-                TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                Rect parentRect = Owner.GetAbsoluteRect();
+                if (Owner.WindowState == WindowState.Maximized)
+                {
+                    CalculateDpiFactors();
+                    LeftMultiplier = (Left - (parentRect.Left / thisDpiWidthFactor)) / (parentRect.Width / thisDpiWidthFactor);
+                    TopMultiplier = (Top - (parentRect.Top / thisDpiHeightFactor)) / (parentRect.Height / thisDpiHeightFactor);
+                }
+                else
+                {
+                    LeftMultiplier = (Left - parentRect.Left) / parentRect.Width;
+                    TopMultiplier = (Top - parentRect.Top) / parentRect.Height;
+                }
                 _restoreLeftMultiplier = LeftMultiplier;
                 _restoreTopMultiplier = TopMultiplier;
             }
@@ -619,37 +726,38 @@ namespace VideoCollection.Popups
         // Make sure the video player doesn't go outside of the main window when resizing the main window
         private void videoPlayerWindow_LocationChanged(object sender, EventArgs e)
         {
-            if(!_expanded && Width < Owner.ActualWidth - (2 * VideoPlayerMargin) && Height < Owner.ActualHeight - (2 * VideoPlayerMargin))
+            if(Owner.WindowState != WindowState.Maximized && !_expanded && Width < Owner.ActualWidth - (2 * VideoPlayerMargin) && Height < Owner.ActualHeight - (2 * VideoPlayerMargin))
             {
+                Rect parentRect = Owner.GetAbsoluteRect();
                 bool changeMultipliers = false;
-                if (Left + Width > Owner.Left + Owner.ActualWidth - VideoPlayerMargin)
+                if (Left + Width > parentRect.Left + parentRect.Width - VideoPlayerMargin)
                 {
-                    Left = Owner.Left + Owner.ActualWidth - VideoPlayerMargin - Width;
+                    Left = parentRect.Left + parentRect.Width - VideoPlayerMargin - Width;
                     changeMultipliers = true;
                 }
 
-                if (Left < Owner.Left + VideoPlayerMargin)
+                if (Left < parentRect.Left + VideoPlayerMargin)
                 {
-                    Left = Owner.Left + VideoPlayerMargin;
+                    Left = parentRect.Left + VideoPlayerMargin;
                     changeMultipliers = true;
                 }
 
-                if (Top + Height > Owner.Top + Owner.ActualHeight - VideoPlayerMargin)
+                if (Top + Height > parentRect.Top + parentRect.Height - VideoPlayerMargin)
                 {
-                    Top = Owner.Top + Owner.ActualHeight - VideoPlayerMargin - Height;
+                    Top = parentRect.Top + parentRect.Height - VideoPlayerMargin - Height;
                     changeMultipliers = true;
                 }
 
-                if (Top < Owner.Top + VideoPlayerMargin)
+                if (Top < parentRect.Top + VideoPlayerMargin)
                 {
-                    Top = Owner.Top + VideoPlayerMargin;
+                    Top = parentRect.Top + VideoPlayerMargin;
                     changeMultipliers = true;
                 }
 
                 if (changeMultipliers && !Moving)
                 {
-                    LeftMultiplier = (Left - Owner.Left) / Owner.ActualWidth;
-                    TopMultiplier = (Top - Owner.Top) / Owner.ActualHeight;
+                    LeftMultiplier = (Left - parentRect.Left) / parentRect.Width;
+                    TopMultiplier = (Top - parentRect.Top) / parentRect.Height;
                 }
             }
         }
@@ -907,10 +1015,13 @@ namespace VideoCollection.Popups
                 Width = Height / HeightToWidthRatio;
             }
 
-            Moving = true;
-            Left = parent.Left + (parent.Width * LeftMultiplier);
-            Top = parent.Top + (parent.Height * TopMultiplier);
-            Moving = false;
+            if (parent.WindowState != WindowState.Maximized)
+            {
+                Moving = true;
+                Left = parent.Left + (parent.ActualWidth * LeftMultiplier);
+                Top = parent.Top + (parent.ActualHeight * TopMultiplier);
+                Moving = false;
+            }
         }
     }
 }

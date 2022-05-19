@@ -16,6 +16,8 @@ using VideoCollection.Helpers;
 using VideoCollection.Popups;
 using VideoCollection.Views;
 using VideoCollection.CustomTypes;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace VideoCollection
 {
@@ -24,17 +26,35 @@ namespace VideoCollection
     /// </summary>
     public partial class MainWindow : Window
     {
-        private double _restoreLeft = 0;
-        private double _restoreTop = 0;
         private List<ScaleableWindow> _children = new List<ScaleableWindow>();
+        private static int _minWidth = 100;
+        private static int _minHeight = 100;
 
         public MainWindow()
         {
             InitializeComponent();
+            MinHeight = _minHeight;
+            MinWidth = _minWidth;
+            SourceInitialized += Window_SourceInitialized;
+        }
 
-            MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
-            Height = SystemParameters.MaximizedPrimaryScreenHeight / 2;
-            Width = SystemParameters.MaximizedPrimaryScreenWidth / 2;
+        void Window_SourceInitialized(object sender, EventArgs e)
+        {
+            IntPtr handle = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(handle)?.AddHook(WindowProc);
+        }
+
+        private IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            switch (msg)
+            {
+                case 0x0024:
+                    Extensions.WmGetMinMaxInfo(hwnd, lParam, (int)MinWidth, (int)MinHeight);
+                    handled = true;
+                    break;
+            }
+
+            return (IntPtr)0;
         }
 
         // Scale based on the size of the window
@@ -58,6 +78,11 @@ namespace VideoCollection
             }
         }
 
+        private void myMainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Maximized;
+        }
+
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -75,17 +100,11 @@ namespace VideoCollection
         {
             if (WindowState == WindowState.Maximized)
             {
-                Left = _restoreLeft;
-                Top = _restoreTop;
                 WindowState = WindowState.Normal;
                 iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowMaximize;
             }
             else
             {
-                _restoreLeft = Left;
-                _restoreTop = Top;
-                Left = 0;
-                Top = 0;
                 WindowState = WindowState.Maximized;
                 iconMaximize.Kind = MaterialDesignThemes.Wpf.PackIconKind.WindowRestore;
             }
@@ -148,6 +167,5 @@ namespace VideoCollection
         {
             _children.Remove(child);
         }
-
     }
 }

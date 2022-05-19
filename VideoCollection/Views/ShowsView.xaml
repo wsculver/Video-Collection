@@ -1,12 +1,159 @@
-﻿<UserControl x:Class="VideoCollection.Views.ShowsView"
+﻿<UserControl x:Name="showsView" x:Class="VideoCollection.Views.ShowsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VideoCollection.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800" Background="{StaticResource BackgroundBrush}">
+             d:DesignHeight="398" d:DesignWidth="800" Background="{StaticResource BackgroundBrush}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <sys:Double x:Key="SettingsButtonHeight">20</sys:Double>
+            <sys:Double x:Key="CategorySettingsWidth">82</sys:Double>
+            <sys:Double x:Key="ShowSettingsWidth">128</sys:Double>
+            <sys:Double x:Key="AddSettingsWidth">90</sys:Double>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="icCategoryDisplay">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,27">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition x:Name="colMiddle" Width="734"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-    <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+
+                            <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="0" Margin="10,0,0,0">
+                                <Label Foreground="White" FontSize="10" Content="{Binding Name}" FontWeight="Bold"/>
+                                <Button Style="{StaticResource DotsVerticalCategoryIconButtonStyle}" Margin="0,-9,0,-4">
+                                    <materialDesign:PopupBox materialDesign:RippleAssist.RippleSizeMultiplier="0" Foreground="White" PopupVerticalOffset="-6" Padding="0,0,0,0" VerticalAlignment="Center">
+                                        <materialDesign:PopupBox.ToggleContent>
+                                            <materialDesign:PackIcon Kind="DotsVertical" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="12" Height="36"/>
+                                        </materialDesign:PopupBox.ToggleContent>
+                                        <StackPanel Background="{StaticResource PopupStackPanelBackgroundColor}">
+                                            <Button x:Name="btnUpdateCategory" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdateCategory_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                <TextBlock Text="EDIT" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                            </Button>
+                                            <Button x:Name="btnDeleteCategory" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDeleteCategory_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                <TextBlock Text="DELETE" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                            </Button>
+                                            <Button x:Name="btnMoveUp" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnMoveUp_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                <TextBlock Text="MOVE UP" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                            </Button>
+                                            <Button x:Name="btnMoveDown" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnMoveDown_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                <TextBlock Text="MOVE DOWN" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </materialDesign:PopupBox>
+                                </Button>
+                            </StackPanel>
+                            <Button x:Name="btnViewAll" Grid.Column="1" Grid.Row="0" Style="{StaticResource ViewAllButtonStyle}" Click="btnViewAll_Click" Tag="{Binding Id}" Visibility="Hidden" materialDesign:RippleAssist.RippleSizeMultiplier="0" Margin="0,0,14,-3" Width="44" Height="9" HorizontalAlignment="Right" Padding="-5,-10,0,0">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="14"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-5,-7,-5" Foreground="#FFA0A0A0">VIEW ALL</Label>
+                                    <materialDesign:PackIcon Grid.Column="1" Kind="ChevronRight" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,1,-3"/>
+                                </Grid>
+                            </Button>
+                            <customtypes:AnimatedScrollViewer x:Name="scrollShows" ScrollChanged="scrollShows_ScrollChanged" Grid.Column="1" Grid.Row="1" PreviewMouseWheel="HandlePreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+                                <ItemsControl x:Name="icShows" ItemsSource="{Binding Shows}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Height="78"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Image x:Name="imageThumbnail" Width="138" Height="78" Margin="2,0,2,0" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding Id}"/>
+                                                <Border x:Name="showSplash" Background="Black" Opacity="0.25" Width="138" Height="78" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                                <Rectangle Width="16" Height="16" Fill="{StaticResource BackgroundBrush}" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                                <Border x:Name="iconPlayShow" IsHitTestVisible="False" Visibility="Collapsed">
+                                                    <materialDesign:PackIcon Kind="Information" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
+                                                </Border>
+                                                <Button Style="{StaticResource DotsVerticalVideoIconButtonStyle}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-9,0,0">
+                                                    <materialDesign:PopupBox materialDesign:RippleAssist.RippleSizeMultiplier="0" Foreground="White" PopupVerticalOffset="-7" Padding="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                                        <materialDesign:PopupBox.ToggleContent>
+                                                            <materialDesign:PackIcon Kind="DotsVertical" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="12" Height="36"/>
+                                                        </materialDesign:PopupBox.ToggleContent>
+                                                        <StackPanel Background="{StaticResource PopupStackPanelBackgroundColor}">
+                                                            <TextBlock Visibility="Collapsed" x:Name="hiddenText">
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{0},{1}">
+                                                                        <Binding RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}" Path="DataContext.Id"/>
+                                                                        <Binding Path="Id"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                            <Button x:Name="btnPlayShow" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnPlayShow_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="PLAY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnDetails" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDetails_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="DETAILS" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnUpdate" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdate_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="UPDATE" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnRemoveShowFromCategory" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnRemoveShowFromCategory_Click" Tag="{Binding Text, ElementName=hiddenText}" Cursor="Hand">
+                                                                <TextBlock Text="REMOVE FROM CATEGORY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                            <Button x:Name="btnDeleteShow" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDeleteShow_Click" Tag="{Binding Id}" Cursor="Hand">
+                                                                <TextBlock Text="DELETE" Style="{StaticResource SettingsTextBlockStyle}"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </materialDesign:PopupBox>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </customtypes:AnimatedScrollViewer>
+                            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Hidden" Width="25" Height="25" Margin="2,0,0,0">
+                                <materialDesign:PackIcon Kind="ChevronLeft" Foreground="White" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Button>
+                            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden" Width="25" Height="25" Margin="0,0,2,0">
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="White" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <Button Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,0,0,5" Padding="0,0,0,0" Width="30" Height="30">
+            <materialDesign:PopupBox PlacementMode="TopAndAlignLeftEdges" Width="30" Height="30" PopupVerticalOffset="-7" PopupHorizontalOffset="-2" Padding="0,0,0,0" VerticalAlignment="Center">
+                <materialDesign:PopupBox.ToggleContent>
+                    <materialDesign:PackIcon Kind="Plus" Foreground="White" Width="22" Height="22" Margin="3,0,0,0"/>
+                </materialDesign:PopupBox.ToggleContent>
+                <StackPanel Background="{StaticResource PopupStackPanelBackgroundColor}">
+                    <Button x:Name="btnNewShow" Width="{StaticResource AddSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnNewShow_Click" Cursor="Hand">
+                        <TextBlock Text="NEW SHOW" Style="{StaticResource SettingsTextBlockStyle}"/>
+                    </Button>
+                    <Button x:Name="btnUpdateExistingShow" Width="{StaticResource AddSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdateExistingShow_Click" Cursor="Hand">
+                        <TextBlock Text="UPDATE SHOW" Style="{StaticResource SettingsTextBlockStyle}"/>
+                    </Button>
+                    <Button x:Name="btnAddCategory" Width="{StaticResource AddSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnAddCategory_Click" Cursor="Hand">
+                        <TextBlock Text="ADD CATEGORY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                    </Button>
+                </StackPanel>
+            </materialDesign:PopupBox>
+        </Button>
     </Grid>
 </UserControl>
