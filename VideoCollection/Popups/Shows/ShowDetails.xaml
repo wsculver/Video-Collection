@@ -1,0 +1,143 @@
+﻿<Window x:Name="showDetailsWindow" x:Class="VideoCollection.Popups.Shows.ShowDetails"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoCollection.Popups"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
+        xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
+        mc:Ignorable="d"
+        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
+    <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="214"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="ApplicationScaleTransform"
+                        CenterX="0"
+                        CenterY="0"
+                        ScaleX="{Binding ElementName=showDetailsWindow, Path=ScaleValue}"
+                        ScaleY="{Binding ElementName=showDetailsWindow, Path=ScaleValue}" />
+        </Grid.LayoutTransform>
+
+        <Label x:Name="labelTitle" Grid.Row="0" HorizontalAlignment="Center" FontWeight="Bold" Margin="0,1,0,0">TITLE</Label>
+        <Separator Grid.Row="0" VerticalAlignment="Bottom" MinHeight="1"/>
+        <Button x:Name="btnClose" Grid.Row="0" Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedSecondaryDarkButton}" Width="25" Height="20" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <materialDesign:PackIcon Kind="WindowClose" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10" Margin="-7,0,0,0"/>
+        </Button>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Image x:Name="imageShowThumbnail" Width="359" Height="201" Cursor="Hand" MouseDown="imageShowThumbnail_MouseDown" MouseEnter="imageShowThumbnail_MouseEnter" MouseLeave="imageShowThumbnail_MouseLeave"/>
+                <Border x:Name="showSplash" Background="Black" Opacity="0.25" Width="359" Height="201" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <Rectangle x:Name="playShowIconBackground" Fill="{StaticResource BackgroundBrush}" Width="32" Height="32" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <materialDesign:PackIcon x:Name="iconPlayShow" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
+            </Grid>
+                
+            <StackPanel Grid.Column="1" Margin="22,-2,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Runtime:</Label>
+                    <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Rating:</Label>
+                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Categories:</Label>
+                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+        
+        <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
+        <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Separator x:Name="separatorBonusBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1" Visibility="Collapsed"/>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="colMiddle" Width="794"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <customtypes:AnimatedScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+                <ItemsControl x:Name="icBonusVideos">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="97"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <TextBlock Visibility="Collapsed" x:Name="hiddenText">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0},,,{1},,,{2},,,{3}">
+                                                <Binding Path="Title"/>
+                                                <Binding Path="FilePath"/>
+                                                <Binding Path="Runtime"/>
+                                                <Binding Path="SubtitlesSerialized"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <Image x:Name="imageThumbnail" Width="152" Height="85" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding Text, ElementName=hiddenText}" Margin="1,6,1,6"/>
+                                    <TextBlock x:Name="txtBonusRuntime" Foreground="White" Text="{Binding Runtime}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,4,8" Padding="2,0,2,1" FontSize="8" FontWeight="Bold">
+                                        <TextBlock.Background>
+                                            <SolidColorBrush Color="Black" Opacity="0.8"/>
+                                        </TextBlock.Background>
+                                    </TextBlock>
+                                    <Border x:Name="bonusSplash" Background="Black" Opacity="0.25" Width="152" Height="85" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Rectangle x:Name="rectPlayBackground" Fill="{StaticResource BackgroundBrush}" Width="16" Height="16" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Border x:Name="iconPlayBonus" IsHitTestVisible="False" Visibility="Collapsed">
+                                        <materialDesign:PackIcon Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </customtypes:AnimatedScrollViewer>
+
+            <Button x:Name="btnPrevious" Click="btnPrevious_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="27" Height="27" Margin="0,36,0,0" Visibility="Hidden">
+                <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ChevronLeft" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </Button>
+            <Button x:Name="btnNext" Click="btnNext_Click" Grid.Column="1" Style="{StaticResource MaterialDesignFloatingActionDarkButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Width="27" Height="27" Visibility="Hidden" Margin="0,36,0,0">
+                <Border Width="27" Height="27" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ChevronRight" Foreground="White" Width="21" Height="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </Button>
+        </Grid>
+
+        <Border x:Name="Splash" Grid.RowSpan="4" Style="{StaticResource SplashStyle}"/>
+    </Grid>
+</Window>
