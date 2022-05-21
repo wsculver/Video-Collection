@@ -12,6 +12,10 @@ namespace VideoCollection.Shows
         public string Title { get; set; }
         public string Thumbnail { get; set; }
         public string FilePath { get; set; }
+        // JSON encoded List<ShowVideo>
+        public string Commentaries { get; set; }
+        // JSON encoded ShowVideo
+        public string DeletedScenes { get; set; }
         public string Section { get; set; }
         public string Runtime { get; set; }
         // JSON encoded List<SubtitleSegment>

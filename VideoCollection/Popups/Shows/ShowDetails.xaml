@@ -114,11 +114,13 @@
                                 <Grid Grid.Row="0">
                                     <TextBlock Visibility="Collapsed" x:Name="hiddenText">
                                         <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0},,,{1},,,{2},,,{3}">
+                                            <MultiBinding StringFormat="{}{0},,,{1},,,{2},,,{3},,,{4},,,{5}">
                                                 <Binding Path="Title"/>
                                                 <Binding Path="FilePath"/>
                                                 <Binding Path="Runtime"/>
                                                 <Binding Path="SubtitlesSerialized"/>
+                                                <Binding Path="CommentariesSerialized"/>
+                                                <Binding Path="DeletedScenesSerialized"/>
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>

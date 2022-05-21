@@ -16,6 +16,10 @@ namespace VideoCollection.Shows
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }
         public string FilePath { get; set; }
+        public string CommentariesSerialized { get; set; }
+        public List<ShowVideoDeserialized> Commentaries { get; set; }
+        public string DeletedScenesSerialized { get; set; }
+        public ShowVideoDeserialized DeletedScenes { get; set; }
         public string Section { get; set; }
         public string Runtime { get; set; }
         public string SubtitlesSerialized { get; set; }
@@ -27,18 +31,66 @@ namespace VideoCollection.Shows
             Title = video.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
             FilePath = video.FilePath;
+            CommentariesSerialized = video.Commentaries;
+            List<ShowVideo> commentaries = JsonConvert.DeserializeObject<List<ShowVideo>>(video.Commentaries);
+            if (commentaries != null)
+            {
+                List<ShowVideoDeserialized> commentariesDeserialized = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo commentary in commentaries)
+                {
+                    commentariesDeserialized.Add(new ShowVideoDeserialized(commentary));
+                }
+                Commentaries = commentariesDeserialized;
+            }
+            else
+            {
+                Commentaries = null;
+            }
+            DeletedScenesSerialized = video.DeletedScenes;
+            ShowVideo deletedScenes = JsonConvert.DeserializeObject<ShowVideo>(video.DeletedScenes);
+            if (deletedScenes != null)
+            {
+                DeletedScenes = new ShowVideoDeserialized(deletedScenes);
+            }
+            else
+            {
+                DeletedScenes = null;
+            }
             Section = video.Section;
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
         }
 
-        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles)
+        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes)
         {
             Title = title;
             FilePath = filePath;
             Runtime = runtime;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
+            List<ShowVideo> videoCommentaries = JsonConvert.DeserializeObject<List<ShowVideo>>(commentaries);
+            if (videoCommentaries != null)
+            {
+                List<ShowVideoDeserialized> commentariesDeserialized = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo commentary in videoCommentaries)
+                {
+                    commentariesDeserialized.Add(new ShowVideoDeserialized(commentary));
+                }
+                Commentaries = commentariesDeserialized;
+            }
+            else
+            {
+                Commentaries = null;
+            }
+            ShowVideo videoDeletedScenes = JsonConvert.DeserializeObject<ShowVideo>(deletedScenes);
+            if (videoDeletedScenes != null)
+            {
+                DeletedScenes = new ShowVideoDeserialized(videoDeletedScenes);
+            }
+            else
+            {
+                DeletedScenes = null;
+            }
         }
 
         public int CompareTo(object obj)

@@ -24,6 +24,7 @@ namespace VideoCollection.Shows
         public string ShowFolderPath { get; set; }
         public ImageSource Thumbnail { get; set; }
         public List<ShowSeasonDeserialized> Seasons { get; set; }
+        public ShowVideoDeserialized NextEpisode { get; set; }
         public string Rating { get; set; }
         public List<string> Categories { get; set; }
         public bool IsChecked { get; set; }
@@ -41,6 +42,8 @@ namespace VideoCollection.Shows
                 showSeasonsDeserialized.Add(new ShowSeasonDeserialized(season));
             }
             Seasons = showSeasonsDeserialized;
+            ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
+            NextEpisode = new ShowVideoDeserialized(nextEpisode);
             Rating = show.Rating;
             Categories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
             IsChecked = show.IsChecked;

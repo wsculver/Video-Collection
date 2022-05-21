@@ -15,8 +15,10 @@ namespace VideoCollection.Shows
         public string Title { get; set; }
         public string ShowFolderPath { get; set; }
         public string Thumbnail { get; set; }
-        // JSON encoded List<ShowSeasonDeserialized>
+        // JSON encoded List<ShowSeason>
         public string Seasons { get; set; }
+        // JSON encoded ShowVideo
+        public string NextEpisode { get; set; }
         public string Rating { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }

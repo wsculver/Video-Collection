@@ -276,6 +276,7 @@ namespace VideoCollection.Helpers
             string showThumbnailVideoFile = "";
 
             List<ShowSeason> seasons = new List<ShowSeason>();
+            ShowVideo nextEpisode = new ShowVideo();
 
             var seasonFolders = Directory.GetDirectories(showFolderPath, "*.*", SearchOption.TopDirectoryOnly);
             var showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolders.First())).ToUpper();
@@ -302,8 +303,9 @@ namespace VideoCollection.Helpers
                     bonusSubtitleFiles = Directory.GetFiles(bonusFolder, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
                 }
 
-
                 List<ShowVideo> videos = new List<ShowVideo>();
+                List<ShowVideo> commentaries = new List<ShowVideo>();
+                List<ShowVideo> deletedScenes = new List<ShowVideo>();
 
                 // Episodes
                 var episodeTasks = new List<Task<Tuple<int, string, string, List<SubtitleSegment>, string>>>();
@@ -369,20 +371,6 @@ namespace VideoCollection.Helpers
                 }
 
                 // Wait for episode and bonus tasks to finish
-                foreach (var task in await Task.WhenAll(episodeTasks))
-                {
-                    ShowVideo episode = new ShowVideo()
-                    {
-                        EpisodeNumber = task.Item1,
-                        Title = task.Item2,
-                        Thumbnail = task.Item3,
-                        FilePath = task.Item5,
-                        Section = "EPISODES",
-                        Runtime = GetVideoDuration(task.Item5),
-                        Subtitles = JsonConvert.SerializeObject(task.Item4)
-                    };
-                    videos.Add(episode);
-                }
                 foreach (var task in await Task.WhenAll(bonusTasks))
                 {
                     bonusSectionsSet.Add(task.Item1);
@@ -392,11 +380,68 @@ namespace VideoCollection.Helpers
                         Title = task.Item2.ToUpper(),
                         Thumbnail = task.Item3,
                         FilePath = task.Item5,
+                        Commentaries = "",
+                        DeletedScenes = "",
                         Section = task.Item1,
                         Runtime = GetVideoDuration(task.Item5),
                         Subtitles = JsonConvert.SerializeObject(task.Item4)
                     };
                     videos.Add(video);
+
+                    // Add to commentaries and deleted scenes
+                    if (task.Item1.ToUpper() == "COMMENTARIES")
+                    {
+                        commentaries.Add(video);
+                    }
+                    else if (task.Item1.ToUpper() == "DELETED SCENES")
+                    {
+                        deletedScenes.Add(video);
+                    }
+                }
+                foreach (var task in await Task.WhenAll(episodeTasks))
+                {
+                    // Link commentaries and deleted scenes if there are any
+                    List<ShowVideo> episodeCommentaries = null;
+                    ShowVideo episodeDeletedScenes = null;
+                    foreach (ShowVideo com in commentaries)
+                    {
+                        if (com.Title.StartsWith(task.Item2, true, null))
+                        {
+                            if (episodeCommentaries == null)
+                            {
+                                episodeCommentaries = new List<ShowVideo>();
+                            }
+                            episodeCommentaries.Add(com);
+                        }
+                    }
+                    foreach (ShowVideo del in deletedScenes)
+                    {
+                        if (del.Title.StartsWith(task.Item2, true, null))
+                        {
+                            episodeDeletedScenes = del;
+                            break;
+                        }
+                    }
+
+                    ShowVideo episode = new ShowVideo()
+                    {
+                        EpisodeNumber = task.Item1,
+                        Title = task.Item2.ToUpper(),
+                        Thumbnail = task.Item3,
+                        FilePath = task.Item5,
+                        Commentaries = JsonConvert.SerializeObject(episodeCommentaries),
+                        DeletedScenes = JsonConvert.SerializeObject(episodeDeletedScenes),
+                        Section = "EPISODES",
+                        Runtime = GetVideoDuration(task.Item5),
+                        Subtitles = JsonConvert.SerializeObject(task.Item4)
+                    };
+                    videos.Add(episode);
+
+                    // Set the initial next episode to episode 1
+                    if (s == 0 && task.Item1 == 1)
+                    {
+                        nextEpisode = episode;
+                    }
                 }
 
                 List<ShowSection> sections = new List<ShowSection>();
@@ -445,6 +490,7 @@ namespace VideoCollection.Helpers
                 ShowFolderPath = showFolderPath,
                 Thumbnail = showThumbnail,
                 Seasons = JsonConvert.SerializeObject(seasons),
+                NextEpisode = JsonConvert.SerializeObject(nextEpisode),
                 Categories = "",
                 IsChecked = false
             };

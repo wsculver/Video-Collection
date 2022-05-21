@@ -201,7 +201,11 @@ namespace VideoCollection.Popups
 
         public void updateVideo(ShowDeserialized show)
         {
-            txtTitle.Text = show.Title;
+            meVideoPlayer.Source = new Uri(show.NextEpisode.FilePath);
+            txtTitle.Text = show.NextEpisode.Title;
+            txtDuration.Text = show.NextEpisode.Runtime;
+            setTimeFormat(show.NextEpisode.Runtime);
+            _subtitles = show.NextEpisode.Subtitles;
             update();
         }
         public void updateVideo(ShowVideoDeserialized showVideo)

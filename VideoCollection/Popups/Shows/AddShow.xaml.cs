@@ -34,7 +34,6 @@ namespace VideoCollection.Popups.Shows
         private List<ShowCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
         private Show _show;
-        private string _seasons;
         private string _rating = "";
         private Border _splash;
         private Action _callback;
@@ -56,7 +55,6 @@ namespace VideoCollection.Popups.Shows
             _callback = callback;
             _selectedCategories = new List<string>();
             _show = new Show();
-            _seasons = "";
 
             WidthScale = 0.43;
             HeightScale = 0.85;
@@ -155,7 +153,8 @@ namespace VideoCollection.Popups.Shows
                     Title = txtShowName.Text.ToUpper(),
                     ShowFolderPath = txtShowFolder.Text,
                     Thumbnail = thumbnail,
-                    Seasons = _seasons,
+                    Seasons = _show.Seasons,
+                    NextEpisode = _show.NextEpisode,
                     Rating = _rating,
                     Categories = JsonConvert.SerializeObject(_selectedCategories),
                     IsChecked = false
@@ -235,11 +234,6 @@ namespace VideoCollection.Popups.Shows
                            if (_show.Thumbnail != "")
                            {
                                imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
-                           }
-
-                           if (_show.Seasons != "")
-                           {
-                               _seasons = _show.Seasons;
                            }
 
                            panelShowFields.Visibility = Visibility.Visible;
