@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Shows
 {
-    public class ShowBonusSection
+    public class ShowSection
     {
         public string Name { get; set; }
         // JSON encoded SolidColorBrush

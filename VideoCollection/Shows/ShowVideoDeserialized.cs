@@ -10,8 +10,9 @@ using VideoCollection.Subtitles;
 
 namespace VideoCollection.Shows
 {
-    public class ShowBonusVideoDeserialized
+    public class ShowVideoDeserialized : IComparable
     {
+        public int EpisodeNumber { get; set; }
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }
         public string FilePath { get; set; }
@@ -20,8 +21,9 @@ namespace VideoCollection.Shows
         public string SubtitlesSerialized { get; set; }
         public List<SubtitleSegment> Subtitles { get; set; }
 
-        public ShowBonusVideoDeserialized(ShowBonusVideo video)
+        public ShowVideoDeserialized(ShowVideo video)
         {
+            EpisodeNumber = video.EpisodeNumber;
             Title = video.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
             FilePath = video.FilePath;
@@ -31,12 +33,18 @@ namespace VideoCollection.Shows
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
         }
 
-        public ShowBonusVideoDeserialized(string title, string filePath, string runtime, string subtitles)
+        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles)
         {
             Title = title;
             FilePath = filePath;
             Runtime = runtime;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
+        }
+
+        public int CompareTo(object obj)
+        {
+            ShowVideoDeserialized video = obj as ShowVideoDeserialized;
+            return EpisodeNumber.CompareTo(video.EpisodeNumber);
         }
     }
 }

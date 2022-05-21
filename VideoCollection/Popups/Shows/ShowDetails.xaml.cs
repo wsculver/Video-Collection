@@ -29,7 +29,7 @@ namespace VideoCollection.Popups.Shows
         private static int _sideMargins = 16;
         private double _scrollDistance = 0;
         private ShowDeserialized _showDeserialized;
-        private Dictionary<string, List<ShowBonusVideoDeserialized>> _bonusVideosDictionary;
+        private Dictionary<string, List<ShowVideoDeserialized>> _videosDictionary;
         private Border _splash;
         private Action _callback;
 
@@ -82,26 +82,14 @@ namespace VideoCollection.Popups.Shows
                 }
                 categories = categories.Substring(0, categories.Length-2);
                 txtCategories.Text = categories;
-                icBonusSectionButtons.ItemsSource = _showDeserialized.BonusSections;
-                _bonusVideosDictionary = new Dictionary<string, List<ShowBonusVideoDeserialized>>();
-                foreach(ShowBonusVideoDeserialized bonusVideo in _showDeserialized.BonusVideos)
-                {
-                    if(!_bonusVideosDictionary.ContainsKey(bonusVideo.Section))
-                    {
-                        _bonusVideosDictionary.Add(bonusVideo.Section, new List<ShowBonusVideoDeserialized>());
-                    } 
-                    _bonusVideosDictionary[bonusVideo.Section].Add(bonusVideo);
-                }
-                if (_showDeserialized.BonusSections.Any())
-                {
-                    _showDeserialized.BonusSections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
-                    icBonusVideos.ItemsSource = _bonusVideosDictionary[_showDeserialized.BonusSections.FirstOrDefault().Name];
-                    separatorBonusTop.Visibility = Visibility.Visible;
-                    separatorBonusBottom.Visibility = Visibility.Visible;
-                }
+                cmbSeasons.DisplayMemberPath = "SeasonName";
+                cmbSeasons.SelectedValuePath = "SeasonNumber";
+                cmbSeasons.ItemsSource = _showDeserialized.Seasons;
+                cmbSeasons.Text = "Select Season";
+                cmbSeasons.SelectedIndex = 0;
             }
 
-            UpdateBonusScrollButtons();
+            UpdateVideoScrollButtons();
         }
 
         // Scale based on the size of the window
@@ -186,7 +174,7 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                ShowBonusVideoDeserialized bonusVideo = new ShowBonusVideoDeserialized(split[0], split[1], split[2], split[3]);
+                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3]);
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
@@ -259,14 +247,14 @@ namespace VideoCollection.Popups.Shows
         }
 
         // Make the bonus scroll buttons visable if they are needed
-        private void UpdateBonusScrollButtons()
+        private void UpdateVideoScrollButtons()
         {
-            ContentPresenter c2 = (ContentPresenter)icBonusVideos.ItemContainerGenerator.ContainerFromIndex(0);
+            ContentPresenter c2 = (ContentPresenter)icVideos.ItemContainerGenerator.ContainerFromIndex(0);
             if (c2 != null)
             {
                 c2.ApplyTemplate();
                 Image tile = c2.ContentTemplate.FindName("imageThumbnail", c2) as Image;
-                if (Math.Round(icBonusVideos.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollBonusVideos.ActualWidth) && scrollBonusVideos.HorizontalOffset < scrollBonusVideos.ScrollableWidth)
+                if (Math.Round(icVideos.Items.Count * (tile.ActualWidth + tile.Margin.Left + tile.Margin.Right)) > Math.Round(scrollVideos.ActualWidth) && scrollVideos.HorizontalOffset < scrollVideos.ScrollableWidth)
                 {
                     btnNext.Visibility = Visibility.Visible;
                 }
@@ -275,7 +263,7 @@ namespace VideoCollection.Popups.Shows
                     btnNext.Visibility = Visibility.Hidden;
                 }
 
-                if (scrollBonusVideos.HorizontalOffset > 0)
+                if (scrollVideos.HorizontalOffset > 0)
                 {
                     btnPrevious.Visibility = Visibility.Visible;
                 }
@@ -286,21 +274,21 @@ namespace VideoCollection.Popups.Shows
             }
         }
 
-        private void scrollBonusVideos_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        private void scrollVideos_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            UpdateBonusScrollButtons();
+            UpdateVideoScrollButtons();
         }
 
-        private void btnBonusSection_Click(object sender, RoutedEventArgs e)
+        private void btnSection_Click(object sender, RoutedEventArgs e)
         {
             Button clickedButton = sender as Button;
-            for (int i = 0; i < icBonusSectionButtons.Items.Count; i++)
+            for (int i = 0; i < icSectionButtons.Items.Count; i++)
             {
-                ContentPresenter c = (ContentPresenter)icBonusSectionButtons.ItemContainerGenerator.ContainerFromIndex(i);
+                ContentPresenter c = (ContentPresenter)icSectionButtons.ItemContainerGenerator.ContainerFromIndex(i);
                 if (c != null)
                 {
                     c.ApplyTemplate();
-                    Button button = c.ContentTemplate.FindName("btnBonusSection", c) as Button;
+                    Button button = c.ContentTemplate.FindName("btnSection", c) as Button;
                     if(button.Equals(clickedButton))
                     {
                         button.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
@@ -312,10 +300,10 @@ namespace VideoCollection.Popups.Shows
                 }
             }
 
-            scrollBonusVideos.ScrollToHorizontalOffset(0);
-            icBonusVideos.ItemsSource = _bonusVideosDictionary[clickedButton.Content.ToString()];
+            scrollVideos.ScrollToHorizontalOffset(0);
+            icVideos.ItemsSource = _videosDictionary[clickedButton.Content.ToString()];
 
-            UpdateBonusScrollButtons();
+            UpdateVideoScrollButtons();
         }
 
         private void imageShowThumbnail_MouseEnter(object sender, MouseEventArgs e)
@@ -335,15 +323,15 @@ namespace VideoCollection.Popups.Shows
         private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
         {
             StaticHelpers.GetObject<Rectangle>((sender as Image).Parent, "rectPlayBackground").Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayBonus").Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "bonusSplash").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayVideo").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "videoSplash").Visibility = Visibility.Visible;
         }
 
         private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
         {
             StaticHelpers.GetObject<Rectangle>((sender as Image).Parent, "rectPlayBackground").Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayBonus").Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "bonusSplash").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayVideo").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Image).Parent, "videoSplash").Visibility = Visibility.Collapsed;
         }
 
         public void scaleWindow(Window parent)
@@ -358,6 +346,28 @@ namespace VideoCollection.Popups.Shows
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private void cmbSeasons_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            scrollVideos.ScrollToLeftEnd();
+            int selectedSeason = (sender as ComboBox).SelectedItem == null ? 1 : (sender as ComboBox).SelectedIndex;
+            icSectionButtons.ItemsSource = _showDeserialized.Seasons.ElementAt(selectedSeason).Sections;
+            _videosDictionary = new Dictionary<string, List<ShowVideoDeserialized>>();
+            _showDeserialized.Seasons.ElementAt(selectedSeason).Videos.Sort();
+            foreach (ShowVideoDeserialized video in _showDeserialized.Seasons.ElementAt(selectedSeason).Videos)
+            {
+                if (!_videosDictionary.ContainsKey(video.Section))
+                {
+                    _videosDictionary.Add(video.Section, new List<ShowVideoDeserialized>());
+                }
+                _videosDictionary[video.Section].Add(video);
+            }
+            if (_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.Any())
+            {
+                _showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+                icVideos.ItemsSource = _videosDictionary[_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Name];
+            }
         }
     }
 }

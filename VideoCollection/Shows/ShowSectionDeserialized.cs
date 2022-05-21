@@ -8,12 +8,12 @@ using System.Windows.Media;
 
 namespace VideoCollection.Shows
 {
-    public class ShowBonusSectionDeserialized
+    public class ShowSectionDeserialized
     {
         public string Name { get; set; }
         public SolidColorBrush Background { get; set; }
 
-        public ShowBonusSectionDeserialized(ShowBonusSection section)
+        public ShowSectionDeserialized(ShowSection section)
         {
             Name = section.Name;
             Color backgroundColor = JsonConvert.DeserializeObject<Color>(section.Background);

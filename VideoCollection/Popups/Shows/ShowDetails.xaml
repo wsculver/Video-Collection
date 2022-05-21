@@ -42,12 +42,8 @@
                 <Rectangle x:Name="playShowIconBackground" Fill="{StaticResource BackgroundBrush}" Width="32" Height="32" IsHitTestVisible="False" Visibility="Collapsed"/>
                 <materialDesign:PackIcon x:Name="iconPlayShow" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
             </Grid>
-                
+
             <StackPanel Grid.Column="1" Margin="22,-2,0,0">
-                <StackPanel Orientation="Horizontal">
-                    <Label FontWeight="Bold">Runtime:</Label>
-                    <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0"/>
-                </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Rating:</Label>
                     <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
@@ -58,21 +54,40 @@
                 </StackPanel>
             </StackPanel>
         </Grid>
-        
-        <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
-        <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <Separator x:Name="separatorBonusBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1" Visibility="Collapsed"/>
+
+        <Separator x:Name="separatorVideosTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1"/>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ComboBox x:Name="cmbSeasons" Grid.Column="0"
+                  SelectionChanged="cmbSeasons_SelectionChanged"
+                  FontSize="10"    
+                  FontWeight="Bold"
+                  HorizontalAlignment="Left"   
+                  BorderThickness="0"  
+                  VerticalContentAlignment="Center"  
+                  Background="Transparent"
+                  Foreground="White"  
+                  IsEditable="False"
+                  IsReadOnly="True"
+                  Margin="25,0,0,0" MaxDropDownHeight="118" Padding="0,4,0,4"/>
+            <ItemsControl x:Name="icSectionButtons" Grid.Column="1" Margin="0,0,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button x:Name="btnSection" Content="{Binding Name}" Click="btnSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+        <Separator x:Name="separatorVideosBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
 
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
@@ -81,8 +96,8 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <customtypes:AnimatedScrollViewer x:Name="scrollBonusVideos" ScrollChanged="scrollBonusVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
-                <ItemsControl x:Name="icBonusVideos">
+            <customtypes:AnimatedScrollViewer x:Name="scrollVideos" ScrollChanged="scrollVideos_ScrollChanged" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,0">
+                <ItemsControl x:Name="icVideos">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal"/>
@@ -108,18 +123,18 @@
                                         </TextBlock.Text>
                                     </TextBlock>
                                     <Image x:Name="imageThumbnail" Width="152" Height="85" Source="{Binding Thumbnail}" Cursor="Hand" MouseDown="imageThumbnail_MouseDown" MouseEnter="imageThumbnail_MouseEnter" MouseLeave="imageThumbnail_MouseLeave" Tag="{Binding Text, ElementName=hiddenText}" Margin="1,6,1,6"/>
-                                    <TextBlock x:Name="txtBonusRuntime" Foreground="White" Text="{Binding Runtime}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,4,8" Padding="2,0,2,1" FontSize="8" FontWeight="Bold">
+                                    <TextBlock x:Name="txtRuntime" Foreground="White" Text="{Binding Runtime}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,4,8" Padding="2,0,2,1" FontSize="8" FontWeight="Bold">
                                         <TextBlock.Background>
                                             <SolidColorBrush Color="Black" Opacity="0.8"/>
                                         </TextBlock.Background>
                                     </TextBlock>
-                                    <Border x:Name="bonusSplash" Background="Black" Opacity="0.25" Width="152" Height="85" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                    <Border x:Name="videoSplash" Background="Black" Opacity="0.25" Width="152" Height="85" IsHitTestVisible="False" Visibility="Collapsed"/>
                                     <Rectangle x:Name="rectPlayBackground" Fill="{StaticResource BackgroundBrush}" Width="16" Height="16" IsHitTestVisible="False" Visibility="Collapsed"/>
-                                    <Border x:Name="iconPlayBonus" IsHitTestVisible="False" Visibility="Collapsed">
+                                    <Border x:Name="iconPlayVideo" IsHitTestVisible="False" Visibility="Collapsed">
                                         <materialDesign:PackIcon Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock x:Name="textBonusVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
+                                <TextBlock x:Name="textVideoTitle" Grid.Row="1" Text="{Binding Title}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis" FontSize="8" Width="126" Foreground="White" TextAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

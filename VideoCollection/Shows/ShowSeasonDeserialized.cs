@@ -20,26 +20,28 @@ namespace VideoCollection.Shows
     public class ShowSeasonDeserialized
     {
         public int SeasonNumber { get; set; }
-        public List<ShowBonusSectionDeserialized> BonusSections { get; set; }
-        public List<ShowBonusVideoDeserialized> BonusVideos { get; set; }
+        public string SeasonName { get; set; }
+        public List<ShowSectionDeserialized> Sections { get; set; }
+        public List<ShowVideoDeserialized> Videos { get; set; }
 
         public ShowSeasonDeserialized(ShowSeason show)
         {
             SeasonNumber = show.SeasonNumber;
-            List<ShowBonusSection> showBonusSections = JsonConvert.DeserializeObject<List<ShowBonusSection>>(show.BonusSections);
-            List<ShowBonusSectionDeserialized> showBonusSectionsDeserialized = new List<ShowBonusSectionDeserialized>();
-            foreach (ShowBonusSection section in showBonusSections)
+            SeasonName = show.SeasonName;
+            List<ShowSection> showSections = JsonConvert.DeserializeObject<List<ShowSection>>(show.Sections);
+            List<ShowSectionDeserialized> showSectionsDeserialized = new List<ShowSectionDeserialized>();
+            foreach (ShowSection section in showSections)
             {
-                showBonusSectionsDeserialized.Add(new ShowBonusSectionDeserialized(section));
+                showSectionsDeserialized.Add(new ShowSectionDeserialized(section));
             }
-            BonusSections = showBonusSectionsDeserialized;
-            List<ShowBonusVideo> showBonusVideos = JsonConvert.DeserializeObject<List<ShowBonusVideo>>(show.BonusVideos);
-            List<ShowBonusVideoDeserialized> showBonusVideosDeserialized = new List<ShowBonusVideoDeserialized>();
-            foreach (ShowBonusVideo video in showBonusVideos)
+            Sections = showSectionsDeserialized;
+            List<ShowVideo> showVideos = JsonConvert.DeserializeObject<List<ShowVideo>>(show.Videos);
+            List<ShowVideoDeserialized> showVideosDeserialized = new List<ShowVideoDeserialized>();
+            foreach (ShowVideo video in showVideos)
             {
-                showBonusVideosDeserialized.Add(new ShowBonusVideoDeserialized(video));
+                showVideosDeserialized.Add(new ShowVideoDeserialized(video));
             }
-            BonusVideos = showBonusVideosDeserialized;
+            Videos = showVideosDeserialized;
         }
     }
 }

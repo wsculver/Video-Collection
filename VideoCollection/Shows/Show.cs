@@ -17,10 +17,6 @@ namespace VideoCollection.Shows
         public string Thumbnail { get; set; }
         // JSON encoded List<ShowSeasonDeserialized>
         public string Seasons { get; set; }
-        // JSON encoded List<string>
-        public string BonusSections { get; set; }
-        // JSON encoded List<ShowBonusVideo>
-        public string BonusVideos { get; set; }
         public string Rating { get; set; }
         // JSON encoded List<string>
         public string Categories { get; set; }

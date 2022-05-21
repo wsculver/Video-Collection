@@ -31,6 +31,7 @@ namespace VideoCollection.Popups.Shows
         private List<string> _selectedCategories;
         private int _showId;
         private ShowDeserialized _show;
+        private string _seasons;
         private string _rating;
         private string _originalShowName;
         private bool _showDeleted = false;
@@ -53,6 +54,7 @@ namespace VideoCollection.Popups.Shows
             _splash = splash;
             _callback = callback;
 
+            _seasons = "";
             _selectedCategories = new List<string>();
             _rating = "";
 
@@ -152,16 +154,6 @@ namespace VideoCollection.Popups.Shows
             }
         }
 
-        // Choose show file
-        private void btnChooseFile_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog filePath = StaticHelpers.CreateVideoFileDialog();
-            if (filePath.ShowDialog() == true)
-            {
-                txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
-            }
-        }
-
         // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
@@ -190,20 +182,23 @@ namespace VideoCollection.Popups.Shows
                 _show = show;
                 switch(show.Rating)
                 {
-                    case "G":
-                        btnG.IsChecked = true;
+                    case "TV Y":
+                        btnTVY.IsChecked = true;
                         break;
-                    case "PG":
-                        btnPG.IsChecked = true;
+                    case "TV Y7":
+                        btnTVY7.IsChecked = true;
                         break;
-                    case "PG-13":
-                        btnPG13.IsChecked = true;
+                    case "TV G":
+                        btnTVG.IsChecked = true;
                         break;
-                    case "R":
-                        btnR.IsChecked = true;
+                    case "TV PG":
+                        btnTVPG.IsChecked = true;
                         break;
-                    case "NC-17":
-                        btnNC17.IsChecked = true;
+                    case "TV 14":
+                        btnTV14.IsChecked = true;
+                        break;
+                    case "TV MA":
+                        btnTVMA.IsChecked = true;
                         break;
                 }
                 _rating = show.Rating;
@@ -266,11 +261,6 @@ namespace VideoCollection.Popups.Shows
                     ShowOKMessageBox("You need to enter a show name");
                     return false;
                 }
-                else if (txtFile.Text == "")
-                {
-                    ShowOKMessageBox("You need to select a show file");
-                    return false;
-                }
                 else if (_rating == "")
                 {
                     ShowOKMessageBox("You need to select a rating");
@@ -302,36 +292,9 @@ namespace VideoCollection.Popups.Shows
                             show.Title = txtShowName.Text.ToUpper();
                             show.ShowFolderPath = txtShowFolder.Text;
                             show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
-                            List<ShowBonusSection> bonusSections = new List<ShowBonusSection>();
-                            foreach (ShowBonusSectionDeserialized section in _show.BonusSections)
-                            {
-                                ShowBonusSection sec = new ShowBonusSection()
-                                {
-                                    Name = section.Name,
-                                    Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
-                                };
-                                bonusSections.Add(sec);
-                            }
-                            show.BonusSections = JsonConvert.SerializeObject(bonusSections);
-                            List<ShowBonusVideo> bonusVideos = new List<ShowBonusVideo>();
-                            foreach (ShowBonusVideoDeserialized video in _show.BonusVideos)
-                            {
-                                ShowBonusVideo vid = new ShowBonusVideo()
-                                {
-                                    Title = video.Title,
-                                    Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
-                                    FilePath = video.FilePath,
-                                    Section = video.Section,
-                                    Runtime = video.Runtime,
-                                    Subtitles = video.SubtitlesSerialized
-                                };
-                                bonusVideos.Add(vid);
-                            }
-                            show.BonusVideos = JsonConvert.SerializeObject(bonusVideos);
+                            show.Seasons = _seasons;                          
                             show.Rating = _rating;
                             show.Categories = JsonConvert.SerializeObject(_selectedCategories);
-                            // Parse the subtitle file
-                            SubtitleParser subParser = new SubtitleParser();
                             connection.Update(show);
 
                             // Update the ShowCateogry table
@@ -412,6 +375,11 @@ namespace VideoCollection.Popups.Shows
                 if (show.Thumbnail != "")
                 {
                     imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(show.Thumbnail));
+                }
+
+                if (show.Seasons != "")
+                {
+                    _seasons = show.Seasons;
                 }
             }
         }

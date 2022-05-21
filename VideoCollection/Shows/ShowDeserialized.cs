@@ -24,8 +24,6 @@ namespace VideoCollection.Shows
         public string ShowFolderPath { get; set; }
         public ImageSource Thumbnail { get; set; }
         public List<ShowSeasonDeserialized> Seasons { get; set; }
-        public List<ShowBonusSectionDeserialized> BonusSections { get; set; }
-        public List<ShowBonusVideoDeserialized> BonusVideos { get; set; }
         public string Rating { get; set; }
         public List<string> Categories { get; set; }
         public bool IsChecked { get; set; }
@@ -43,20 +41,6 @@ namespace VideoCollection.Shows
                 showSeasonsDeserialized.Add(new ShowSeasonDeserialized(season));
             }
             Seasons = showSeasonsDeserialized;
-            List<ShowBonusSection> showBonusSections = JsonConvert.DeserializeObject<List<ShowBonusSection>>(show.BonusSections);
-            List<ShowBonusSectionDeserialized> showBonusSectionsDeserialized = new List<ShowBonusSectionDeserialized>();
-            foreach (ShowBonusSection section in showBonusSections)
-            {
-                showBonusSectionsDeserialized.Add(new ShowBonusSectionDeserialized(section));
-            }
-            BonusSections = showBonusSectionsDeserialized;
-            List<ShowBonusVideo> showBonusVideos = JsonConvert.DeserializeObject<List<ShowBonusVideo>>(show.BonusVideos);
-            List<ShowBonusVideoDeserialized> showBonusVideosDeserialized = new List<ShowBonusVideoDeserialized>();
-            foreach (ShowBonusVideo video in showBonusVideos)
-            {
-                showBonusVideosDeserialized.Add(new ShowBonusVideoDeserialized(video));
-            }
-            BonusVideos = showBonusVideosDeserialized;
             Rating = show.Rating;
             Categories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
             IsChecked = show.IsChecked;

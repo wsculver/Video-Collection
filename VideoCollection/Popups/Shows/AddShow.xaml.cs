@@ -34,6 +34,7 @@ namespace VideoCollection.Popups.Shows
         private List<ShowCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
         private Show _show;
+        private string _seasons;
         private string _rating = "";
         private Border _splash;
         private Action _callback;
@@ -55,6 +56,7 @@ namespace VideoCollection.Popups.Shows
             _callback = callback;
             _selectedCategories = new List<string>();
             _show = new Show();
+            _seasons = "";
 
             WidthScale = 0.43;
             HeightScale = 0.85;
@@ -121,10 +123,6 @@ namespace VideoCollection.Popups.Shows
             {
                 ShowOKMessageBox("You need to enter a show name");
             }
-            else if (txtFile.Text == "")
-            { 
-                ShowOKMessageBox("You need to select a show file");
-            }
             else if (_rating == "")
             {
                 ShowOKMessageBox("You need to select a rating");
@@ -134,8 +132,18 @@ namespace VideoCollection.Popups.Shows
                 string thumbnail = "";
                 if (imgThumbnail.Source == null)
                 {
-                    ImageSource image = StaticHelpers.CreateThumbnailFromVideoFile(txtFile.Text, TimeSpan.FromSeconds(60));
-                    thumbnail = StaticHelpers.ImageSourceToBase64(image);
+                    var episodeVideoFiles = Directory.GetFiles(txtShowFolder.Text, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+                    string video = episodeVideoFiles.FirstOrDefault();
+                    if (video != null)
+                    {
+                        ImageSource image = StaticHelpers.CreateThumbnailFromVideoFile(video, TimeSpan.FromSeconds(60));
+                        thumbnail = StaticHelpers.ImageSourceToBase64(image);
+                    } 
+                    else
+                    {
+                        ShowOKMessageBox("Unable to create a thumbnail. Please select one manually.");
+                        return;
+                    }
                 }
                 else
                 {
@@ -147,8 +155,7 @@ namespace VideoCollection.Popups.Shows
                     Title = txtShowName.Text.ToUpper(),
                     ShowFolderPath = txtShowFolder.Text,
                     Thumbnail = thumbnail,
-                    BonusSections = _show.BonusSections,
-                    BonusVideos = _show.BonusVideos,
+                    Seasons = _seasons,
                     Rating = _rating,
                     Categories = JsonConvert.SerializeObject(_selectedCategories),
                     IsChecked = false
@@ -199,16 +206,6 @@ namespace VideoCollection.Popups.Shows
             }
         }
 
-        // Choose show file
-        private void btnChooseFile_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog filePath = StaticHelpers.CreateVideoFileDialog();
-            if (filePath.ShowDialog() == true)
-            {
-                txtFile.Text = StaticHelpers.GetRelativePathStringFromCurrent(filePath.FileName);
-            }
-        }
-
         // Choose image file
         private void btnChooseImage_Click(object sender, RoutedEventArgs e)
         {
@@ -238,6 +235,11 @@ namespace VideoCollection.Popups.Shows
                            if (_show.Thumbnail != "")
                            {
                                imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
+                           }
+
+                           if (_show.Seasons != "")
+                           {
+                               _seasons = _show.Seasons;
                            }
 
                            panelShowFields.Visibility = Visibility.Visible;

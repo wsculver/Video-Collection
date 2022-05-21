@@ -124,7 +124,7 @@ namespace VideoCollection.Popups
             updateVideo(show);
         }
 
-        public VideoPlayer(ShowBonusVideoDeserialized showBonusVideo)
+        public VideoPlayer(ShowVideoDeserialized showBonusVideo)
         {
             InitializeComponent();
 
@@ -204,13 +204,13 @@ namespace VideoCollection.Popups
             txtTitle.Text = show.Title;
             update();
         }
-        public void updateVideo(ShowBonusVideoDeserialized showBonusVideo)
+        public void updateVideo(ShowVideoDeserialized showVideo)
         {
-            meVideoPlayer.Source = new Uri(showBonusVideo.FilePath);
-            txtTitle.Text = showBonusVideo.Title;
-            txtDuration.Text = showBonusVideo.Runtime;
-            setTimeFormat(showBonusVideo.Runtime);
-            _subtitles = showBonusVideo.Subtitles;
+            meVideoPlayer.Source = new Uri(showVideo.FilePath);
+            txtTitle.Text = showVideo.Title;
+            txtDuration.Text = showVideo.Runtime;
+            setTimeFormat(showVideo.Runtime);
+            _subtitles = showVideo.Subtitles;
             update();
         }
 

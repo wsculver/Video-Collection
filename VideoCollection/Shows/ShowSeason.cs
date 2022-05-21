@@ -12,10 +12,11 @@ namespace VideoCollection.Shows
     {
         [PrimaryKey, AutoIncrement]
         public int SeasonNumber { get; set; }
+        public string SeasonName { get; set; }
         // JSON encoded List<string>
-        public string BonusSections { get; set; }
-        // JSON encoded List<ShowBonusVideo>
-        public string BonusVideos { get; set; }
+        public string Sections { get; set; }
+        // JSON encoded List<ShowVideo>
+        public string Videos { get; set; }
        
         public int CompareTo(object obj)
         {

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace VideoCollection.Shows
 {
-    public class ShowBonusVideo
+    public class ShowVideo : IComparable
     {
+        public int EpisodeNumber { get; set; }
         public string Title { get; set; }
         public string Thumbnail { get; set; }
         public string FilePath { get; set; }
@@ -15,5 +16,11 @@ namespace VideoCollection.Shows
         public string Runtime { get; set; }
         // JSON encoded List<SubtitleSegment>
         public string Subtitles { get; set; }
+
+        public int CompareTo(object obj)
+        {
+            ShowVideo video = obj as ShowVideo;
+            return EpisodeNumber.CompareTo(video.EpisodeNumber);
+        }
     }
 }
