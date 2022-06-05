@@ -293,14 +293,27 @@ namespace VideoCollection.Helpers
                 var episodeSubtitleFiles = Directory.GetFiles(seasonFolder, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.EndsWith(".srt"));
 
                 var subdirectories = Directory.GetDirectories(seasonFolder, "*.*", SearchOption.TopDirectoryOnly);
-                bool bonusExists = !String.IsNullOrEmpty(subdirectories.Where(d => d.EndsWith("Bonus")).FirstOrDefault());
                 IEnumerable<string> bonusVideoFiles = null;
                 IEnumerable<string> bonusSubtitleFiles = null;
-                if (bonusExists)
+                foreach(var directory in subdirectories)
                 {
-                    string bonusFolder = Path.Combine(seasonFolder, "Bonus");
-                    bonusVideoFiles = Directory.GetFiles(bonusFolder, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
-                    bonusSubtitleFiles = Directory.GetFiles(bonusFolder, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
+                    if(bonusVideoFiles == null)
+                    {
+                        bonusVideoFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+                    } 
+                    else
+                    {
+                        bonusVideoFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv")));
+                    }
+
+                    if(bonusSubtitleFiles == null)
+                    {
+                        bonusSubtitleFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
+                    }
+                    else
+                    {
+                        bonusSubtitleFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt")));
+                    }
                 }
 
                 List<ShowVideo> videos = new List<ShowVideo>();
