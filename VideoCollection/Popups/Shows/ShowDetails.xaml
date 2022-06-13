@@ -7,7 +7,9 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
         xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
         mc:Ignorable="d"
-        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
+        WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" 
+        Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize"
+        MouseMove="showDetailsWindow_MouseMove">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -51,6 +53,10 @@
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Categories:</Label>
                     <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label FontWeight="Bold">Next Episode:</Label>
+                    <TextBlock x:Name="txtNextEpisode" Foreground="White" Text="{Binding Title}" Margin="0,4,0,0"/>
                 </StackPanel>
             </StackPanel>
         </Grid>

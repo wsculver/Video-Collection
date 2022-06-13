@@ -89,6 +89,8 @@ namespace VideoCollection.Popups.Shows
                 cmbSeasons.SelectedIndex = 0;
             }
 
+            this.DataContext = _showDeserialized.NextEpisode;
+
             UpdateVideoScrollButtons();
         }
 
@@ -174,7 +176,7 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3], split[4], split[5]);
+                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3], split[4], split[5], true);
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
@@ -368,6 +370,11 @@ namespace VideoCollection.Popups.Shows
                 _showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
                 icVideos.ItemsSource = _videosDictionary[_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Name];
             }
+        }
+
+        private void showDetailsWindow_MouseMove(object sender, MouseEventArgs e)
+        {
+            this.DataContext = _showDeserialized.NextEpisode;
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Drawing.Imaging;
 using System.Windows;
 using VideoCollection.Database;
 using Newtonsoft.Json;
+using SQLite;
 
 namespace VideoCollection.Shows
 {
@@ -47,6 +48,33 @@ namespace VideoCollection.Shows
             Rating = show.Rating;
             Categories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
             IsChecked = show.IsChecked;
+        }
+
+
+
+        // Update the next episode for a show
+        public void UpdateNextEpisode()
+        {
+            int seasonNum = NextEpisode.NextEpisode.Item1;
+            int episodeNum = NextEpisode.NextEpisode.Item2;
+
+            NextEpisode = Seasons.ElementAt(seasonNum).Videos.ElementAt(episodeNum);
+
+            Show show = new Show(this);
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Show>();
+                connection.Update(show);
+                /*List<ShowCategory> categories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                foreach (ShowCategory category in categories)
+                {
+                    if (this.Categories.Contains(category.Name))
+                    {
+                        connection.Update(category);
+                    }
+                }*/
+            }
         }
     }
 }

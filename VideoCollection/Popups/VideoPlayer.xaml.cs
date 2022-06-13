@@ -206,6 +206,7 @@ namespace VideoCollection.Popups
             txtDuration.Text = show.NextEpisode.Runtime;
             setTimeFormat(show.NextEpisode.Runtime);
             _subtitles = show.NextEpisode.Subtitles;
+            show.UpdateNextEpisode();
             update();
         }
         public void updateVideo(ShowVideoDeserialized showVideo)

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VideoCollection.Helpers;
+using Newtonsoft.Json;
 
 namespace VideoCollection.Shows
 {
@@ -24,6 +26,26 @@ namespace VideoCollection.Shows
         public string Categories { get; set; }
         // Used for editing categories
         public bool IsChecked { get; set; }
+
+        public Show() { }
+
+        public Show(ShowDeserialized show)
+        {
+            Id = show.Id;
+            Title = show.Title;
+            ShowFolderPath = show.ShowFolderPath;
+            Thumbnail = StaticHelpers.ImageSourceToBase64(show.Thumbnail);
+            List<ShowSeason> seasons = new List<ShowSeason>();
+            foreach(var season in show.Seasons)
+            {
+                seasons.Add(new ShowSeason(season));
+            }
+            Seasons = JsonConvert.SerializeObject(seasons);
+            NextEpisode = JsonConvert.SerializeObject(new ShowVideo(show.NextEpisode));
+            Rating = show.Rating;
+            Categories = JsonConvert.SerializeObject(show.Categories);
+            IsChecked = false;
+        }
 
         public int CompareTo(object obj)
         {

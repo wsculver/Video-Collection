@@ -124,14 +124,18 @@ namespace VideoCollection.Helpers
             string bonusTitle = Path.GetFileNameWithoutExtension(videoFile);
             string bonusSubtitleFile = "";
             List<SubtitleSegment> bonusSubtitles = new List<SubtitleSegment>();
-            var bonusSubtitleFiles = subtitleFiles.Where(s => s.EndsWith(bonusTitle + ".srt"));
+            var bonusSubtitleFiles = subtitleFiles
+                .Where(s => s.EndsWith(bonusTitle + ".srt", StringComparison.OrdinalIgnoreCase));
             if (bonusSubtitleFiles.Any())
             {
                 bonusSubtitleFile = bonusSubtitleFiles.FirstOrDefault();
                 bonusSubtitles = subParser.ExtractSubtitles(bonusSubtitleFile);
             }
 
-            var bonusImageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(bonusTitle + ".png") || s.EndsWith(bonusTitle + ".jpg") || s.EndsWith(bonusTitle + ".jpeg"));
+            var bonusImageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(bonusTitle + ".png", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(bonusTitle + ".jpg", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(bonusTitle + ".jpeg", StringComparison.OrdinalIgnoreCase));
             string bonusThumbnail = "";
             if (bonusImageFiles.Any())
             {
@@ -152,8 +156,13 @@ namespace VideoCollection.Helpers
         // Parse a movie bonus folder to format all videos in it
         public static async Task<Movie> ParseMovieVideos(string movieFolderPath)
         {
-            var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
-            var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
+            var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
+            var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
 
             // The first video found should be the movie
             string movieFile = videoFiles.FirstOrDefault();
@@ -202,7 +211,10 @@ namespace VideoCollection.Helpers
             }
 
             // Get the thumbnail file if it exists, otherwise create one
-            var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(movieTitle + ".png") || s.EndsWith(movieTitle + ".jpg") || s.EndsWith(movieTitle + ".jpeg"));
+            var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(movieTitle + ".png", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(movieTitle + ".jpg", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(movieTitle + ".jpeg", StringComparison.OrdinalIgnoreCase));
             string movieThumbnail = "";
             if (imageFiles.Any())
             {
@@ -216,7 +228,8 @@ namespace VideoCollection.Helpers
 
             SubtitleParser subParser = new SubtitleParser();
             // Get the subtitle file path and parse it
-            string subtitleFile = subtitleFiles.Where(s => s.EndsWith(movieTitle + ".srt")).FirstOrDefault();
+            string subtitleFile = subtitleFiles
+                .Where(s => s.EndsWith(movieTitle + ".srt", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             List<SubtitleSegment> subtitles = new List<SubtitleSegment>();
             if (subtitleFile != null)
             {
@@ -245,14 +258,18 @@ namespace VideoCollection.Helpers
             string episodeTitle = Path.GetFileNameWithoutExtension(videoFile);
             string episodeSubtitleFile = "";
             List<SubtitleSegment> episodeSubtitles = new List<SubtitleSegment>();
-            var episodeSubtitleFiles = subtitleFiles.Where(s => s.EndsWith(episodeTitle + ".srt"));
+            var episodeSubtitleFiles = subtitleFiles
+                .Where(s => s.EndsWith(episodeTitle + ".srt", StringComparison.OrdinalIgnoreCase));
             if (episodeSubtitleFiles.Any())
             {
                 episodeSubtitleFile = episodeSubtitleFiles.FirstOrDefault();
                 episodeSubtitles = subParser.ExtractSubtitles(episodeSubtitleFile);
             }
 
-            var episodeImageFiles = Directory.GetFiles(seasonFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(episodeTitle + ".png") || s.EndsWith(episodeTitle + ".jpg") || s.EndsWith(episodeTitle + ".jpeg"));
+            var episodeImageFiles = Directory.GetFiles(seasonFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(episodeTitle + ".png", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(episodeTitle + ".jpg", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(episodeTitle + ".jpeg", StringComparison.OrdinalIgnoreCase));
             string episodeThumbnail = "";
             if (episodeImageFiles.Any())
             {
@@ -277,20 +294,42 @@ namespace VideoCollection.Helpers
 
             List<ShowSeason> seasons = new List<ShowSeason>();
             ShowVideo nextEpisode = new ShowVideo();
+            List<List<ShowVideo>> showVideos = new List<List<ShowVideo>>();
+            List<List<ShowSection>> showSections = new List<List<ShowSection>>();
 
             var seasonFolders = Directory.GetDirectories(showFolderPath, "*.*", SearchOption.TopDirectoryOnly);
-            var showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolders.First())).ToUpper();
+            var showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolders.First()));
             int numSeasons = seasonFolders.Count();
-            for (int s = 0; s < numSeasons; s++)
+            for (int n = 0; n < numSeasons; n++)
             {
-                string seasonFolder = seasonFolders.ElementAt(s);
+                showVideos.Add(new List<ShowVideo>());
+            }
+            for (int n = 0; n < numSeasons; n++)
+            {
+                int season = n;
+                string seasonFolder = seasonFolders.ElementAt(n);
+                Regex rx = new Regex(@"(Season)\s+(?<season>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                MatchCollection matches = rx.Matches(seasonFolder);
+                Match match = matches.FirstOrDefault();
+                if (match != null)
+                {
+                    GroupCollection groups = match.Groups;
+                    bool success = int.TryParse(groups["season"].Value, out season);
+                }
 
-                var episodeVideoFiles = Directory.GetFiles(seasonFolder, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
-                if (s == 0)
+                List<ShowVideo> videos = new List<ShowVideo>();
+
+                var episodeVideoFiles = Directory.GetFiles(seasonFolder, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
+                    || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+                    || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
+                    || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
+                if (season == 1)
                 {
                     showThumbnailVideoFile = episodeVideoFiles.FirstOrDefault();
                 }
-                var episodeSubtitleFiles = Directory.GetFiles(seasonFolder, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.EndsWith(".srt"));
+                var episodeSubtitleFiles = Directory.GetFiles(seasonFolder, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
 
                 var subdirectories = Directory.GetDirectories(seasonFolder, "*.*", SearchOption.TopDirectoryOnly);
                 IEnumerable<string> bonusVideoFiles = null;
@@ -299,49 +338,51 @@ namespace VideoCollection.Helpers
                 {
                     if(bonusVideoFiles == null)
                     {
-                        bonusVideoFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv"));
+                        bonusVideoFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                            .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
                     } 
                     else
                     {
-                        bonusVideoFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".m4v") || s.EndsWith(".mp4") || s.EndsWith(".MOV") || s.EndsWith(".mkv")));
+                        bonusVideoFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                            .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
+                            || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase)));
                     }
 
                     if(bonusSubtitleFiles == null)
                     {
-                        bonusSubtitleFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt"));
+                        bonusSubtitleFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                            .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
                     }
                     else
                     {
-                        bonusSubtitleFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".srt")));
+                        bonusSubtitleFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                            .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase)));
                     }
                 }
 
-                List<ShowVideo> videos = new List<ShowVideo>();
                 List<ShowVideo> commentaries = new List<ShowVideo>();
                 List<ShowVideo> deletedScenes = new List<ShowVideo>();
 
                 // Episodes
                 var episodeTasks = new List<Task<Tuple<int, string, string, List<SubtitleSegment>, string>>>();
-                int numEpisodes = episodeVideoFiles.Count();
-                for (int i = 0; i < numEpisodes; i++)
+                int numEpisodeVideoFiles = episodeVideoFiles.Count();
+                for (int i = 0; i < numEpisodeVideoFiles; i++)
                 {
                     string videoFile = episodeVideoFiles.ElementAt(i);
-                    Regex rx = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                    MatchCollection matches = rx.Matches(videoFile);
-                    Match match = matches.FirstOrDefault();
-                    if (match != null)
+                    Regex rxEpisode = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    MatchCollection matchesEpisode = rxEpisode.Matches(videoFile);
+                    Match matchEpisode = matchesEpisode.FirstOrDefault();
+                    if (matchEpisode != null)
                     {
-                        GroupCollection groups = match.Groups;
-                        int episodeNumber = 0;
+                        GroupCollection groups = matchEpisode.Groups;
+                        int episodeNumber = i + 1;
                         bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
-                        if (success)
-                        {
-                            episodeTasks.Add(ParseEpisode(episodeNumber, showFolderPath, videoFile, episodeSubtitleFiles));
-                        }
-                        else
-                        {
-                            episodeTasks.Add(ParseEpisode(i + 1, showFolderPath, videoFile, episodeSubtitleFiles));
-                        }
+                        episodeTasks.Add(ParseEpisode(episodeNumber, showFolderPath, videoFile, episodeSubtitleFiles));
                     }
                     else
                     {
@@ -360,15 +401,15 @@ namespace VideoCollection.Helpers
                 for (int i = 0; i < numBonusVideoFiles; i++)
                 {
                     string videoFile = bonusVideoFiles.ElementAt(i);
-                    Regex rx = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                    MatchCollection matches = rx.Matches(videoFile);
-                    Match match = matches.FirstOrDefault();
-                    if (match != null)
+                    Regex rxBonus = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    MatchCollection matchesBonus = rxBonus.Matches(videoFile);
+                    Match matchBonus = matchesBonus.FirstOrDefault();
+                    if (matchBonus != null)
                     {
-                        GroupCollection groups = match.Groups;
+                        GroupCollection groups = matchBonus.Groups;
                         int episodeNumber = 0;
                         bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
-                        if (success)
+                        if(success)
                         {
                             bonusTasks.Add(ParseBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, episodeNumber));
                         }
@@ -389,6 +430,7 @@ namespace VideoCollection.Helpers
                     bonusSectionsSet.Add(task.Item1);
                     ShowVideo video = new ShowVideo()
                     {
+                        SeasonNumber = season,
                         EpisodeNumber = task.Item6,
                         Title = task.Item2.ToUpper(),
                         Thumbnail = task.Item3,
@@ -397,7 +439,8 @@ namespace VideoCollection.Helpers
                         DeletedScenes = "",
                         Section = task.Item1,
                         Runtime = GetVideoDuration(task.Item5),
-                        Subtitles = JsonConvert.SerializeObject(task.Item4)
+                        Subtitles = JsonConvert.SerializeObject(task.Item4),
+                        NextEpisode = ""
                     };
                     videos.Add(video);
 
@@ -411,6 +454,7 @@ namespace VideoCollection.Helpers
                         deletedScenes.Add(video);
                     }
                 }
+                List<ShowVideo> episodes = new List<ShowVideo>();
                 foreach (var task in await Task.WhenAll(episodeTasks))
                 {
                     // Link commentaries and deleted scenes if there are any
@@ -438,6 +482,7 @@ namespace VideoCollection.Helpers
 
                     ShowVideo episode = new ShowVideo()
                     {
+                        SeasonNumber = season,
                         EpisodeNumber = task.Item1,
                         Title = task.Item2.ToUpper(),
                         Thumbnail = task.Item3,
@@ -446,12 +491,13 @@ namespace VideoCollection.Helpers
                         DeletedScenes = JsonConvert.SerializeObject(episodeDeletedScenes),
                         Section = "EPISODES",
                         Runtime = GetVideoDuration(task.Item5),
-                        Subtitles = JsonConvert.SerializeObject(task.Item4)
+                        Subtitles = JsonConvert.SerializeObject(task.Item4),
+                        NextEpisode = ""
                     };
                     videos.Add(episode);
 
                     // Set the initial next episode to episode 1
-                    if (s == 0 && task.Item1 == 1)
+                    if (season == 1 && task.Item1 == 1)
                     {
                         nextEpisode = episode;
                     }
@@ -473,19 +519,56 @@ namespace VideoCollection.Helpers
                     };
                     sections.Add(section);
                 }
+                showSections.Add(sections);
+
+                // Sort the videos
+                showVideos[season - 1] = videos.OrderBy(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
+            }
+
+            int numShowVideos = showVideos.Count();
+            for (int i = 0; i < numShowVideos; i++)
+            {
+                // Set the next episode for each episode
+                var seasonList = showVideos.ElementAt(i);
+                var nextSeasonList = (i < numShowVideos - 1) ? showVideos.ElementAt(i + 1) : showVideos.ElementAt(0);
+                int numVideos = seasonList.Count();
+                for (int j = 0; j < numVideos - 1; j++)
+                {
+                    if (seasonList.ElementAt(j).EpisodeNumber > 0)
+                    {
+                        seasonList.ElementAt(j).NextEpisode = JsonConvert.SerializeObject(new Tuple<int, int>(i, j + 1));
+                    }
+                }
+                if (seasonList.ElementAt(numVideos - 1).EpisodeNumber > 0)
+                {
+                    int videoIndex = 0;
+                    int numNextVideos = nextSeasonList.Count();
+                    for(int k = 0; k < numNextVideos; k++)
+                    {
+                        if(nextSeasonList.ElementAt(k).EpisodeNumber == 1)
+                        {
+                            videoIndex = k;
+                            break;
+                        }
+                    }
+                    seasonList.ElementAt(numVideos - 1).NextEpisode = JsonConvert.SerializeObject(new Tuple<int, int>(i + 1, videoIndex));
+                }
 
                 ShowSeason season = new ShowSeason()
                 {
-                    SeasonNumber = s + 1,
-                    SeasonName = "Season " + (s + 1).ToString(),
-                    Sections = JsonConvert.SerializeObject(sections),
-                    Videos = JsonConvert.SerializeObject(videos),
+                    SeasonNumber = i + 1,
+                    SeasonName = "Season " + (i + 1).ToString(),
+                    Sections = JsonConvert.SerializeObject(showSections.ElementAt(i)),
+                    Videos = JsonConvert.SerializeObject(seasonList)
                 };
                 seasons.Add(season);
             }
 
             // Get the thumbnail file if it exists, otherwise create one
-            var imageFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(showTitle + ".png") || s.EndsWith(showTitle + ".jpg") || s.EndsWith(showTitle + ".jpeg"));
+            var imageFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(showTitle + ".png", StringComparison.OrdinalIgnoreCase) 
+                || s.EndsWith(showTitle + ".jpg", StringComparison.OrdinalIgnoreCase) 
+                || s.EndsWith(showTitle + ".jpeg", StringComparison.OrdinalIgnoreCase));
             string showThumbnail = "";
             if (imageFiles.Any())
             {

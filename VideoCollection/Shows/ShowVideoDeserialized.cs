@@ -12,6 +12,7 @@ namespace VideoCollection.Shows
 {
     public class ShowVideoDeserialized : IComparable
     {
+        public int SeasonNumber { get; set; }
         public int EpisodeNumber { get; set; }
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }
@@ -24,9 +25,12 @@ namespace VideoCollection.Shows
         public string Runtime { get; set; }
         public string SubtitlesSerialized { get; set; }
         public List<SubtitleSegment> Subtitles { get; set; }
+        public Tuple<int, int> NextEpisode { get; set; }
+        public bool IsBonusVideo { get; set; }
 
         public ShowVideoDeserialized(ShowVideo video)
         {
+            SeasonNumber = video.SeasonNumber;
             EpisodeNumber = video.EpisodeNumber;
             Title = video.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
@@ -60,9 +64,11 @@ namespace VideoCollection.Shows
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
+            NextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(video.NextEpisode);
+            IsBonusVideo = video.IsBonusVideo;
         }
 
-        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes)
+        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes, bool isBonusVideo)
         {
             Title = title;
             FilePath = filePath;
@@ -91,6 +97,7 @@ namespace VideoCollection.Shows
             {
                 DeletedScenes = null;
             }
+            IsBonusVideo = isBonusVideo;
         }
 
         public int CompareTo(object obj)
