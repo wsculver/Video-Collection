@@ -181,5 +181,17 @@ namespace VideoCollection.Database
                 connection.Delete<Show>(show.Id);
             }
         }
+
+        public static ShowDeserialized GetShow(string title)
+        {
+            ShowDeserialized showDeserialized = null;
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                Show show = connection.Table<Show>().FirstOrDefault(x => x.Title == title);
+                showDeserialized = new ShowDeserialized(show);
+            }
+
+            return showDeserialized;
+        }
     }
 }

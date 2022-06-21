@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Shows;
@@ -89,13 +90,23 @@ namespace VideoCollection.Popups.Shows
                 cmbSeasons.SelectedIndex = 0;
             }
 
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(1000);
+            timer.Tick += timer_Tick;
+            timer.Start();
             this.DataContext = _showDeserialized.NextEpisode;
 
             UpdateVideoScrollButtons();
         }
 
+        // Update the next episode
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            this.DataContext = _showDeserialized.NextEpisode;
+        }
+
         // Scale based on the size of the window
-        #region ScaleValue Depdency Property
+            #region ScaleValue Depdency Property
         public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<ShowDetails>();
         public double ScaleValue
         {
@@ -176,7 +187,7 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3], split[4], split[5], true);
+                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3], split[4], split[5], true, split[6], split[7]);
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
@@ -370,11 +381,6 @@ namespace VideoCollection.Popups.Shows
                 _showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
                 icVideos.ItemsSource = _videosDictionary[_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Name];
             }
-        }
-
-        private void showDetailsWindow_MouseMove(object sender, MouseEventArgs e)
-        {
-            this.DataContext = _showDeserialized.NextEpisode;
         }
     }
 }

@@ -22,6 +22,8 @@ using VideoCollection.Movies;
 using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 using VideoCollection.CustomTypes;
+using System.Windows.Media.Animation;
+using VideoCollection.Database;
 
 namespace VideoCollection.Popups
 {
@@ -49,6 +51,9 @@ namespace VideoCollection.Popups
         private Point _lastMousePos;
         private bool _fastForwarding = false;
         private int _fastForwardSpeed = 1;
+        private ShowVideoDeserialized _nextEpisode = null;
+        private bool _forcePlay = false;
+        private double _nextEpisodeGridLength = 546.0;
 
         private const string _fullScreenLabel = "FULL SCREEN";
         private const string _exitFullScreenLabel = "EXIT FULL SCREEN";
@@ -187,6 +192,8 @@ namespace VideoCollection.Popups
             txtDuration.Text = movie.Runtime;
             setTimeFormat(movie.Runtime);
             _subtitles = movie.Subtitles;
+            DataContext = null;
+            _nextEpisode = null;
             update();
         }
         public void updateVideo(MovieBonusVideoDeserialized movieBonusVideo)
@@ -196,6 +203,8 @@ namespace VideoCollection.Popups
             txtDuration.Text = movieBonusVideo.Runtime;
             setTimeFormat(movieBonusVideo.Runtime);
             _subtitles = movieBonusVideo.Subtitles;
+            DataContext = null;
+            _nextEpisode = null;
             update();
         }
 
@@ -206,6 +215,10 @@ namespace VideoCollection.Popups
             txtDuration.Text = show.NextEpisode.Runtime;
             setTimeFormat(show.NextEpisode.Runtime);
             _subtitles = show.NextEpisode.Subtitles;
+            DataContext = show.NextEpisode;
+            _nextEpisode = show.GetNextEpisode();
+            imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
+            txtNextEpisodeTitle.Text = _nextEpisode.Title;
             show.UpdateNextEpisode();
             update();
         }
@@ -216,6 +229,11 @@ namespace VideoCollection.Popups
             txtDuration.Text = showVideo.Runtime;
             setTimeFormat(showVideo.Runtime);
             _subtitles = showVideo.Subtitles;
+            DataContext = showVideo;
+            ShowDeserialized show = DatabaseFunctions.GetShow(showVideo.ShowTitle);
+            _nextEpisode = show.GetEpisode(showVideo.NextEpisode.Item1, showVideo.NextEpisode.Item2);
+            imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
+            txtNextEpisodeTitle.Text = _nextEpisode.Title;
             update();
         }
 
@@ -521,6 +539,8 @@ namespace VideoCollection.Popups
                 txtExpand.Text = _expandLabel;
                 popupFullScreen.HorizontalOffset = _fullScreenHorizontalOffset;
                 txtFullScreen.Text = _fullScreenLabel;
+                gridNextEpisode.Visibility = Visibility.Collapsed;
+                gridTitle.ColumnDefinitions.RemoveAt(1);
             } 
             else
             {
@@ -549,6 +569,10 @@ namespace VideoCollection.Popups
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupExpand.HorizontalOffset = _collapseHorizontalOffset;
                 txtExpand.Text = _collapseLabel;
+                gridNextEpisode.Visibility = Visibility.Visible;
+                var colDef = new ColumnDefinition();
+                colDef.Width = new GridLength(_nextEpisodeGridLength);
+                gridTitle.ColumnDefinitions.Add(colDef);
             }
         }
 
@@ -580,6 +604,13 @@ namespace VideoCollection.Popups
             {
                 WindowState = WindowState.Maximized;
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapseAll;
+                if (!_expanded)
+                {
+                    gridNextEpisode.Visibility = Visibility.Visible;
+                    var colDef = new ColumnDefinition();
+                    colDef.Width = new GridLength(_nextEpisodeGridLength);
+                    gridTitle.ColumnDefinitions.Add(colDef);
+                }
                 _expanded = true;
                 Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
@@ -625,13 +656,14 @@ namespace VideoCollection.Popups
                 else
                 {
                     // Allow user to play/pause video by clicking in middle while expanded
-                    if (_playing)
+                    if (_playing && !_forcePlay)
                     {
                         pause();
                     }
                     else
                     {
                         play();
+                        _forcePlay = false;
                     }
                 }
             } 
@@ -1026,6 +1058,31 @@ namespace VideoCollection.Popups
                 Left = parent.Left + (parent.ActualWidth * LeftMultiplier);
                 Top = parent.Top + (parent.ActualHeight * TopMultiplier);
                 Moving = false;
+            }
+        }
+
+        private void gridNextEpisode_MouseEnter(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Grid), "rectPlayBackground").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Grid), "iconPlayVideo").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>((sender as Grid), "videoSplash").Visibility = Visibility.Visible;
+        }
+
+        private void gridNextEpisode_MouseLeave(object sender, MouseEventArgs e)
+        {
+            StaticHelpers.GetObject<Rectangle>((sender as Grid), "rectPlayBackground").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Grid), "iconPlayVideo").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>((sender as Grid), "videoSplash").Visibility = Visibility.Collapsed;
+        }
+
+        private void gridNextEpisode_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                if (_nextEpisode != null) {
+                    updateVideo(_nextEpisode);
+                    _forcePlay = true;
+                }
             }
         }
     }

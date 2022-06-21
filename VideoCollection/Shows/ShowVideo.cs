@@ -13,6 +13,7 @@ namespace VideoCollection.Shows
         public int SeasonNumber { get; set; }
         public int EpisodeNumber { get; set; }
         public string Title { get; set; }
+        public string ShowTitle { get; set; }
         public string Thumbnail { get; set; }
         public string FilePath { get; set; }
         // JSON encoded List<ShowVideo>
@@ -34,6 +35,7 @@ namespace VideoCollection.Shows
             SeasonNumber = video.SeasonNumber;
             EpisodeNumber = video.EpisodeNumber;
             Title = video.Title;
+            ShowTitle = video.ShowTitle;
             Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail);
             FilePath = video.FilePath;
             if (video.Commentaries != null)

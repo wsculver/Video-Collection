@@ -50,8 +50,6 @@ namespace VideoCollection.Shows
             IsChecked = show.IsChecked;
         }
 
-
-
         // Update the next episode for a show
         public void UpdateNextEpisode()
         {
@@ -66,15 +64,20 @@ namespace VideoCollection.Shows
             {
                 connection.CreateTable<Show>();
                 connection.Update(show);
-                /*List<ShowCategory> categories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                foreach (ShowCategory category in categories)
-                {
-                    if (this.Categories.Contains(category.Name))
-                    {
-                        connection.Update(category);
-                    }
-                }*/
             }
+        }
+
+        public ShowVideoDeserialized GetNextEpisode()
+        {
+            int seasonNum = NextEpisode.NextEpisode.Item1;
+            int episodeNum = NextEpisode.NextEpisode.Item2;
+
+            return Seasons.ElementAt(seasonNum).Videos.ElementAt(episodeNum);
+        }
+
+        public ShowVideoDeserialized GetEpisode(int seasonIndex, int episodeIndex)
+        {
+            return Seasons.ElementAt(seasonIndex).Videos.ElementAt(episodeIndex);
         }
     }
 }

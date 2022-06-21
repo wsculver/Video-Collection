@@ -306,7 +306,7 @@ namespace VideoCollection.Helpers
             }
             for (int n = 0; n < numSeasons; n++)
             {
-                int season = n;
+                int season = n + 1;
                 string seasonFolder = seasonFolders.ElementAt(n);
                 Regex rx = new Regex(@"(Season)\s+(?<season>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 MatchCollection matches = rx.Matches(seasonFolder);
@@ -433,6 +433,7 @@ namespace VideoCollection.Helpers
                         SeasonNumber = season,
                         EpisodeNumber = task.Item6,
                         Title = task.Item2.ToUpper(),
+                        ShowTitle = showTitle.ToUpper(),
                         Thumbnail = task.Item3,
                         FilePath = task.Item5,
                         Commentaries = "",
@@ -485,6 +486,7 @@ namespace VideoCollection.Helpers
                         SeasonNumber = season,
                         EpisodeNumber = task.Item1,
                         Title = task.Item2.ToUpper(),
+                        ShowTitle = showTitle.ToUpper(),
                         Thumbnail = task.Item3,
                         FilePath = task.Item5,
                         Commentaries = JsonConvert.SerializeObject(episodeCommentaries),
@@ -530,7 +532,8 @@ namespace VideoCollection.Helpers
             {
                 // Set the next episode for each episode
                 var seasonList = showVideos.ElementAt(i);
-                var nextSeasonList = (i < numShowVideos - 1) ? showVideos.ElementAt(i + 1) : showVideos.ElementAt(0);
+                var nextSeasonIndex = (i < numShowVideos - 1) ? (i + 1) : 0;
+                var nextSeasonList = showVideos.ElementAt(nextSeasonIndex);
                 int numVideos = seasonList.Count();
                 for (int j = 0; j < numVideos - 1; j++)
                 {
@@ -551,13 +554,13 @@ namespace VideoCollection.Helpers
                             break;
                         }
                     }
-                    seasonList.ElementAt(numVideos - 1).NextEpisode = JsonConvert.SerializeObject(new Tuple<int, int>(i + 1, videoIndex));
+                    seasonList.ElementAt(numVideos - 1).NextEpisode = JsonConvert.SerializeObject(new Tuple<int, int>(nextSeasonIndex, videoIndex));
                 }
 
                 ShowSeason season = new ShowSeason()
                 {
                     SeasonNumber = i + 1,
-                    SeasonName = "Season " + (i + 1).ToString(),
+                    SeasonName = Path.GetFileName(seasonFolders.ElementAt(i)).ToUpper(),
                     Sections = JsonConvert.SerializeObject(showSections.ElementAt(i)),
                     Videos = JsonConvert.SerializeObject(seasonList)
                 };
@@ -598,6 +601,16 @@ namespace VideoCollection.Helpers
         // Output thumbnail to temp file and return it as an ImageSource
         public static ImageSource CreateThumbnailFromVideoFile(string videoFile, TimeSpan time)
         {
+            TimeSpan duration = GetVideoDurationTimeSpan(videoFile);
+            while (time > duration)
+            {
+                time -= TimeSpan.FromSeconds(5);
+                while (time <= TimeSpan.FromSeconds(0))
+                {
+                    time += TimeSpan.FromSeconds(1);
+                }
+            }
+
             string output = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".jpg");
 
             var startInfo = new ProcessStartInfo
@@ -761,6 +774,19 @@ namespace VideoCollection.Helpers
                 return duration;
             }
             return "0:00:00";
+        }
+
+        // Get the duration of a video file
+        public static TimeSpan GetVideoDurationTimeSpan(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                var ffProbe = new FFProbe();
+                var videoInfo = ffProbe.GetMediaInfo(filePath);
+                TimeSpan videoDuration = videoInfo.Duration;
+                return videoDuration;
+            }
+            return TimeSpan.FromSeconds(0);
         }
     }
 }

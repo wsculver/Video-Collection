@@ -15,6 +15,7 @@ namespace VideoCollection.Shows
         public int SeasonNumber { get; set; }
         public int EpisodeNumber { get; set; }
         public string Title { get; set; }
+        public string ShowTitle { get; set; }
         public ImageSource Thumbnail { get; set; }
         public string FilePath { get; set; }
         public string CommentariesSerialized { get; set; }
@@ -26,6 +27,7 @@ namespace VideoCollection.Shows
         public string SubtitlesSerialized { get; set; }
         public List<SubtitleSegment> Subtitles { get; set; }
         public Tuple<int, int> NextEpisode { get; set; }
+        public string NextEpisodeSerialized { get; set; }
         public bool IsBonusVideo { get; set; }
 
         public ShowVideoDeserialized(ShowVideo video)
@@ -33,6 +35,7 @@ namespace VideoCollection.Shows
             SeasonNumber = video.SeasonNumber;
             EpisodeNumber = video.EpisodeNumber;
             Title = video.Title;
+            ShowTitle = video.ShowTitle;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
             FilePath = video.FilePath;
             CommentariesSerialized = video.Commentaries;
@@ -64,13 +67,15 @@ namespace VideoCollection.Shows
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
+            NextEpisodeSerialized = video.NextEpisode;
             NextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(video.NextEpisode);
             IsBonusVideo = video.IsBonusVideo;
         }
 
-        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes, bool isBonusVideo)
+        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes, bool isBonusVideo, string showTitle, string nextEpisode)
         {
             Title = title;
+            ShowTitle = showTitle;
             FilePath = filePath;
             Runtime = runtime;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
@@ -98,6 +103,7 @@ namespace VideoCollection.Shows
                 DeletedScenes = null;
             }
             IsBonusVideo = isBonusVideo;
+            NextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(nextEpisode);
         }
 
         public int CompareTo(object obj)
