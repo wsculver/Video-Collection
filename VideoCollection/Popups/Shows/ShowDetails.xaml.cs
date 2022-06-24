@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoCollection.CustomTypes;
+using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Shows;
 
@@ -94,7 +95,7 @@ namespace VideoCollection.Popups.Shows
             timer.Interval = TimeSpan.FromMilliseconds(1000);
             timer.Tick += timer_Tick;
             timer.Start();
-            this.DataContext = _showDeserialized.NextEpisode;
+            DataContext = _showDeserialized.NextEpisode;
 
             UpdateVideoScrollButtons();
         }
@@ -102,7 +103,9 @@ namespace VideoCollection.Popups.Shows
         // Update the next episode
         private void timer_Tick(object sender, EventArgs e)
         {
-            this.DataContext = _showDeserialized.NextEpisode;
+            // TODO: Optimize this to only query DB when needed
+            _showDeserialized = DatabaseFunctions.GetShow(_showDeserialized.Title);
+            DataContext = _showDeserialized.NextEpisode;
         }
 
         // Scale based on the size of the window

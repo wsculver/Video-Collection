@@ -63,6 +63,7 @@ namespace VideoCollection.Shows
             Runtime = video.Runtime;
             Subtitles = JsonConvert.SerializeObject(video.Subtitles);
             NextEpisode = JsonConvert.SerializeObject(video.NextEpisode);
+            IsBonusVideo = video.IsBonusVideo;
         }
 
         public int CompareTo(object obj)

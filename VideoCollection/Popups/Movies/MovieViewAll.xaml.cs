@@ -94,12 +94,12 @@ namespace VideoCollection.Popups.Movies
         }
 
         // Show the movie details when a movie thumbnail is clicked
-        private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
+        private void movieTile_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
             {
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                MovieDetails popup = new MovieDetails((sender as Image).Tag.ToString(), ref Splash, () => { });
+                MovieDetails popup = new MovieDetails((sender as Grid).Tag.ToString(), ref Splash, () => { });
                 popup.scaleWindow(parentWindow);
                 parentWindow.addChild(popup);
                 popup.Owner = parentWindow;
@@ -109,19 +109,19 @@ namespace VideoCollection.Popups.Movies
         }
 
         // Show info icon when hovering a thumbnail
-        private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
+        private void movieTile_MouseEnter(object sender, MouseEventArgs e)
         {
-            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "movieSplash").Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Rectangle>(sender as Grid).Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>(sender as Grid, "movieSplash").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>(sender as Grid, "iconPlayMovie").Visibility = Visibility.Visible;
         }
 
         // Hide info icon when not hovering a thumbnail
-        private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
+        private void movieTile_MouseLeave(object sender, MouseEventArgs e)
         {
-            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "movieSplash").Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayMovie").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Rectangle>(sender as Grid).Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>(sender as Grid, "movieSplash").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>(sender as Grid, "iconPlayMovie").Visibility = Visibility.Collapsed;
         }
 
         // Play the movie directly

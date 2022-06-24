@@ -23,6 +23,7 @@ namespace VideoCollection.Movies
         public string Title { get; set; }
         public string MovieFolderPath { get; set; }
         public ImageSource Thumbnail { get; set; }
+        public string ThumbnailVisibility { get; set; }
         public string MovieFilePath { get; set; }
         public string Runtime { get; set; }
         public List<MovieBonusSectionDeserialized> BonusSections { get; set; }
@@ -44,6 +45,7 @@ namespace VideoCollection.Movies
             }
             MovieFilePath = movie.MovieFilePath;
             Thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+            ThumbnailVisibility = movie.ThumbnailVisibility;
             List<MovieBonusSection> movieBonusSections = JsonConvert.DeserializeObject<List<MovieBonusSection>>(movie.BonusSections);
             List<MovieBonusSectionDeserialized> movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
             foreach (MovieBonusSection section in movieBonusSections)

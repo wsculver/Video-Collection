@@ -102,6 +102,12 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White" Margin="0,0,4,0">Thumbnail Tile</Label>
+                <RadioButton x:Name="btnImage" GroupName="ThumbTile" Click="ThumbnailTileButtonClick" Foreground="White" Margin="4,0,16,0">Image</RadioButton>
+                <RadioButton x:Name="btnText" GroupName="ThumbTile" Click="ThumbnailTileButtonClick" Foreground="White" Margin="4,0,16,0">Text</RadioButton>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
                 <Label Foreground="White" Margin="0,0,15,0">Movie File</Label>
                 <TextBox x:Name="txtFile" Width="270" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False"/>
                 <Button x:Name="btnChooseFile" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseFile_Click">Choose File</Button>

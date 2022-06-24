@@ -15,6 +15,7 @@ namespace VideoCollection.Movies
         public string Title { get; set; }
         public string MovieFolderPath { get; set; }
         public string Thumbnail { get; set; }
+        public string ThumbnailVisibility { get; set; }
         public string MovieFilePath { get; set; }
         public string Runtime { get; set; }
         // JSON encoded List<string>

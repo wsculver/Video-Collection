@@ -37,6 +37,7 @@ namespace VideoCollection.Popups.Shows
         private string _rating = "";
         private Border _splash;
         private Action _callback;
+        private string _thumbnailVisibility = "";
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -121,6 +122,10 @@ namespace VideoCollection.Popups.Shows
             {
                 ShowOKMessageBox("You need to enter a show name");
             }
+            else if (_thumbnailVisibility == "")
+            {
+                ShowOKMessageBox("You need to select a thumbnail tile type");
+            }
             else if (_rating == "")
             {
                 ShowOKMessageBox("You need to select a rating");
@@ -153,6 +158,7 @@ namespace VideoCollection.Popups.Shows
                     Title = txtShowName.Text.ToUpper(),
                     ShowFolderPath = txtShowFolder.Text,
                     Thumbnail = thumbnail,
+                    ThumbnailVisibility = _thumbnailVisibility,
                     Seasons = _show.Seasons,
                     NextEpisode = _show.NextEpisode,
                     Rating = _rating,
@@ -262,6 +268,22 @@ namespace VideoCollection.Popups.Shows
         private void RatingButtonClick(object sender, RoutedEventArgs e)
         {
             _rating = (sender as RadioButton).Content.ToString();
+        }
+
+        // Set the thumbnail tile visibility
+        private void ThumbnailTileButtonClick(object sender, RoutedEventArgs e)
+        {
+            string option = (sender as RadioButton).Content.ToString();
+            switch (option)
+            {
+                case "Image":
+                    _thumbnailVisibility = "Visible";
+                    break;
+                case "Text":
+                default:
+                    _thumbnailVisibility = "Collapsed";
+                    break;
+            }
         }
 
         public void scaleWindow(Window parent)

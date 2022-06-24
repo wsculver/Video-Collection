@@ -155,7 +155,7 @@
                 
                 <TextBlock x:Name="txtTitle" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontWeight="Bold" Margin="40,0,0,0" FontSize="24" Foreground="White" TextWrapping="WrapWithOverflow">TITLE</TextBlock>
 
-                <Grid x:Name="gridNextEpisode" Grid.Column="1" Width="456" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="Hand" Margin="40,0,40,0" MouseEnter="gridNextEpisode_MouseEnter" MouseLeave="gridNextEpisode_MouseLeave" MouseDown="gridNextEpisode_MouseDown">
+                <Grid x:Name="gridNextEpisode" Grid.Column="1" Width="456" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="Hand" Margin="40,0,40,0" Visibility="Collapsed" MouseEnter="gridNextEpisode_MouseEnter" MouseLeave="gridNextEpisode_MouseLeave" MouseDown="gridNextEpisode_MouseDown">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="152"/>
                         <ColumnDefinition Width="*"/>

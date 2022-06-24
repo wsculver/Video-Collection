@@ -37,6 +37,7 @@ namespace VideoCollection.Popups.Movies
         private bool _movieDeleted = false;
         private Border _splash;
         private Action _callback;
+        private string _thumbnailVisibility = "";
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -187,6 +188,17 @@ namespace VideoCollection.Popups.Movies
                 txtMovieName.Text = movie.Title;
                 _originalMovieName = movie.Title;
                 imgThumbnail.Source = movie.Thumbnail;
+                switch (movie.ThumbnailVisibility)
+                {
+                    case "Visible":
+                        btnImage.IsChecked = true;
+                        break;
+                    case "Collapsed":
+                    default:
+                        btnText.IsChecked = true;
+                        break;
+                }
+                _thumbnailVisibility = movie.ThumbnailVisibility;
                 txtFile.Text = movie.MovieFilePath;
                 _movieId = movie.Id;
                 _movie = movie;
@@ -273,6 +285,11 @@ namespace VideoCollection.Popups.Movies
                     ShowOKMessageBox("You need to select a movie file");
                     return false;
                 }
+                else if (_thumbnailVisibility == "")
+                {
+                    ShowOKMessageBox("You need to select a thumbnail tile type");
+                    return false;
+                }
                 else if (_rating == "")
                 {
                     ShowOKMessageBox("You need to select a rating");
@@ -304,6 +321,7 @@ namespace VideoCollection.Popups.Movies
                             movie.Title = txtMovieName.Text.ToUpper();
                             movie.MovieFolderPath = txtMovieFolder.Text;
                             movie.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
+                            movie.ThumbnailVisibility = _thumbnailVisibility;
                             movie.MovieFilePath = txtFile.Text;
                             movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
                             List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
@@ -440,6 +458,22 @@ namespace VideoCollection.Popups.Movies
         private void RatingButtonClick(object sender, RoutedEventArgs e)
         {
             _rating = (sender as RadioButton).Content.ToString();
+        }
+
+        // Set the thumbnail tile visibility
+        private void ThumbnailTileButtonClick(object sender, RoutedEventArgs e)
+        {
+            string option = (sender as RadioButton).Content.ToString();
+            switch (option)
+            {
+                case "Image":
+                    _thumbnailVisibility = "Visible";
+                    break;
+                case "Text":
+                default:
+                    _thumbnailVisibility = "Collapsed";
+                    break;
+            }
         }
 
         // Delete a movie from the database

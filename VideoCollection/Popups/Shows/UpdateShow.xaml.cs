@@ -31,12 +31,13 @@ namespace VideoCollection.Popups.Shows
         private List<string> _selectedCategories;
         private int _showId;
         private ShowDeserialized _show;
-        private string _seasons;
+        private List<ShowSeasonDeserialized> _seasons;
         private string _rating;
         private string _originalShowName;
         private bool _showDeleted = false;
         private Border _splash;
         private Action _callback;
+        private string _thumbnailVisibility = "";
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -54,7 +55,7 @@ namespace VideoCollection.Popups.Shows
             _splash = splash;
             _callback = callback;
 
-            _seasons = "";
+            _seasons = new List<ShowSeasonDeserialized>();
             _selectedCategories = new List<string>();
             _rating = "";
 
@@ -178,6 +179,18 @@ namespace VideoCollection.Popups.Shows
                 txtShowName.Text = show.Title;
                 _originalShowName = show.Title;
                 imgThumbnail.Source = show.Thumbnail;
+                switch (show.ThumbnailVisibility)
+                {
+                    case "Visible":
+                        btnImage.IsChecked = true;
+                        break;
+                    case "Collapsed":
+                    default:
+                        btnText.IsChecked = true;
+                        break;
+                }
+                _thumbnailVisibility = show.ThumbnailVisibility;
+                _seasons = show.Seasons;
                 _showId = show.Id;
                 _show = show;
                 switch(show.Rating)
@@ -261,6 +274,10 @@ namespace VideoCollection.Popups.Shows
                     ShowOKMessageBox("You need to enter a show name");
                     return false;
                 }
+                else if (_thumbnailVisibility == "")
+                {
+                    ShowOKMessageBox("You need to select a thumbnail tile type");
+                }
                 else if (_rating == "")
                 {
                     ShowOKMessageBox("You need to select a rating");
@@ -292,7 +309,14 @@ namespace VideoCollection.Popups.Shows
                             show.Title = txtShowName.Text.ToUpper();
                             show.ShowFolderPath = txtShowFolder.Text;
                             show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
-                            show.Seasons = _seasons;                          
+                            show.ThumbnailVisibility = _thumbnailVisibility;
+                            List<ShowSeason> seasons = new List<ShowSeason>();
+                            foreach (ShowSeasonDeserialized season in _seasons)
+                            {
+                                ShowSeason s = new ShowSeason(season);
+                                seasons.Add(s);
+                            }
+                            show.Seasons = JsonConvert.SerializeObject(seasons);
                             show.Rating = _rating;
                             show.Categories = JsonConvert.SerializeObject(_selectedCategories);
                             connection.Update(show);
@@ -355,32 +379,33 @@ namespace VideoCollection.Popups.Shows
         }
 
         // Choose the whole show folder
-        private async void btnChooseShowFolder_Click(object sender, RoutedEventArgs e)
+        private void btnChooseShowFolder_Click(object sender, RoutedEventArgs e)
         {
             CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtShowFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-                Show show = await StaticHelpers.ParseShowVideos(dlg.FileName);
-                try
+                Task.Run(async () =>
                 {
-                    _show = new ShowDeserialized(show);
-                }
-                catch (Exception ex)
-                {
-                    ShowOKMessageBox("Error: " + ex.Message);
-                }
-
-                txtShowName.Text = _show.Title;
-                if (show.Thumbnail != "")
-                {
-                    imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(show.Thumbnail));
-                }
-
-                if (show.Seasons != "")
-                {
-                    _seasons = show.Seasons;
-                }
+                    Show show = await StaticHelpers.ParseShowVideos(dlg.FileName);
+                    try
+                    {
+                        _show = new ShowDeserialized(show);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowOKMessageBox("Error: " + ex.Message);
+                    }
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
+                       (Action)(() =>
+                       {
+                           txtShowName.Text = _show.Title;
+                           if (show.Thumbnail != "")
+                           {
+                               imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(show.Thumbnail));
+                           }
+                       }));
+                });
             }
         }
 
@@ -414,6 +439,22 @@ namespace VideoCollection.Popups.Shows
                     panelShowInfo.Visibility = Visibility.Collapsed;
                 }
                 Splash.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // Set the thumbnail tile visibility
+        private void ThumbnailTileButtonClick(object sender, RoutedEventArgs e)
+        {
+            string option = (sender as RadioButton).Content.ToString();
+            switch (option)
+            {
+                case "Image":
+                    _thumbnailVisibility = "Visible";
+                    break;
+                case "Text":
+                default:
+                    _thumbnailVisibility = "Collapsed";
+                    break;
             }
         }
 

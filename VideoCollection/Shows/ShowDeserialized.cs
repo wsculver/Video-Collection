@@ -24,6 +24,7 @@ namespace VideoCollection.Shows
         public string Title { get; set; }
         public string ShowFolderPath { get; set; }
         public ImageSource Thumbnail { get; set; }
+        public string ThumbnailVisibility { get; set; }
         public List<ShowSeasonDeserialized> Seasons { get; set; }
         public ShowVideoDeserialized NextEpisode { get; set; }
         public string Rating { get; set; }
@@ -36,6 +37,7 @@ namespace VideoCollection.Shows
             Title = show.Title;
             ShowFolderPath = show.ShowFolderPath;
             Thumbnail = StaticHelpers.Base64ToImageSource(show.Thumbnail);
+            ThumbnailVisibility = show.ThumbnailVisibility;
             List<ShowSeason> showSeasons = JsonConvert.DeserializeObject<List<ShowSeason>>(show.Seasons);
             List<ShowSeasonDeserialized> showSeasonsDeserialized = new List<ShowSeasonDeserialized>();
             foreach (ShowSeason season in showSeasons)
@@ -53,10 +55,7 @@ namespace VideoCollection.Shows
         // Update the next episode for a show
         public void UpdateNextEpisode()
         {
-            int seasonNum = NextEpisode.NextEpisode.Item1;
-            int episodeNum = NextEpisode.NextEpisode.Item2;
-
-            NextEpisode = Seasons.ElementAt(seasonNum).Videos.ElementAt(episodeNum);
+            NextEpisode = GetNextEpisode();
 
             Show show = new Show(this);
 
@@ -72,12 +71,14 @@ namespace VideoCollection.Shows
             int seasonNum = NextEpisode.NextEpisode.Item1;
             int episodeNum = NextEpisode.NextEpisode.Item2;
 
-            return Seasons.ElementAt(seasonNum).Videos.ElementAt(episodeNum);
+            return GetEpisode(seasonNum, episodeNum);
         }
 
         public ShowVideoDeserialized GetEpisode(int seasonIndex, int episodeIndex)
         {
-            return Seasons.ElementAt(seasonIndex).Videos.ElementAt(episodeIndex);
+            List<ShowVideoDeserialized> sortedVideos = Seasons.ElementAt(seasonIndex).Videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
+
+            return sortedVideos.ElementAt(episodeIndex);
         }
     }
 }

@@ -298,12 +298,12 @@ namespace VideoCollection.Views
         }
 
         // Show the show details when a show thumbnail is clicked
-        private void imageThumbnail_MouseDown(object sender, MouseButtonEventArgs e)
+        private void showTile_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
             {
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                ShowDetails popup = new ShowDetails((sender as Image).Tag.ToString(), ref parentWindow.Splash, () => { });
+                ShowDetails popup = new ShowDetails((sender as Grid).Tag.ToString(), ref parentWindow.Splash, () => { });
                 popup.scaleWindow(parentWindow);
                 popup.Owner = parentWindow;
                 parentWindow.addChild(popup);
@@ -401,19 +401,19 @@ namespace VideoCollection.Views
         }
 
         // Show info icon when hovering a thumbnail
-        private void imageThumbnail_MouseEnter(object sender, MouseEventArgs e)
+        private void showTile_MouseEnter(object sender, MouseEventArgs e)
         {
-            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "showSplash").Visibility = Visibility.Visible;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayShow").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Rectangle>(sender as Grid).Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>(sender as Grid, "showSplash").Visibility = Visibility.Visible;
+            StaticHelpers.GetObject<Border>(sender as Grid, "iconPlayShow").Visibility = Visibility.Visible;
         }
 
         // Hide info icon when not hovering a thumbnail
-        private void imageThumbnail_MouseLeave(object sender, MouseEventArgs e)
+        private void showTile_MouseLeave(object sender, MouseEventArgs e)
         {
-            StaticHelpers.GetObject<Rectangle>((sender as Image).Parent).Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "showSplash").Visibility = Visibility.Collapsed;
-            StaticHelpers.GetObject<Border>((sender as Image).Parent, "iconPlayShow").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Rectangle>(sender as Grid).Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>(sender as Grid, "showSplash").Visibility = Visibility.Collapsed;
+            StaticHelpers.GetObject<Border>(sender as Grid, "iconPlayShow").Visibility = Visibility.Collapsed;
         }
 
         // Play the show directly

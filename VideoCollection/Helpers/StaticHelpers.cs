@@ -441,7 +441,8 @@ namespace VideoCollection.Helpers
                         Section = task.Item1,
                         Runtime = GetVideoDuration(task.Item5),
                         Subtitles = JsonConvert.SerializeObject(task.Item4),
-                        NextEpisode = ""
+                        NextEpisode = "",
+                        IsBonusVideo = true
                     };
                     videos.Add(video);
 
@@ -494,7 +495,8 @@ namespace VideoCollection.Helpers
                         Section = "EPISODES",
                         Runtime = GetVideoDuration(task.Item5),
                         Subtitles = JsonConvert.SerializeObject(task.Item4),
-                        NextEpisode = ""
+                        NextEpisode = "",
+                        IsBonusVideo = false
                     };
                     videos.Add(episode);
 
@@ -524,7 +526,7 @@ namespace VideoCollection.Helpers
                 showSections.Add(sections);
 
                 // Sort the videos
-                showVideos[season - 1] = videos.OrderBy(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
+                showVideos[season - 1] = videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
             }
 
             int numShowVideos = showVideos.Count();
@@ -532,23 +534,23 @@ namespace VideoCollection.Helpers
             {
                 // Set the next episode for each episode
                 var seasonList = showVideos.ElementAt(i);
-                var nextSeasonIndex = (i < numShowVideos - 1) ? (i + 1) : 0;
+                var nextSeasonIndex = (i + 1) % numShowVideos;
                 var nextSeasonList = showVideos.ElementAt(nextSeasonIndex);
                 int numVideos = seasonList.Count();
                 for (int j = 0; j < numVideos - 1; j++)
                 {
-                    if (seasonList.ElementAt(j).EpisodeNumber > 0)
+                    if (!seasonList.ElementAt(j).IsBonusVideo)
                     {
                         seasonList.ElementAt(j).NextEpisode = JsonConvert.SerializeObject(new Tuple<int, int>(i, j + 1));
                     }
                 }
-                if (seasonList.ElementAt(numVideos - 1).EpisodeNumber > 0)
+                if (!seasonList.ElementAt(numVideos - 1).IsBonusVideo)
                 {
                     int videoIndex = 0;
                     int numNextVideos = nextSeasonList.Count();
                     for(int k = 0; k < numNextVideos; k++)
                     {
-                        if(nextSeasonList.ElementAt(k).EpisodeNumber == 1)
+                        if(!nextSeasonList.ElementAt(k).IsBonusVideo && nextSeasonList.ElementAt(k).EpisodeNumber == 1)
                         {
                             videoIndex = k;
                             break;

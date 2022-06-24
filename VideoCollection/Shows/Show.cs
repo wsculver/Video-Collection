@@ -17,6 +17,7 @@ namespace VideoCollection.Shows
         public string Title { get; set; }
         public string ShowFolderPath { get; set; }
         public string Thumbnail { get; set; }
+        public string ThumbnailVisibility { get; set; }
         // JSON encoded List<ShowSeason>
         public string Seasons { get; set; }
         // JSON encoded ShowVideo
@@ -35,6 +36,7 @@ namespace VideoCollection.Shows
             Title = show.Title;
             ShowFolderPath = show.ShowFolderPath;
             Thumbnail = StaticHelpers.ImageSourceToBase64(show.Thumbnail);
+            ThumbnailVisibility = show.ThumbnailVisibility;
             List<ShowSeason> seasons = new List<ShowSeason>();
             foreach(var season in show.Seasons)
             {

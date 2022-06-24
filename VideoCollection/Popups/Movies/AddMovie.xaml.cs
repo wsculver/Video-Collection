@@ -37,6 +37,7 @@ namespace VideoCollection.Popups.Movies
         private string _rating = "";
         private Border _splash;
         private Action _callback;
+        private string _thumbnailVisibility = "";
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -125,6 +126,10 @@ namespace VideoCollection.Popups.Movies
             { 
                 ShowOKMessageBox("You need to select a movie file");
             }
+            else if (_thumbnailVisibility == "")
+            {
+                ShowOKMessageBox("You need to select a thumbnail tile type");
+            }
             else if (_rating == "")
             {
                 ShowOKMessageBox("You need to select a rating");
@@ -147,6 +152,7 @@ namespace VideoCollection.Popups.Movies
                     Title = txtMovieName.Text.ToUpper(),
                     MovieFolderPath = txtMovieFolder.Text,
                     Thumbnail = thumbnail,
+                    ThumbnailVisibility = _thumbnailVisibility,
                     MovieFilePath = txtFile.Text,
                     Runtime = StaticHelpers.GetVideoDuration(txtFile.Text),
                     BonusSections = _movie.BonusSections,
@@ -274,6 +280,22 @@ namespace VideoCollection.Popups.Movies
         private void RatingButtonClick(object sender, RoutedEventArgs e)
         {
             _rating = (sender as RadioButton).Content.ToString();
+        }
+
+        // Set the thumbnail tile visibility
+        private void ThumbnailTileButtonClick(object sender, RoutedEventArgs e)
+        {
+            string option = (sender as RadioButton).Content.ToString();
+            switch(option)
+            {
+                case "Image":
+                    _thumbnailVisibility = "Visible";
+                    break;
+                case "Text":
+                default:
+                    _thumbnailVisibility = "Collapsed";
+                    break;
+            }
         }
 
         public void scaleWindow(Window parent)

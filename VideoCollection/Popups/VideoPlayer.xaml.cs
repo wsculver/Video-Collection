@@ -194,6 +194,7 @@ namespace VideoCollection.Popups
             _subtitles = movie.Subtitles;
             DataContext = null;
             _nextEpisode = null;
+            gridNextEpisode.Visibility = Visibility.Collapsed;
             update();
         }
         public void updateVideo(MovieBonusVideoDeserialized movieBonusVideo)
@@ -205,6 +206,7 @@ namespace VideoCollection.Popups
             _subtitles = movieBonusVideo.Subtitles;
             DataContext = null;
             _nextEpisode = null;
+            gridNextEpisode.Visibility = Visibility.Collapsed;
             update();
         }
 
@@ -217,6 +219,7 @@ namespace VideoCollection.Popups
             _subtitles = show.NextEpisode.Subtitles;
             DataContext = show.NextEpisode;
             _nextEpisode = show.GetNextEpisode();
+            gridNextEpisode.Visibility = Visibility.Visible;
             imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
             txtNextEpisodeTitle.Text = _nextEpisode.Title;
             show.UpdateNextEpisode();
@@ -231,9 +234,19 @@ namespace VideoCollection.Popups
             _subtitles = showVideo.Subtitles;
             DataContext = showVideo;
             ShowDeserialized show = DatabaseFunctions.GetShow(showVideo.ShowTitle);
-            _nextEpisode = show.GetEpisode(showVideo.NextEpisode.Item1, showVideo.NextEpisode.Item2);
-            imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
-            txtNextEpisodeTitle.Text = _nextEpisode.Title;
+            if (showVideo.IsBonusVideo)
+            {
+                _nextEpisode = null;
+                gridNextEpisode.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                _nextEpisode = show.GetEpisode(showVideo.NextEpisode.Item1, showVideo.NextEpisode.Item2);
+                gridNextEpisode.Visibility = Visibility.Visible;
+                imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
+                txtNextEpisodeTitle.Text = _nextEpisode.Title;
+                show.UpdateNextEpisode();
+            }
             update();
         }
 
