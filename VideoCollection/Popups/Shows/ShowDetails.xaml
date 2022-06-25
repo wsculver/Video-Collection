@@ -79,18 +79,20 @@
                   IsEditable="False"
                   IsReadOnly="True"
                   Margin="25,0,0,0" MaxDropDownHeight="118" Padding="0,4,0,4"/>
-            <ItemsControl x:Name="icSectionButtons" Grid.Column="1" Margin="0,0,0,0">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button x:Name="btnSection" Content="{Binding Name}" Click="btnSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <ScrollViewer x:Name="scrollCategories" Grid.Column="1" PreviewMouseWheel="scrollCategories_PreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" SnapsToDevicePixels="True">
+                <ItemsControl x:Name="icSectionButtons">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnSection" Content="{Binding Name}" Click="btnSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
         </Grid>
         <Separator x:Name="separatorVideosBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
 

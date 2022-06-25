@@ -50,6 +50,12 @@ namespace VideoCollection.Helpers
             return Uri.UnescapeDataString(relativePath.OriginalString);
         }
 
+        // Get the absolute path from the current directory and relative path
+        public static string GetAbsolutePathStringFromRelative(string relativePath)
+        {
+            return Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), relativePath));
+        }
+
         // Create a file dialog to choose a video
         public static OpenFileDialog CreateVideoFileDialog()
         {
@@ -139,7 +145,7 @@ namespace VideoCollection.Helpers
             string bonusThumbnail = "";
             if (bonusImageFiles.Any())
             {
-                bonusThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(bonusImageFiles.First()))));
+                bonusThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(bonusImageFiles.First())));
             }
             else
             {
@@ -218,7 +224,7 @@ namespace VideoCollection.Helpers
             string movieThumbnail = "";
             if (imageFiles.Any())
             {
-                movieThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(imageFiles.First()))));
+                movieThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(imageFiles.First())));
             }
             else if(movieFile != null)
             {
@@ -273,7 +279,7 @@ namespace VideoCollection.Helpers
             string episodeThumbnail = "";
             if (episodeImageFiles.Any())
             {
-                episodeThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(episodeImageFiles.First()))));
+                episodeThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(episodeImageFiles.First())));
             }
             else
             {
@@ -435,7 +441,7 @@ namespace VideoCollection.Helpers
                         Title = task.Item2.ToUpper(),
                         ShowTitle = showTitle.ToUpper(),
                         Thumbnail = task.Item3,
-                        FilePath = task.Item5,
+                        FilePath = GetRelativePathStringFromCurrent(task.Item5),
                         Commentaries = "",
                         DeletedScenes = "",
                         Section = task.Item1,
@@ -461,7 +467,7 @@ namespace VideoCollection.Helpers
                 {
                     // Link commentaries and deleted scenes if there are any
                     List<ShowVideo> episodeCommentaries = null;
-                    ShowVideo episodeDeletedScenes = null;
+                    List<ShowVideo> episodeDeletedScenes = null;
                     foreach (ShowVideo com in commentaries)
                     {
                         if (com.Title.StartsWith(task.Item2, true, null))
@@ -477,8 +483,11 @@ namespace VideoCollection.Helpers
                     {
                         if (del.Title.StartsWith(task.Item2, true, null))
                         {
-                            episodeDeletedScenes = del;
-                            break;
+                            if (episodeDeletedScenes == null)
+                            {
+                                episodeDeletedScenes = new List<ShowVideo>();
+                            }
+                            episodeDeletedScenes.Add(del);
                         }
                     }
 
@@ -489,7 +498,7 @@ namespace VideoCollection.Helpers
                         Title = task.Item2.ToUpper(),
                         ShowTitle = showTitle.ToUpper(),
                         Thumbnail = task.Item3,
-                        FilePath = task.Item5,
+                        FilePath = GetRelativePathStringFromCurrent(task.Item5),
                         Commentaries = JsonConvert.SerializeObject(episodeCommentaries),
                         DeletedScenes = JsonConvert.SerializeObject(episodeDeletedScenes),
                         Section = "EPISODES",
@@ -577,7 +586,7 @@ namespace VideoCollection.Helpers
             string showThumbnail = "";
             if (imageFiles.Any())
             {
-                showThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(GetRelativePathStringFromCurrent(imageFiles.First()))));
+                showThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(imageFiles.First())));
             }
             else if (showThumbnailVideoFile != null)
             {
@@ -759,10 +768,11 @@ namespace VideoCollection.Helpers
         // Get the duration of a video file
         public static string GetVideoDuration(string filePath)
         {
-            if (File.Exists(filePath))
+            string absPath = GetAbsolutePathStringFromRelative(filePath);
+            if (File.Exists(absPath))
             {
                 var ffProbe = new FFProbe();
-                var videoInfo = ffProbe.GetMediaInfo(filePath);
+                var videoInfo = ffProbe.GetMediaInfo(absPath);
                 string duration = "";
                 TimeSpan videoDuration = videoInfo.Duration;
                 if(videoDuration.Hours > 0)
@@ -781,10 +791,11 @@ namespace VideoCollection.Helpers
         // Get the duration of a video file
         public static TimeSpan GetVideoDurationTimeSpan(string filePath)
         {
-            if (File.Exists(filePath))
+            string absPath = GetAbsolutePathStringFromRelative(filePath);
+            if (File.Exists(absPath))
             {
                 var ffProbe = new FFProbe();
-                var videoInfo = ffProbe.GetMediaInfo(filePath);
+                var videoInfo = ffProbe.GetMediaInfo(absPath);
                 TimeSpan videoDuration = videoInfo.Duration;
                 return videoDuration;
             }

@@ -213,6 +213,10 @@ namespace VideoCollection.Popups.Shows
                     case "TV MA":
                         btnTVMA.IsChecked = true;
                         break;
+                    case "None":
+                    default:
+                        btnNone.IsChecked = true;
+                        break;
                 }
                 _rating = show.Rating;
                 List<ShowCategoryDeserialized> categories = new List<ShowCategoryDeserialized>();

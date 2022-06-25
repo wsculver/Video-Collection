@@ -115,6 +115,7 @@
                 <RadioButton x:Name="btnTVPG" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">TV PG</RadioButton>
                 <RadioButton x:Name="btnTV14" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">TV 14</RadioButton>
                 <RadioButton x:Name="btnTVMA" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">TV MA</RadioButton>
+                <RadioButton x:Name="btnNone" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">None</RadioButton>
             </StackPanel>
 
             <Label Foreground="White">Categories:</Label>

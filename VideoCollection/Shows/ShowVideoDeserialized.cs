@@ -21,7 +21,7 @@ namespace VideoCollection.Shows
         public string CommentariesSerialized { get; set; }
         public List<ShowVideoDeserialized> Commentaries { get; set; }
         public string DeletedScenesSerialized { get; set; }
-        public ShowVideoDeserialized DeletedScenes { get; set; }
+        public List<ShowVideoDeserialized> DeletedScenes { get; set; }
         public string Section { get; set; }
         public string Runtime { get; set; }
         public string SubtitlesSerialized { get; set; }
@@ -54,10 +54,15 @@ namespace VideoCollection.Shows
                 Commentaries = null;
             }
             DeletedScenesSerialized = video.DeletedScenes;
-            ShowVideo deletedScenes = JsonConvert.DeserializeObject<ShowVideo>(video.DeletedScenes);
+            List<ShowVideo> deletedScenes = JsonConvert.DeserializeObject<List<ShowVideo>>(video.DeletedScenes);
             if (deletedScenes != null)
             {
-                DeletedScenes = new ShowVideoDeserialized(deletedScenes);
+                List<ShowVideoDeserialized> deletedScenesDeserialized = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo delScene in deletedScenes)
+                {
+                    deletedScenesDeserialized.Add(new ShowVideoDeserialized(delScene));
+                }
+                DeletedScenes = deletedScenesDeserialized;
             }
             else
             {
@@ -93,10 +98,15 @@ namespace VideoCollection.Shows
             {
                 Commentaries = null;
             }
-            ShowVideo videoDeletedScenes = JsonConvert.DeserializeObject<ShowVideo>(deletedScenes);
+            List<ShowVideo> videoDeletedScenes = JsonConvert.DeserializeObject<List<ShowVideo>>(deletedScenes);
             if (videoDeletedScenes != null)
             {
-                DeletedScenes = new ShowVideoDeserialized(videoDeletedScenes);
+                List<ShowVideoDeserialized> deletedScenesDeserialized = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo delScene in videoDeletedScenes)
+                {
+                    deletedScenesDeserialized.Add(new ShowVideoDeserialized(delScene));
+                }
+                DeletedScenes = deletedScenesDeserialized;
             }
             else
             {

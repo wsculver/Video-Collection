@@ -18,7 +18,7 @@ namespace VideoCollection.Shows
         public string FilePath { get; set; }
         // JSON encoded List<ShowVideo>
         public string Commentaries { get; set; }
-        // JSON encoded ShowVideo
+        // JSON encoded List<ShowVideo>
         public string DeletedScenes { get; set; }
         public string Section { get; set; }
         public string Runtime { get; set; }
@@ -53,7 +53,12 @@ namespace VideoCollection.Shows
             }
             if (video.DeletedScenes != null)
             {
-                DeletedScenes = JsonConvert.SerializeObject(video.DeletedScenes);
+                List<ShowVideo> deletedScenes = new List<ShowVideo>();
+                foreach (var delScene in video.DeletedScenes)
+                {
+                    deletedScenes.Add(new ShowVideo(delScene));
+                }
+                DeletedScenes = JsonConvert.SerializeObject(deletedScenes);
             }
             else
             {

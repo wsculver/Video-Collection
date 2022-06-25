@@ -187,7 +187,7 @@ namespace VideoCollection.Popups
         }
         public void updateVideo(MovieDeserialized movie)
         {
-            meVideoPlayer.Source = new Uri(movie.MovieFilePath);
+            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(movie.MovieFilePath));
             txtTitle.Text = movie.Title;
             txtDuration.Text = movie.Runtime;
             setTimeFormat(movie.Runtime);
@@ -199,7 +199,7 @@ namespace VideoCollection.Popups
         }
         public void updateVideo(MovieBonusVideoDeserialized movieBonusVideo)
         {
-            meVideoPlayer.Source = new Uri(movieBonusVideo.FilePath);
+            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(movieBonusVideo.FilePath));
             txtTitle.Text = movieBonusVideo.Title;
             txtDuration.Text = movieBonusVideo.Runtime;
             setTimeFormat(movieBonusVideo.Runtime);
@@ -212,7 +212,7 @@ namespace VideoCollection.Popups
 
         public void updateVideo(ShowDeserialized show)
         {
-            meVideoPlayer.Source = new Uri(show.NextEpisode.FilePath);
+            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(show.NextEpisode.FilePath));
             txtTitle.Text = show.NextEpisode.Title;
             txtDuration.Text = show.NextEpisode.Runtime;
             setTimeFormat(show.NextEpisode.Runtime);
@@ -227,7 +227,7 @@ namespace VideoCollection.Popups
         }
         public void updateVideo(ShowVideoDeserialized showVideo)
         {
-            meVideoPlayer.Source = new Uri(showVideo.FilePath);
+            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(showVideo.FilePath));
             txtTitle.Text = showVideo.Title;
             txtDuration.Text = showVideo.Runtime;
             setTimeFormat(showVideo.Runtime);

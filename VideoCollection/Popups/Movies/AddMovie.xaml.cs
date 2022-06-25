@@ -139,7 +139,7 @@ namespace VideoCollection.Popups.Movies
                 string thumbnail = "";
                 if (imgThumbnail.Source == null)
                 {
-                    ImageSource image = StaticHelpers.CreateThumbnailFromVideoFile(txtFile.Text, TimeSpan.FromSeconds(60));
+                    ImageSource image = StaticHelpers.CreateThumbnailFromVideoFile(StaticHelpers.GetAbsolutePathStringFromRelative(txtFile.Text), TimeSpan.FromSeconds(60));
                     thumbnail = StaticHelpers.ImageSourceToBase64(image);
                 }
                 else

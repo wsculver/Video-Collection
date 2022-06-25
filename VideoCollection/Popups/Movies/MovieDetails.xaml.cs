@@ -360,5 +360,19 @@ namespace VideoCollection.Popups.Movies
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
         }
+
+        private void scrollCategories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ScrollViewer scrollviewer = sender as ScrollViewer;
+            if (e.Delta > 0)
+            {
+                scrollviewer.LineLeft();
+            }
+            else
+            {
+                scrollviewer.LineRight();
+            }
+            e.Handled = true;
+        }
     }
 }

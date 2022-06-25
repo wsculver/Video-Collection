@@ -219,6 +219,10 @@ namespace VideoCollection.Popups.Movies
                     case "NC-17":
                         btnNC17.IsChecked = true;
                         break;
+                    case "None":
+                    default:
+                        btnNone.IsChecked = true;
+                        break;
                 }
                 _rating = movie.Rating;
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
