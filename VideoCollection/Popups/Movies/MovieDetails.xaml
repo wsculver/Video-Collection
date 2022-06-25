@@ -60,8 +60,8 @@
         </Grid>
         
         <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
-        <ScrollViewer x:Name="scrollCategories" Grid.Column="1" PreviewMouseWheel="scrollCategories_PreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" SnapsToDevicePixels="True">
-            <ItemsControl x:Name="icBonusSectionButtons" Grid.Row="2">
+        <ScrollViewer x:Name="scrollCategories" Grid.Row="2" PreviewMouseWheel="scrollCategories_PreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" SnapsToDevicePixels="True">
+            <ItemsControl x:Name="icBonusSectionButtons">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal"/>
