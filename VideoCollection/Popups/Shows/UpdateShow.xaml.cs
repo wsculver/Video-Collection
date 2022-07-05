@@ -3,21 +3,13 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Shows;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
-using VideoCollection.Subtitles;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
 
@@ -30,7 +22,7 @@ namespace VideoCollection.Popups.Shows
     {
         private List<string> _selectedCategories;
         private int _showId;
-        private ShowDeserialized _show;
+        private Show _show;
         private List<ShowSeasonDeserialized> _seasons;
         private string _rating;
         private string _originalShowName;
@@ -69,7 +61,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> rawCategories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
                 List<ShowCategoryDeserialized> categories = new List<ShowCategoryDeserialized>();
                 foreach (ShowCategory category in rawCategories)
                 {
@@ -85,7 +77,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Show>();
-                List<Show> rawShows = (connection.Table<Show>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
                 foreach (Show show in rawShows)
                 {
@@ -174,11 +166,12 @@ namespace VideoCollection.Popups.Shows
                 panelShowInfo.Visibility = Visibility.Visible;
                 _selectedCategories = new List<string>();
 
-                ShowDeserialized show = (ShowDeserialized)shows[0];
+                ShowDeserialized showDeserialized = (ShowDeserialized)shows[0];
+                Show show = DatabaseFunctions.GetShow(showDeserialized.Id);
                 txtShowFolder.Text = show.ShowFolderPath;
                 txtShowName.Text = show.Title;
                 _originalShowName = show.Title;
-                imgThumbnail.Source = show.Thumbnail;
+                imgThumbnail.Source = showDeserialized.Thumbnail;
                 switch (show.ThumbnailVisibility)
                 {
                     case "Visible":
@@ -190,7 +183,13 @@ namespace VideoCollection.Popups.Shows
                         break;
                 }
                 _thumbnailVisibility = show.ThumbnailVisibility;
-                _seasons = show.Seasons;
+                List<ShowSeason> showSeasons = JsonConvert.DeserializeObject<List<ShowSeason>>(show.Seasons);
+                List<ShowSeasonDeserialized> showSeasonsDeserialized = new List<ShowSeasonDeserialized>();
+                foreach (ShowSeason season in showSeasons)
+                {
+                    showSeasonsDeserialized.Add(new ShowSeasonDeserialized(season));
+                }
+                _seasons = showSeasonsDeserialized;
                 _showId = show.Id;
                 _show = show;
                 switch(show.Rating)
@@ -296,7 +295,10 @@ namespace VideoCollection.Popups.Shows
                         foreach (Show m in shows)
                         {
                             if (m.Title != _originalShowName && m.Title == txtShowName.Text.ToUpper())
+                            {
                                 repeat = true;
+                                break;
+                            }
                         }
 
                         if (repeat)
@@ -305,10 +307,8 @@ namespace VideoCollection.Popups.Shows
                         }
                         else
                         {
-
                             // Update the show in the Show table
-                            connection.CreateTable<Show>();
-                            Show show = connection.Query<Show>("SELECT * FROM Show WHERE Id = " + _showId)[0];
+                            Show show = connection.Get<Show>(_showId);
                             bool showContentChanged = ShowContentChanged(show);
                             show.Title = txtShowName.Text.ToUpper();
                             show.ShowFolderPath = txtShowFolder.Text;
@@ -327,21 +327,13 @@ namespace VideoCollection.Popups.Shows
 
                             // Update the ShowCateogry table
                             connection.CreateTable<ShowCategory>();
-                            List<ShowCategory> categories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                            List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
                             foreach (ShowCategory category in categories)
                             {
-                                if (_selectedCategories.Contains(category.Name))
-                                {
-                                    // Update show in the ShowCategory table if any content changed
-                                    if (showContentChanged)
-                                    {
-                                        DatabaseFunctions.UpdateShowInCategory(show, category);
-                                    }
-                                }
-                                else
+                                if (!_selectedCategories.Contains(category.Name))
                                 {
                                     // Remove show from categories in the ShowCategory table
-                                    DatabaseFunctions.RemoveShowFromCategory(_show.Id.ToString(), category);
+                                    DatabaseFunctions.RemoveShowFromCategory(_show.Id, category);
                                 }
                             }
                         }
@@ -394,7 +386,7 @@ namespace VideoCollection.Popups.Shows
                     Show show = await StaticHelpers.ParseShowVideos(dlg.FileName);
                     try
                     {
-                        _show = new ShowDeserialized(show);
+                        _show = show;
                     }
                     catch (Exception ex)
                     {
@@ -424,26 +416,22 @@ namespace VideoCollection.Popups.Shows
         {
             Button button = sender as Button;
             string showId = button.Tag.ToString();
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-            {
-                connection.CreateTable<Show>();
-                Show show = connection.Query<Show>("SELECT * FROM Show WHERE Id = " + showId)[0];
+            Show show = DatabaseFunctions.GetShow(showId);
 
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + show.Title + " from the database? This only removes the show from your video collection, it does not delete any show files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.scaleWindow(parentWindow);
-                parentWindow.addChild(popup);
-                popup.Owner = parentWindow;
-                Splash.Visibility = Visibility.Visible;
-                if (popup.ShowDialog() == true)
-                {
-                    DatabaseFunctions.DeleteShow(show);
-                    UpdateShowList();
-                    _showDeleted = true;
-                    panelShowInfo.Visibility = Visibility.Collapsed;
-                }
-                Splash.Visibility = Visibility.Collapsed;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + show.Title + " from the database? This only removes the show from your video collection, it does not delete any show files.", CustomMessageBox.MessageBoxType.YesNo);
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
+            popup.Owner = parentWindow;
+            Splash.Visibility = Visibility.Visible;
+            if (popup.ShowDialog() == true)
+            {
+                DatabaseFunctions.DeleteShow(show.Id);
+                UpdateShowList();
+                _showDeleted = true;
+                panelShowInfo.Visibility = Visibility.Collapsed;
             }
+            Splash.Visibility = Visibility.Collapsed;
         }
 
         // Set the thumbnail tile visibility

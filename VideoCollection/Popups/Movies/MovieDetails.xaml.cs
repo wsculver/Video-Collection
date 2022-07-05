@@ -1,20 +1,16 @@
-﻿using SQLite;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using VideoCollection.CustomTypes;
+using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
@@ -28,8 +24,7 @@ namespace VideoCollection.Popups.Movies
         private static int _scrollViewerMargins = 24;
         private static int _sideMargins = 16;
         private double _scrollDistance = 0;
-        private MovieDeserialized _movieDeserialized;
-        private Dictionary<string, List<MovieBonusVideoDeserialized>> _bonusVideosDictionary;
+        private int _movieId;
         private Border _splash;
         private Action _callback;
 
@@ -40,7 +35,7 @@ namespace VideoCollection.Popups.Movies
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public MovieDetails() { }
 
-        public MovieDetails(string Id, ref Border splash, Action callback)
+        public MovieDetails(int id, ref Border splash, Action callback)
         {
             InitializeComponent();
 
@@ -53,53 +48,48 @@ namespace VideoCollection.Popups.Movies
             HeightScale = 0.86;
             HeightToWidthRatio = 0.49;
 
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            Movie movie = DatabaseFunctions.GetMovie(id);
+            _movieId = movie.Id;
+            try
             {
-                connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + Id)[0];
-                try
-                {
-                    _movieDeserialized = new MovieDeserialized(movie);
-                }
-                catch (Exception ex)
-                {
-                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                    popup.scaleWindow(parentWindow);
-                    parentWindow.addChild(popup);
-                    popup.Owner = parentWindow;
-                    popup.ShowDialog();
-                    _callback();
-                }
-                labelTitle.Content = _movieDeserialized.Title;
-                imageMovieThumbnail.Source = _movieDeserialized.Thumbnail;
-                txtRuntime.Text = _movieDeserialized.Runtime;
-                txtRating.Text = _movieDeserialized.Rating;
+                MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
+                labelTitle.Content = movie.Title;
+                imageMovieThumbnail.Source = movieDeserialized.Thumbnail;
+                txtRuntime.Text = movie.Runtime;
+                txtRating.Text = movie.Rating;
                 string categories = "";
-                _movieDeserialized.Categories.Sort();
-                foreach(string category in _movieDeserialized.Categories)
+                List<string> categoriesList = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
+                categoriesList.Sort();
+                foreach (string category in categoriesList)
                 {
                     categories += (CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.ToLower()) + ", ");
                 }
-                categories = categories.Substring(0, categories.Length-2);
+                categories = categories.Substring(0, categories.Length - 2);
                 txtCategories.Text = categories;
-                icBonusSectionButtons.ItemsSource = _movieDeserialized.BonusSections;
-                _bonusVideosDictionary = new Dictionary<string, List<MovieBonusVideoDeserialized>>();
-                foreach(MovieBonusVideoDeserialized bonusVideo in _movieDeserialized.BonusVideos)
+                List<MovieBonusSection> movieBonusSections = JsonConvert.DeserializeObject<List<MovieBonusSection>>(movie.BonusSections);
+                List<MovieBonusSectionDeserialized> movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
+                foreach (MovieBonusSection section in movieBonusSections)
                 {
-                    if(!_bonusVideosDictionary.ContainsKey(bonusVideo.Section))
-                    {
-                        _bonusVideosDictionary.Add(bonusVideo.Section, new List<MovieBonusVideoDeserialized>());
-                    } 
-                    _bonusVideosDictionary[bonusVideo.Section].Add(bonusVideo);
+                    movieBonusSectionsDeserialized.Add(new MovieBonusSectionDeserialized(section));
                 }
-                if (_movieDeserialized.BonusSections.Any())
+                icBonusSectionButtons.ItemsSource = movieBonusSectionsDeserialized;
+                if (movieBonusSectionsDeserialized.Any())
                 {
-                    _movieDeserialized.BonusSections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
-                    icBonusVideos.ItemsSource = _bonusVideosDictionary[_movieDeserialized.BonusSections.FirstOrDefault().Name];
+                    movieBonusSectionsDeserialized.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+                    icBonusVideos.ItemsSource = getSectionVideos(movieBonusSectionsDeserialized.FirstOrDefault().Name);
                     separatorBonusTop.Visibility = Visibility.Visible;
                     separatorBonusBottom.Visibility = Visibility.Visible;
                 }
+            }
+            catch (Exception ex)
+            {
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
+                popup.scaleWindow(parentWindow);
+                parentWindow.addChild(popup);
+                popup.Owner = parentWindow;
+                popup.ShowDialog();
+                _callback();
             }
 
             UpdateBonusScrollButtons();
@@ -149,12 +139,13 @@ namespace VideoCollection.Popups.Movies
         {
             if(e.ChangedButton == MouseButton.Left)
             {
+                Movie movie = DatabaseFunctions.GetMovie(_movieId);
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     try
                     {
-                        VideoPlayer popup = new VideoPlayer(_movieDeserialized);
+                        VideoPlayer popup = new VideoPlayer(movie);
                         App.videoPlayer = popup;
                         popup.WidthScale = 1.0;
                         popup.HeightScale = 1.0;
@@ -177,7 +168,7 @@ namespace VideoCollection.Popups.Movies
                 }
                 else
                 {
-                    App.videoPlayer.updateVideo(_movieDeserialized);
+                    App.videoPlayer.updateVideo(movie);
                 }
             }
         }
@@ -187,7 +178,14 @@ namespace VideoCollection.Popups.Movies
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                MovieBonusVideoDeserialized bonusVideo = new MovieBonusVideoDeserialized(split[0], split[1], split[2], split[3]);
+
+                MovieBonusVideo bonusVideo = new MovieBonusVideo()
+                {
+                    Title = split[0],
+                    FilePath = split[1],
+                    Runtime = split[2],
+                    Subtitles = split[3]
+                };
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
@@ -314,7 +312,7 @@ namespace VideoCollection.Popups.Movies
             }
 
             scrollBonusVideos.ScrollToHorizontalOffset(0);
-            icBonusVideos.ItemsSource = _bonusVideosDictionary[clickedButton.Content.ToString()];
+            icBonusVideos.ItemsSource = getSectionVideos(clickedButton.Content.ToString());
 
             UpdateBonusScrollButtons();
         }
@@ -359,6 +357,27 @@ namespace VideoCollection.Popups.Movies
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private List<MovieBonusVideoDeserialized> getSectionVideos(string section)
+        {    
+            List<MovieBonusVideoDeserialized> sectionVideos = new List<MovieBonusVideoDeserialized>();
+            Movie movie = DatabaseFunctions.GetMovie(_movieId);
+            List<MovieBonusVideo> movieBonusVideos = JsonConvert.DeserializeObject<List<MovieBonusVideo>>(movie.BonusVideos);
+            List<MovieBonusVideoDeserialized> movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
+            foreach (MovieBonusVideo video in movieBonusVideos)
+            {
+                movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
+            }
+            foreach (MovieBonusVideoDeserialized video in movieBonusVideosDeserialized)
+            {
+                if (video.Section == section)
+                {
+                    sectionVideos.Add(video);
+                }
+            }
+
+            return sectionVideos;
         }
 
         private void scrollCategories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

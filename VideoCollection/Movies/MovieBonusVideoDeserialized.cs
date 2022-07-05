@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
@@ -29,14 +25,6 @@ namespace VideoCollection.Movies
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
-        }
-
-        public MovieBonusVideoDeserialized(string title, string filePath, string runtime, string subtitles)
-        {
-            Title = title;
-            FilePath = filePath;
-            Runtime = runtime;
-            Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
         }
     }
 }

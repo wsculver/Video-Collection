@@ -1,9 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VideoCollection.Helpers;
 
 namespace VideoCollection.Shows
@@ -69,6 +66,38 @@ namespace VideoCollection.Shows
             Subtitles = JsonConvert.SerializeObject(video.Subtitles);
             NextEpisode = JsonConvert.SerializeObject(video.NextEpisode);
             IsBonusVideo = video.IsBonusVideo;
+        }
+
+        public List<ShowVideoDeserialized> getCommentaries()
+        {
+            List<ShowVideoDeserialized> commentaries = null;
+            List<ShowVideo> videoCommentaries = JsonConvert.DeserializeObject<List<ShowVideo>>(Commentaries);
+            if (videoCommentaries != null)
+            {
+                commentaries = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo commentary in videoCommentaries)
+                {
+                    commentaries.Add(new ShowVideoDeserialized(commentary));
+                }
+            }
+
+            return commentaries;
+        }
+
+        public List<ShowVideoDeserialized> getDeletedScenes()
+        {
+            List<ShowVideoDeserialized> deletedScenes = null;
+            List<ShowVideo> videoDeletedScenes = JsonConvert.DeserializeObject<List<ShowVideo>>(DeletedScenes);
+            if (videoDeletedScenes != null)
+            {
+                deletedScenes = new List<ShowVideoDeserialized>();
+                foreach (ShowVideo delScene in videoDeletedScenes)
+                {
+                    deletedScenes.Add(new ShowVideoDeserialized(delScene));
+                }
+            }
+
+            return deletedScenes;
         }
 
         public int CompareTo(object obj)

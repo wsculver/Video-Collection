@@ -3,18 +3,10 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VideoCollection.CustomTypes;
 using VideoCollection.Database;
@@ -48,7 +40,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Position).ToList();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Position).ToList();
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
@@ -96,11 +88,11 @@ namespace VideoCollection.Views
         {
             bool deleted = false;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            string categoryId = (sender as Button).Tag.ToString();
+            int categoryId = (int)(sender as Button).Tag;
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                MovieCategory category = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + categoryId)[0];
+                MovieCategory category = connection.Get<MovieCategory>(categoryId);
                 CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete the " + category.Name + " category?", CustomMessageBox.MessageBoxType.YesNo);
                 popup.scaleWindow(parentWindow);
                 parentWindow.addChild(popup);
@@ -132,7 +124,7 @@ namespace VideoCollection.Views
         private void btnUpdateCategory_Click(object sender, RoutedEventArgs e)
         {
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            UpdateMovieCategory popup = new UpdateMovieCategory((sender as Button).Tag.ToString(), ref parentWindow.Splash, () =>
+            UpdateMovieCategory popup = new UpdateMovieCategory((int)(sender as Button).Tag, ref parentWindow.Splash, () =>
             {
                 UpdateCategoryDisplay();
             });
@@ -152,15 +144,15 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                MovieCategory category = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + categoryId)[0];
-                DatabaseFunctions.RemoveMovieFromCategory(movieId, category);
-
+                MovieCategory category = connection.Get<MovieCategory>(categoryId);
                 connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
+                Movie movie = connection.Get<Movie>(movieId);
+
                 List<string> categories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                 categories.Remove(category.Name);
                 movie.Categories = JsonConvert.SerializeObject(categories);
                 connection.Update(movie);
+                DatabaseFunctions.RemoveMovieFromCategory(movie.Id, category);
             }
 
             UpdateCategoryDisplay();
@@ -303,7 +295,7 @@ namespace VideoCollection.Views
             if (e.ChangedButton == MouseButton.Left)
             {
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                MovieDetails popup = new MovieDetails((sender as Grid).Tag.ToString(), ref parentWindow.Splash, () => { });
+                MovieDetails popup = new MovieDetails((int)(sender as Grid).Tag, ref parentWindow.Splash, () => { });
                 popup.scaleWindow(parentWindow);
                 popup.Owner = parentWindow;
                 parentWindow.addChild(popup);
@@ -419,56 +411,51 @@ namespace VideoCollection.Views
         // Play the movie directly
         private void btnPlayMovie_Click(object sender, RoutedEventArgs e)
         {
-            string id = (sender as Button).Tag.ToString();
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            int id = (int)(sender as Button).Tag;
+            Movie movie = DatabaseFunctions.GetMovie(id);
+            try
             {
-                connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id)[0];
-                try
-                {
-                    MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
-                    if (App.videoPlayer == null)
-                    {
-                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                        try
-                        {
-                            VideoPlayer popup = new VideoPlayer(movieDeserialized);
-                            App.videoPlayer = popup;
-                            popup.WidthScale = 1.0;
-                            popup.HeightScale = 1.0;
-                            popup.HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
-                            popup.scaleWindow(parentWindow);
-                            parentWindow.addChild(popup);
-                            popup.Owner = parentWindow;
-                            popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                            popup.Top = popup.TopMultiplier = parentWindow.Top;
-                            popup.Show();
-                        }
-                        catch (Exception ex)
-                        {
-                            CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
-                            popup.scaleWindow(parentWindow);
-                            parentWindow.addChild(popup);
-                            popup.Owner = parentWindow;
-                            popup.ShowDialog();
-                        }
-                    }
-                    else
-                    {
-                        App.videoPlayer.updateVideo(movieDeserialized);
-                    }
-                }
-                catch (Exception ex)
+                if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                    popup.scaleWindow(parentWindow);
-                    parentWindow.addChild(popup);
-                    popup.Owner = parentWindow;
-                    parentWindow.Splash.Visibility = Visibility.Visible;
-                    popup.ShowDialog();
-                    parentWindow.Splash.Visibility = Visibility.Collapsed;
+                    try
+                    {
+                        VideoPlayer popup = new VideoPlayer(movie);
+                        App.videoPlayer = popup;
+                        popup.WidthScale = 1.0;
+                        popup.HeightScale = 1.0;
+                        popup.HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
+                        popup.Owner = parentWindow;
+                        popup.Left = popup.LeftMultiplier = parentWindow.Left;
+                        popup.Top = popup.TopMultiplier = parentWindow.Top;
+                        popup.Show();
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMessageBox popup = new CustomMessageBox(ex.Message, CustomMessageBox.MessageBoxType.OK);
+                        popup.scaleWindow(parentWindow);
+                        parentWindow.addChild(popup);
+                        popup.Owner = parentWindow;
+                        popup.ShowDialog();
+                    }
                 }
+                else
+                {
+                    App.videoPlayer.updateVideo(movie);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                popup.scaleWindow(parentWindow);
+                parentWindow.addChild(popup);
+                popup.Owner = parentWindow;
+                parentWindow.Splash.Visibility = Visibility.Visible;
+                popup.ShowDialog();
+                parentWindow.Splash.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -476,7 +463,7 @@ namespace VideoCollection.Views
         private void btnDetails_Click(object sender, RoutedEventArgs e)
         {
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            MovieDetails popup = new MovieDetails((sender as Button).Tag.ToString(), ref parentWindow.Splash, () => { });
+            MovieDetails popup = new MovieDetails((int)(sender as Button).Tag, ref parentWindow.Splash, () => { });
             popup.scaleWindow(parentWindow);
             parentWindow.addChild(popup);
             popup.Owner = parentWindow;
@@ -487,26 +474,21 @@ namespace VideoCollection.Views
         // Delete the movie from the database
         private void btnDeleteMovie_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            string movieId = button.Tag.ToString();
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-            {
-                connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
+            int movieId = (int)(sender as Button).Tag;
+            Movie movie = DatabaseFunctions.GetMovie(movieId);
 
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.scaleWindow(parentWindow);
-                parentWindow.addChild(popup);
-                popup.Owner = parentWindow;
-                parentWindow.Splash.Visibility = Visibility.Visible;
-                if (popup.ShowDialog() == true)
-                {
-                    DatabaseFunctions.DeleteMovie(movie);
-                    UpdateCategoryDisplay();
-                }
-                parentWindow.Splash.Visibility = Visibility.Collapsed;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
+            popup.Owner = parentWindow;
+            parentWindow.Splash.Visibility = Visibility.Visible;
+            if (popup.ShowDialog() == true)
+            {
+                DatabaseFunctions.DeleteMovie(movie.Id);
+                UpdateCategoryDisplay();
             }
+            parentWindow.Splash.Visibility = Visibility.Collapsed;
         }
 
         // Show the update movie screen with the movie selected
@@ -538,7 +520,7 @@ namespace VideoCollection.Views
         {
             Button button = sender as Button;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            MovieViewAll popup = new MovieViewAll(button.Tag.ToString(), ref parentWindow.Splash, () =>
+            MovieViewAll popup = new MovieViewAll((int)button.Tag, ref parentWindow.Splash, () =>
             {
                 UpdateCategoryDisplay();
             });

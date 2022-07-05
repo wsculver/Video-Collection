@@ -3,20 +3,11 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Shows;
-using VideoCollection.Views;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -61,7 +52,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Show>();
-                List<Show> rawShows = (connection.Table<Show>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
                 foreach (Show show in rawShows)
                 {
@@ -131,7 +122,10 @@ namespace VideoCollection.Popups.Shows
                     foreach (ShowCategory showCategory in categories)
                     {
                         if (showCategory.Name == txtCategoryName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -140,12 +134,10 @@ namespace VideoCollection.Popups.Shows
                     }
                     else
                     {
-                        List<Show> selectedShows = new List<Show>();
                         connection.CreateTable<Show>();
                         foreach (int id in _selectedShowIds)
                         {
-                            Show show = connection.Query<Show>("SELECT * FROM Show WHERE Id = " + id.ToString())[0];
-                            selectedShows.Add(show);
+                            Show show = connection.Get<Show>(id);
 
                             // Add category to selected show
                             List<string> showCategories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
@@ -154,12 +146,12 @@ namespace VideoCollection.Popups.Shows
                             connection.Update(show);
                         }
 
-                        selectedShows.Sort();
+                        _selectedShowIds.Sort();
 
                         ShowCategory category = new ShowCategory()
                         {
                             Name = txtCategoryName.Text.ToUpper(),
-                            Shows = JsonConvert.SerializeObject(selectedShows),
+                            ShowIds = JsonConvert.SerializeObject(_selectedShowIds),
                             IsChecked = false
                         };
 

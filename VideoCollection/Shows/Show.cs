@@ -1,11 +1,7 @@
 ﻿using SQLite;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VideoCollection.Helpers;
 using Newtonsoft.Json;
 
 namespace VideoCollection.Shows
@@ -28,25 +24,45 @@ namespace VideoCollection.Shows
         // Used for editing categories
         public bool IsChecked { get; set; }
 
-        public Show() { }
-
-        public Show(ShowDeserialized show)
+        public List<ShowSeasonDeserialized> getSeasons()
         {
-            Id = show.Id;
-            Title = show.Title;
-            ShowFolderPath = show.ShowFolderPath;
-            Thumbnail = StaticHelpers.ImageSourceToBase64(show.Thumbnail);
-            ThumbnailVisibility = show.ThumbnailVisibility;
-            List<ShowSeason> seasons = new List<ShowSeason>();
-            foreach(var season in show.Seasons)
+            List<ShowSeason> showSeasons = JsonConvert.DeserializeObject<List<ShowSeason>>(Seasons);
+            List<ShowSeasonDeserialized> showSeasonsDeserialized = new List<ShowSeasonDeserialized>();
+            foreach (ShowSeason season in showSeasons)
             {
-                seasons.Add(new ShowSeason(season));
+                showSeasonsDeserialized.Add(new ShowSeasonDeserialized(season));
             }
-            Seasons = JsonConvert.SerializeObject(seasons);
-            NextEpisode = JsonConvert.SerializeObject(new ShowVideo(show.NextEpisode));
-            Rating = show.Rating;
-            Categories = JsonConvert.SerializeObject(show.Categories);
-            IsChecked = false;
+            return showSeasonsDeserialized;
+        }
+
+        // Update the next episode for a show
+        public void UpdateNextEpisode()
+        {
+            NextEpisode = JsonConvert.SerializeObject(GetNextEpisode());
+
+            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            {
+                connection.CreateTable<Show>();
+                connection.Update(this);
+            }
+        }
+
+        public ShowVideo GetNextEpisode()
+        {
+            ShowVideoDeserialized nextEpisode = new ShowVideoDeserialized(JsonConvert.DeserializeObject<ShowVideo>(NextEpisode));
+            int seasonNum = nextEpisode.NextEpisode.Item1;
+            int episodeNum = nextEpisode.NextEpisode.Item2;
+
+            return GetEpisode(seasonNum, episodeNum);
+        }
+
+        public ShowVideo GetEpisode(int seasonIndex, int episodeIndex)
+        {
+            List<ShowSeason> showSeasons = JsonConvert.DeserializeObject<List<ShowSeason>>(Seasons);
+            int showSeasonsLength = showSeasons.Count();
+            ShowSeasonDeserialized showSeasonDeserialized = new ShowSeasonDeserialized(showSeasons.ElementAt(seasonIndex));
+            ShowVideoDeserialized showVideo = showSeasonDeserialized.Videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList().ElementAt(episodeIndex);
+            return new ShowVideo(showVideo);
         }
 
         public int CompareTo(object obj)

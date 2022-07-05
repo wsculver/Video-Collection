@@ -3,16 +3,8 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Shows;
@@ -37,7 +29,7 @@ namespace VideoCollection.Popups.Shows
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public UpdateShowCategory() { }
 
-        public UpdateShowCategory(string Id, ref Border splash, Action callback)
+        public UpdateShowCategory(int id, ref Border splash, Action callback)
         {
             InitializeComponent();
 
@@ -45,7 +37,7 @@ namespace VideoCollection.Popups.Shows
 
             _selectedShowIds = new List<int>();
 
-            Tag = Id;
+            Tag = id;
             _splash = splash;
             _callback = callback;
 
@@ -57,13 +49,13 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                ShowCategory showCategory = connection.Query<ShowCategory>("SELECT * FROM ShowCategory WHERE Id = " + Tag.ToString())[0];
+                ShowCategory showCategory = connection.Get<ShowCategory>(Tag);
                 txtCategoryName.Text = showCategory.Name;
                 _originalCategoryName = showCategory.Name;
                 ShowCategoryDeserialized showCategoryDeserialized = new ShowCategoryDeserialized(showCategory);
 
                 connection.CreateTable<Show>();
-                List<Show> rawShows = (connection.Table<Show>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
                 foreach (Show show in rawShows)
                 {
@@ -139,7 +131,10 @@ namespace VideoCollection.Popups.Shows
                     foreach (ShowCategory showCategory in categories)
                     {
                         if (showCategory.Name != _originalCategoryName && showCategory.Name == txtCategoryName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -148,20 +143,11 @@ namespace VideoCollection.Popups.Shows
                     }
                     else
                     {
-
-                        List<Show> selectedShows = new List<Show>();
-
-                        foreach (int id in _selectedShowIds)
-                        {
-                            Show show = connection.Query<Show>("SELECT * FROM Show WHERE Id = " + id.ToString())[0];
-                            selectedShows.Add(show);
-                        }
-
-                        ShowCategory result = connection.Query<ShowCategory>("SELECT * FROM ShowCategory WHERE Id = " + Tag.ToString())[0];
-                        DatabaseFunctions.UpdateCategoryInShows(result.Name, txtCategoryName.Text.ToUpper(), selectedShows);
+                        ShowCategory result = connection.Get<ShowCategory>((int)Tag);
+                        _selectedShowIds.Sort();
+                        DatabaseFunctions.UpdateCategoryInShows(result.Name, txtCategoryName.Text.ToUpper(), _selectedShowIds);
                         result.Name = txtCategoryName.Text.ToUpper();
-                        selectedShows.Sort();
-                        result.Shows = JsonConvert.SerializeObject(selectedShows);
+                        result.ShowIds = JsonConvert.SerializeObject(_selectedShowIds);
                         connection.Update(result);
                     }
                 }

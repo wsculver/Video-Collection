@@ -2,19 +2,14 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoCollection.Helpers;
@@ -22,8 +17,8 @@ using VideoCollection.Movies;
 using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 using VideoCollection.CustomTypes;
-using System.Windows.Media.Animation;
 using VideoCollection.Database;
+using Newtonsoft.Json;
 
 namespace VideoCollection.Popups
 {
@@ -51,7 +46,7 @@ namespace VideoCollection.Popups
         private Point _lastMousePos;
         private bool _fastForwarding = false;
         private int _fastForwardSpeed = 1;
-        private ShowVideoDeserialized _nextEpisode = null;
+        private ShowVideo _nextEpisode = null;
         private bool _forcePlay = false;
         private double _nextEpisodeGridLength = 546.0;
 
@@ -96,7 +91,7 @@ namespace VideoCollection.Popups
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public VideoPlayer() { }
 
-        public VideoPlayer(MovieDeserialized movie)
+        public VideoPlayer(Movie movie)
         {
             InitializeComponent();
 
@@ -107,7 +102,7 @@ namespace VideoCollection.Popups
             updateVideo(movie);
         }
 
-        public VideoPlayer(MovieBonusVideoDeserialized movieBonusVideo)
+        public VideoPlayer(MovieBonusVideo movieBonusVideo)
         {
             InitializeComponent();
 
@@ -118,7 +113,7 @@ namespace VideoCollection.Popups
             updateVideo(movieBonusVideo);
         }
 
-        public VideoPlayer(ShowDeserialized show)
+        public VideoPlayer(Show show)
         {
             InitializeComponent();
 
@@ -129,7 +124,7 @@ namespace VideoCollection.Popups
             updateVideo(show);
         }
 
-        public VideoPlayer(ShowVideoDeserialized showBonusVideo)
+        public VideoPlayer(ShowVideo showBonusVideo)
         {
             InitializeComponent();
 
@@ -185,55 +180,56 @@ namespace VideoCollection.Popups
 
             meVideoPlayer.Play();
         }
-        public void updateVideo(MovieDeserialized movie)
+        public void updateVideo(Movie movie)
         {
             meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(movie.MovieFilePath));
             txtTitle.Text = movie.Title;
             txtDuration.Text = movie.Runtime;
             setTimeFormat(movie.Runtime);
-            _subtitles = movie.Subtitles;
+            _subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(movie.Subtitles);
             DataContext = null;
             _nextEpisode = null;
             gridNextEpisode.Visibility = Visibility.Collapsed;
             update();
         }
-        public void updateVideo(MovieBonusVideoDeserialized movieBonusVideo)
+        public void updateVideo(MovieBonusVideo movieBonusVideo)
         {
             meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(movieBonusVideo.FilePath));
             txtTitle.Text = movieBonusVideo.Title;
             txtDuration.Text = movieBonusVideo.Runtime;
             setTimeFormat(movieBonusVideo.Runtime);
-            _subtitles = movieBonusVideo.Subtitles;
+            _subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(movieBonusVideo.Subtitles);
             DataContext = null;
             _nextEpisode = null;
             gridNextEpisode.Visibility = Visibility.Collapsed;
             update();
         }
 
-        public void updateVideo(ShowDeserialized show)
+        public void updateVideo(Show show)
         {
-            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(show.NextEpisode.FilePath));
-            txtTitle.Text = show.NextEpisode.Title;
-            txtDuration.Text = show.NextEpisode.Runtime;
-            setTimeFormat(show.NextEpisode.Runtime);
-            _subtitles = show.NextEpisode.Subtitles;
+            ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
+            meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(nextEpisode.FilePath));
+            txtTitle.Text = nextEpisode.Title;
+            txtDuration.Text = nextEpisode.Runtime;
+            setTimeFormat(nextEpisode.Runtime);
+            _subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(nextEpisode.Subtitles);
             DataContext = show.NextEpisode;
             _nextEpisode = show.GetNextEpisode();
             gridNextEpisode.Visibility = Visibility.Visible;
-            imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
+            imageThumbnailNextEpisode.Source = StaticHelpers.Base64ToImageSource(_nextEpisode.Thumbnail);
             txtNextEpisodeTitle.Text = _nextEpisode.Title;
             show.UpdateNextEpisode();
             update();
         }
-        public void updateVideo(ShowVideoDeserialized showVideo)
+        public void updateVideo(ShowVideo showVideo)
         {
             meVideoPlayer.Source = new Uri(StaticHelpers.GetAbsolutePathStringFromRelative(showVideo.FilePath));
             txtTitle.Text = showVideo.Title;
             txtDuration.Text = showVideo.Runtime;
             setTimeFormat(showVideo.Runtime);
-            _subtitles = showVideo.Subtitles;
+            _subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(showVideo.Subtitles);
             DataContext = showVideo;
-            ShowDeserialized show = DatabaseFunctions.GetShow(showVideo.ShowTitle);
+            Show show = DatabaseFunctions.GetShow(showVideo.ShowTitle);
             if (showVideo.IsBonusVideo)
             {
                 _nextEpisode = null;
@@ -241,9 +237,10 @@ namespace VideoCollection.Popups
             }
             else
             {
-                _nextEpisode = show.GetEpisode(showVideo.NextEpisode.Item1, showVideo.NextEpisode.Item2);
+                Tuple<int, int> nextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(showVideo.NextEpisode);
+                _nextEpisode = show.GetEpisode(nextEpisode.Item1, nextEpisode.Item2);
                 gridNextEpisode.Visibility = Visibility.Visible;
-                imageThumbnailNextEpisode.Source = _nextEpisode.Thumbnail;
+                imageThumbnailNextEpisode.Source = StaticHelpers.Base64ToImageSource(_nextEpisode.Thumbnail);
                 txtNextEpisodeTitle.Text = _nextEpisode.Title;
                 show.UpdateNextEpisode();
             }

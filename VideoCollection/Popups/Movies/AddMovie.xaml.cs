@@ -3,23 +3,14 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
-using System.IO;
-using VideoCollection.Subtitles;
-using System.Drawing.Imaging;
 using VideoCollection.Animations;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
@@ -65,7 +56,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
@@ -172,7 +163,10 @@ namespace VideoCollection.Popups.Movies
                     foreach (Movie m in movies)
                     {
                         if (m.Title == txtMovieName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -181,17 +175,16 @@ namespace VideoCollection.Popups.Movies
                     }
                     else
                     {
-
                         connection.CreateTable<Movie>();
                         connection.Insert(movie);
 
                         connection.CreateTable<MovieCategory>();
-                        List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                        List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
                         foreach (MovieCategory category in categories)
                         {
                             if (_selectedCategories.Contains(category.Name))
                             {
-                                DatabaseFunctions.AddMovieToCategory(movie, category);
+                                DatabaseFunctions.AddMovieToCategory(movie.Id, category);
                             }
                         }
                     }

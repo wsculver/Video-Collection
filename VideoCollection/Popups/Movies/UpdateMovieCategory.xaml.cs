@@ -3,16 +3,8 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
@@ -37,7 +29,7 @@ namespace VideoCollection.Popups.Movies
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public UpdateMovieCategory() { }
 
-        public UpdateMovieCategory(string Id, ref Border splash, Action callback)
+        public UpdateMovieCategory(int id, ref Border splash, Action callback)
         {
             InitializeComponent();
 
@@ -45,7 +37,7 @@ namespace VideoCollection.Popups.Movies
 
             _selectedMovieIds = new List<int>();
 
-            Tag = Id;
+            Tag = id;
             _splash = splash;
             _callback = callback;
 
@@ -57,13 +49,13 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                MovieCategory movieCategory = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
+                MovieCategory movieCategory = connection.Get<MovieCategory>(id);
                 txtCategoryName.Text = movieCategory.Name;
                 _originalCategoryName = movieCategory.Name;
                 MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory);
 
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
@@ -139,7 +131,10 @@ namespace VideoCollection.Popups.Movies
                     foreach (MovieCategory movieCategory in categories)
                     {
                         if (movieCategory.Name != _originalCategoryName && movieCategory.Name == txtCategoryName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -148,20 +143,11 @@ namespace VideoCollection.Popups.Movies
                     }
                     else
                     {
-
-                        List<Movie> selectedMovies = new List<Movie>();
-
-                        foreach (int id in _selectedMovieIds)
-                        {
-                            Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
-                            selectedMovies.Add(movie);
-                        }
-
-                        MovieCategory result = connection.Query<MovieCategory>("SELECT * FROM MovieCategory WHERE Id = " + Tag.ToString())[0];
-                        DatabaseFunctions.UpdateCategoryInMovies(result.Name, txtCategoryName.Text.ToUpper(), selectedMovies);
+                        MovieCategory result = connection.Get<MovieCategory>((int)Tag);
+                        _selectedMovieIds.Sort();
+                        DatabaseFunctions.UpdateCategoryInMovies(result.Name, txtCategoryName.Text.ToUpper(), _selectedMovieIds);
                         result.Name = txtCategoryName.Text.ToUpper();
-                        selectedMovies.Sort();
-                        result.Movies = JsonConvert.SerializeObject(selectedMovies);
+                        result.MovieIds = JsonConvert.SerializeObject(_selectedMovieIds);
                         connection.Update(result);
                     }
                 }

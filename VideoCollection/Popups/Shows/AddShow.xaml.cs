@@ -3,23 +3,15 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Shows;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using System.IO;
-using VideoCollection.Subtitles;
-using System.Drawing.Imaging;
 using VideoCollection.Animations;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
@@ -65,7 +57,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> rawCategories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
                 _categories = new List<ShowCategoryDeserialized>();
                 foreach (ShowCategory category in rawCategories)
                 {
@@ -175,7 +167,10 @@ namespace VideoCollection.Popups.Shows
                     foreach (Show m in shows)
                     {
                         if (m.Title == txtShowName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -184,17 +179,16 @@ namespace VideoCollection.Popups.Shows
                     }
                     else
                     {
-
                         connection.CreateTable<Show>();
                         connection.Insert(show);
 
                         connection.CreateTable<ShowCategory>();
-                        List<ShowCategory> categories = (connection.Table<ShowCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                        List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
                         foreach (ShowCategory category in categories)
                         {
                             if (_selectedCategories.Contains(category.Name))
                             {
-                                DatabaseFunctions.AddShowToCategory(show, category);
+                                DatabaseFunctions.AddShowToCategory(show.Id, category);
                             }
                         }
                     }

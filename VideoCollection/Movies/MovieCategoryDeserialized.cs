@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using VideoCollection.Database;
 using VideoCollection.Popups;
 
 namespace VideoCollection.Movies
@@ -22,12 +20,13 @@ namespace VideoCollection.Movies
             Id = category.Id;
             Position = category.Position;
             Name = category.Name;
-            List<Movie> moviesList = JsonConvert.DeserializeObject<List<Movie>>(category.Movies);
+            List<int> movieIds = JsonConvert.DeserializeObject<List<int>>(category.MovieIds);
             List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
-            foreach (Movie movie in moviesList)
+            foreach (int id in movieIds) 
             {
                 try
                 {
+                    Movie movie = DatabaseFunctions.GetMovie(id);
                     moviesDeserialized.Add(new MovieDeserialized(movie));
                 }
                 catch (Exception ex)

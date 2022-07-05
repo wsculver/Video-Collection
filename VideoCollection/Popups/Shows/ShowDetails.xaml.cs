@@ -1,18 +1,13 @@
-﻿using SQLite;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using VideoCollection.CustomTypes;
@@ -30,8 +25,8 @@ namespace VideoCollection.Popups.Shows
         private static int _scrollViewerMargins = 24;
         private static int _sideMargins = 16;
         private double _scrollDistance = 0;
-        private ShowDeserialized _showDeserialized;
-        private Dictionary<string, List<ShowVideoDeserialized>> _videosDictionary;
+        private int _showId;
+        private int _selectedSeasonIndex = 0;
         private Border _splash;
         private Action _callback;
 
@@ -42,7 +37,7 @@ namespace VideoCollection.Popups.Shows
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public ShowDetails() { }
 
-        public ShowDetails(string Id, ref Border splash, Action callback)
+        public ShowDetails(int id, ref Border splash, Action callback)
         {
             InitializeComponent();
 
@@ -55,47 +50,47 @@ namespace VideoCollection.Popups.Shows
             HeightScale = 0.85;
             HeightToWidthRatio = 0.489;
 
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+            Show show = DatabaseFunctions.GetShow(id);
+            _showId = show.Id;
+            try
             {
-                connection.CreateTable<Show>();
-                Show show = connection.Query<Show>("SELECT * FROM Show WHERE Id = " + Id)[0];
-                try
-                {
-                    _showDeserialized = new ShowDeserialized(show);
-                }
-                catch (Exception ex)
-                {
-                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                    popup.scaleWindow(parentWindow);
-                    parentWindow.addChild(popup);
-                    popup.Owner = parentWindow;
-                    popup.ShowDialog();
-                    _callback();
-                }
-                labelTitle.Content = _showDeserialized.Title;
-                imageShowThumbnail.Source = _showDeserialized.Thumbnail;
-                txtRating.Text = _showDeserialized.Rating;
+                ShowDeserialized showDeserialized = new ShowDeserialized(show);
+                labelTitle.Content = show.Title;
+                imageShowThumbnail.Source = showDeserialized.Thumbnail;
+                txtRating.Text = show.Rating;
                 string categories = "";
-                _showDeserialized.Categories.Sort();
-                foreach(string category in _showDeserialized.Categories)
+                List<string> categoriesList = JsonConvert.DeserializeObject<List<string>>(show.Categories);
+                categoriesList.Sort();
+                foreach (string category in categoriesList)
                 {
                     categories += (CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.ToLower()) + ", ");
                 }
-                categories = categories.Substring(0, categories.Length-2);
+                categories = categories.Substring(0, categories.Length - 2);
                 txtCategories.Text = categories;
                 cmbSeasons.DisplayMemberPath = "SeasonName";
                 cmbSeasons.SelectedValuePath = "SeasonNumber";
-                cmbSeasons.ItemsSource = _showDeserialized.Seasons;
+                List<ShowSeason> showSeasons = JsonConvert.DeserializeObject<List<ShowSeason>>(show.Seasons);
+                cmbSeasons.ItemsSource = showSeasons;
                 cmbSeasons.Text = "Select Season";
                 cmbSeasons.SelectedIndex = 0;
+                ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
+                DataContext = nextEpisode;
+            }
+            catch (Exception ex)
+            {
+                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
+                popup.scaleWindow(parentWindow);
+                parentWindow.addChild(popup);
+                popup.Owner = parentWindow;
+                popup.ShowDialog();
+                _callback();
             }
 
             DispatcherTimer timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(1000);
             timer.Tick += timer_Tick;
             timer.Start();
-            DataContext = _showDeserialized.NextEpisode;
 
             UpdateVideoScrollButtons();
         }
@@ -104,8 +99,9 @@ namespace VideoCollection.Popups.Shows
         private void timer_Tick(object sender, EventArgs e)
         {
             // TODO: Optimize this to only query DB when needed
-            _showDeserialized = DatabaseFunctions.GetShow(_showDeserialized.Title);
-            DataContext = _showDeserialized.NextEpisode;
+            Show show = DatabaseFunctions.GetShow(_showId);
+            ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
+            DataContext = nextEpisode;
         }
 
         // Scale based on the size of the window
@@ -152,12 +148,13 @@ namespace VideoCollection.Popups.Shows
         {
             if(e.ChangedButton == MouseButton.Left)
             {
+                Show show = DatabaseFunctions.GetShow(_showId);
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     try
                     {
-                        VideoPlayer popup = new VideoPlayer(_showDeserialized);
+                        VideoPlayer popup = new VideoPlayer(show);
                         App.videoPlayer = popup;
                         popup.WidthScale = 1.0;
                         popup.HeightScale = 1.0;
@@ -180,7 +177,7 @@ namespace VideoCollection.Popups.Shows
                 }
                 else
                 {
-                    App.videoPlayer.updateVideo(_showDeserialized);
+                    App.videoPlayer.updateVideo(show);
                 }
             }
         }
@@ -190,7 +187,19 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                ShowVideoDeserialized bonusVideo = new ShowVideoDeserialized(split[0], split[1], split[2], split[3], split[4], split[5], true, split[6], split[7]);
+                ShowVideo bonusVideo = new ShowVideo()
+                {
+                    Title = split[0],
+                    FilePath = split[1],
+                    Runtime = split[2],
+                    Subtitles = split[3],
+                    Commentaries = split[4],
+                    DeletedScenes = split[5],
+                    IsBonusVideo = true,
+                    ShowTitle = split[6],
+                    NextEpisode = split[7]
+                };
+
                 if (App.videoPlayer == null)
                 {
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
@@ -317,7 +326,7 @@ namespace VideoCollection.Popups.Shows
             }
 
             scrollVideos.ScrollToHorizontalOffset(0);
-            icVideos.ItemsSource = _videosDictionary[clickedButton.Content.ToString()];
+            icVideos.ItemsSource = getSectionVideos(clickedButton.Content.ToString());
 
             UpdateVideoScrollButtons();
         }
@@ -367,23 +376,36 @@ namespace VideoCollection.Popups.Shows
         private void cmbSeasons_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             scrollVideos.ScrollToLeftEnd();
-            int selectedSeason = (sender as ComboBox).SelectedItem == null ? 1 : (sender as ComboBox).SelectedIndex;
-            icSectionButtons.ItemsSource = _showDeserialized.Seasons.ElementAt(selectedSeason).Sections;
-            _videosDictionary = new Dictionary<string, List<ShowVideoDeserialized>>();
-            _showDeserialized.Seasons.ElementAt(selectedSeason).Videos.Sort();
-            foreach (ShowVideoDeserialized video in _showDeserialized.Seasons.ElementAt(selectedSeason).Videos)
+            _selectedSeasonIndex = (sender as ComboBox).SelectedItem == null ? 1 : (sender as ComboBox).SelectedIndex;
+            Show show = DatabaseFunctions.GetShow(_showId);
+            ShowSeasonDeserialized showSeason = show.getSeasons().ElementAt(_selectedSeasonIndex);
+            icSectionButtons.ItemsSource = showSeason.Sections;
+            if (showSeason.Sections.Any())
             {
-                if (!_videosDictionary.ContainsKey(video.Section))
+                showSeason.Sections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+                icVideos.ItemsSource = getSectionVideos();
+            }
+        }
+
+        private List<ShowVideoDeserialized> getSectionVideos(string section = null)
+        {
+            List<ShowVideoDeserialized> sectionVideos = new List<ShowVideoDeserialized>();
+            Show show = DatabaseFunctions.GetShow(_showId);
+            List<ShowSeasonDeserialized> showSeasons = show.getSeasons();
+            ShowSeasonDeserialized season = showSeasons.ElementAt(_selectedSeasonIndex);
+            if (section == null)
+            {
+                section = season.Sections.FirstOrDefault().Name;
+            }
+            foreach (ShowVideoDeserialized video in season.Videos)
+            {
+                if (video.Section == section)
                 {
-                    _videosDictionary.Add(video.Section, new List<ShowVideoDeserialized>());
+                    sectionVideos.Add(video);
                 }
-                _videosDictionary[video.Section].Add(video);
             }
-            if (_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.Any())
-            {
-                _showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
-                icVideos.ItemsSource = _videosDictionary[_showDeserialized.Seasons.ElementAt(selectedSeason).Sections.FirstOrDefault().Name];
-            }
+
+            return sectionVideos;
         }
 
         private void scrollCategories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

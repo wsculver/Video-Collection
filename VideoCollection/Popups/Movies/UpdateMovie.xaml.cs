@@ -3,16 +3,10 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.Database;
 using VideoCollection.Movies;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -31,13 +25,15 @@ namespace VideoCollection.Popups.Movies
     {
         private List<string> _selectedCategories;
         private int _movieId;
-        private MovieDeserialized _movie;
+        private Movie _movie;
         private string _rating;
         private string _originalMovieName;
         private bool _movieDeleted = false;
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
+        private List<MovieBonusSectionDeserialized> _movieBonusSectionsDeserialized;
+        private List<MovieBonusVideoDeserialized> _movieBonusVideosDeserialized;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -58,6 +54,9 @@ namespace VideoCollection.Popups.Movies
             _selectedCategories = new List<string>();
             _rating = "";
 
+            _movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
+            _movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
+
             WidthScale = 0.73;
             HeightScale = 0.85;
             HeightToWidthRatio = 0.623;
@@ -68,7 +67,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
@@ -84,7 +83,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
@@ -183,11 +182,12 @@ namespace VideoCollection.Popups.Movies
                 panelMovieInfo.Visibility = Visibility.Visible;
                 _selectedCategories = new List<string>();
 
-                MovieDeserialized movie = (MovieDeserialized)movies[0];
+                MovieDeserialized movieDeserialized = (MovieDeserialized)movies[0];
+                Movie movie = DatabaseFunctions.GetMovie(movieDeserialized.Id);
                 txtMovieFolder.Text = movie.MovieFolderPath;
                 txtMovieName.Text = movie.Title;
                 _originalMovieName = movie.Title;
-                imgThumbnail.Source = movie.Thumbnail;
+                imgThumbnail.Source = movieDeserialized.Thumbnail;
                 switch (movie.ThumbnailVisibility)
                 {
                     case "Visible":
@@ -249,7 +249,16 @@ namespace VideoCollection.Popups.Movies
         // Check if any movie content has changed from what was already saved
         private bool MovieContentChanged(Movie movie)
         {
-            return (movie.Title != txtMovieName.Text) || (movie.Thumbnail != imgThumbnail.Source.ToString()) || (movie.MovieFilePath != txtFile.Text) || (movie.Categories != JsonConvert.SerializeObject(_selectedCategories));
+            return (movie.Title != txtMovieName.Text)
+                || (movie.MovieFolderPath != txtMovieFolder.Text)
+                || (movie.Thumbnail != imgThumbnail.Source.ToString())
+                || (movie.ThumbnailVisibility != _thumbnailVisibility)
+                || (movie.MovieFilePath != txtFile.Text)
+                || (movie.BonusSections != _movie.BonusSections)
+                || (movie.BonusVideos != _movie.BonusVideos)
+                || (movie.Rating != _rating)
+                || (movie.Categories != JsonConvert.SerializeObject(_selectedCategories))
+                || (movie.Subtitles != JsonConvert.SerializeObject(_movie.Subtitles));
         }
 
         // Shows a custom OK message box
@@ -308,76 +317,72 @@ namespace VideoCollection.Popups.Movies
                         foreach (Movie m in movies)
                         {
                             if (m.Title != _originalMovieName && m.Title == txtMovieName.Text.ToUpper())
+                            {
                                 repeat = true;
+                                break;
+                            }
                         }
 
                         if (repeat)
                         {
-                            ShowOKMessageBox("A category with that name already exists");
+                            ShowOKMessageBox("A movie with that name already exists");
                         }
                         else
                         {
-
                             // Update the movie in the Movie table
                             connection.CreateTable<Movie>();
-                            Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + _movieId)[0];
-                            bool movieContentChanged = MovieContentChanged(movie);
-                            movie.Title = txtMovieName.Text.ToUpper();
-                            movie.MovieFolderPath = txtMovieFolder.Text;
-                            movie.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
-                            movie.ThumbnailVisibility = _thumbnailVisibility;
-                            movie.MovieFilePath = txtFile.Text;
-                            movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
-                            List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
-                            foreach (MovieBonusSectionDeserialized section in _movie.BonusSections)
+                            Movie movie = connection.Get<Movie>(_movieId);
+                            if (MovieContentChanged(movie))
                             {
-                                MovieBonusSection sec = new MovieBonusSection()
+                                movie.Title = txtMovieName.Text.ToUpper();
+                                movie.MovieFolderPath = txtMovieFolder.Text;
+                                movie.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
+                                movie.ThumbnailVisibility = _thumbnailVisibility;
+                                movie.MovieFilePath = txtFile.Text;
+                                movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
+                                List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
+                                foreach (MovieBonusSectionDeserialized section in _movieBonusSectionsDeserialized)
                                 {
-                                    Name = section.Name,
-                                    Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
-                                };
-                                bonusSections.Add(sec);
-                            }
-                            movie.BonusSections = JsonConvert.SerializeObject(bonusSections);
-                            List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
-                            foreach (MovieBonusVideoDeserialized video in _movie.BonusVideos)
-                            {
-                                MovieBonusVideo vid = new MovieBonusVideo()
-                                {
-                                    Title = video.Title,
-                                    Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
-                                    FilePath = video.FilePath,
-                                    Section = video.Section,
-                                    Runtime = video.Runtime,
-                                    Subtitles = video.SubtitlesSerialized
-                                };
-                                bonusVideos.Add(vid);
-                            }
-                            movie.BonusVideos = JsonConvert.SerializeObject(bonusVideos);
-                            movie.Rating = _rating;
-                            movie.Categories = JsonConvert.SerializeObject(_selectedCategories);
-                            // Parse the subtitle file
-                            SubtitleParser subParser = new SubtitleParser();
-                            movie.Subtitles = JsonConvert.SerializeObject(_movie.Subtitles);
-                            connection.Update(movie);
-
-                            // Update the MovieCateogry table
-                            connection.CreateTable<MovieCategory>();
-                            List<MovieCategory> categories = (connection.Table<MovieCategory>().ToList()).OrderBy(c => c.Name).ToList();
-                            foreach (MovieCategory category in categories)
-                            {
-                                if (_selectedCategories.Contains(category.Name))
-                                {
-                                    // Update movie in the MovieCategory table if any content changed
-                                    if (movieContentChanged)
+                                    MovieBonusSection sec = new MovieBonusSection()
                                     {
-                                        DatabaseFunctions.UpdateMovieInCategory(movie, category);
-                                    }
+                                        Name = section.Name,
+                                        Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
+                                    };
+                                    bonusSections.Add(sec);
                                 }
-                                else
+                                movie.BonusSections = JsonConvert.SerializeObject(bonusSections);
+                                List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
+                                foreach (MovieBonusVideoDeserialized video in _movieBonusVideosDeserialized)
                                 {
-                                    // Remove movie from categories in the MovieCategory table
-                                    DatabaseFunctions.RemoveMovieFromCategory(_movie.Id.ToString(), category);
+                                    MovieBonusVideo vid = new MovieBonusVideo()
+                                    {
+                                        Title = video.Title,
+                                        Thumbnail = StaticHelpers.ImageSourceToBase64(video.Thumbnail),
+                                        FilePath = video.FilePath,
+                                        Section = video.Section,
+                                        Runtime = video.Runtime,
+                                        Subtitles = video.SubtitlesSerialized
+                                    };
+                                    bonusVideos.Add(vid);
+                                }
+                                movie.BonusVideos = JsonConvert.SerializeObject(bonusVideos);
+                                movie.Rating = _rating;
+                                movie.Categories = JsonConvert.SerializeObject(_selectedCategories);
+                                // Parse the subtitle file
+                                SubtitleParser subParser = new SubtitleParser();
+                                movie.Subtitles = JsonConvert.SerializeObject(_movie.Subtitles);
+                                connection.Update(movie);
+
+                                // Update the MovieCateogry table
+                                connection.CreateTable<MovieCategory>();
+                                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
+                                foreach (MovieCategory category in categories)
+                                {
+                                    if (!_selectedCategories.Contains(category.Name))
+                                    {
+                                        // Remove movie from categories in the MovieCategory table
+                                        DatabaseFunctions.RemoveMovieFromCategory(_movie.Id, category);
+                                    }
                                 }
                             }
                         }
@@ -419,7 +424,7 @@ namespace VideoCollection.Popups.Movies
         }
 
         // Choose the whole movie folder
-        private async void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
+        private void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
         {
             CommonOpenFileDialog dlg = StaticHelpers.CreateFolderFileDialog();
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
@@ -427,12 +432,24 @@ namespace VideoCollection.Popups.Movies
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
                 loadingControl.Content = new LoadingSpinner();
                 loadingControl.Visibility = Visibility.Visible;
-                _ = Task.Run(async () =>
+                Task.Run(async () =>
                   {
                       Movie movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
                       try
                       {
-                          _movie = new MovieDeserialized(movie);
+                          List<MovieBonusSection> movieBonusSections = JsonConvert.DeserializeObject<List<MovieBonusSection>>(movie.BonusSections);
+                          _movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
+                          foreach (MovieBonusSection section in movieBonusSections)
+                          {
+                              _movieBonusSectionsDeserialized.Add(new MovieBonusSectionDeserialized(section));
+                          }
+                          List<MovieBonusVideo> movieBonusVideos = JsonConvert.DeserializeObject<List<MovieBonusVideo>>(movie.BonusVideos);
+                          _movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
+                          foreach (MovieBonusVideo video in movieBonusVideos)
+                          {
+                              _movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
+                          }
+                          _movie = movie;
                       }
                       catch (Exception ex)
                       {
@@ -483,28 +500,23 @@ namespace VideoCollection.Popups.Movies
         // Delete a movie from the database
         private void btnDeleteMovie_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            string movieId = button.Tag.ToString();
-            using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
-            {
-                connection.CreateTable<Movie>();
-                Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + movieId)[0];
+            int movieId = (int)(sender as Button).Tag;
+            Movie movie = DatabaseFunctions.GetMovie(movieId);
 
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
-                popup.scaleWindow(parentWindow);
-                parentWindow.addChild(popup);
-                popup.Owner = parentWindow;
-                Splash.Visibility = Visibility.Visible;
-                if (popup.ShowDialog() == true)
-                {
-                    DatabaseFunctions.DeleteMovie(movie);
-                    UpdateMovieList();
-                    _movieDeleted = true;
-                    panelMovieInfo.Visibility = Visibility.Collapsed;
-                }
-                Splash.Visibility = Visibility.Collapsed;
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            CustomMessageBox popup = new CustomMessageBox("Are you sure you want to delete " + movie.Title + " from the database? This only removes the movie from your video collection, it does not delete any movie files.", CustomMessageBox.MessageBoxType.YesNo);
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
+            popup.Owner = parentWindow;
+            Splash.Visibility = Visibility.Visible;
+            if (popup.ShowDialog() == true)
+            {
+                DatabaseFunctions.DeleteMovie(movie.Id);
+                UpdateMovieList();
+                _movieDeleted = true;
+                panelMovieInfo.Visibility = Visibility.Collapsed;
             }
+            Splash.Visibility = Visibility.Collapsed;
         }
 
         public void scaleWindow(Window parent)

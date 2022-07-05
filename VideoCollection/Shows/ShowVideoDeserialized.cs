@@ -1,9 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using VideoCollection.Helpers;
 using VideoCollection.Subtitles;
@@ -75,45 +72,6 @@ namespace VideoCollection.Shows
             NextEpisodeSerialized = video.NextEpisode;
             NextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(video.NextEpisode);
             IsBonusVideo = video.IsBonusVideo;
-        }
-
-        public ShowVideoDeserialized(string title, string filePath, string runtime, string subtitles, string commentaries, string deletedScenes, bool isBonusVideo, string showTitle, string nextEpisode)
-        {
-            Title = title;
-            ShowTitle = showTitle;
-            FilePath = filePath;
-            Runtime = runtime;
-            Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(subtitles);
-            List<ShowVideo> videoCommentaries = JsonConvert.DeserializeObject<List<ShowVideo>>(commentaries);
-            if (videoCommentaries != null)
-            {
-                List<ShowVideoDeserialized> commentariesDeserialized = new List<ShowVideoDeserialized>();
-                foreach (ShowVideo commentary in videoCommentaries)
-                {
-                    commentariesDeserialized.Add(new ShowVideoDeserialized(commentary));
-                }
-                Commentaries = commentariesDeserialized;
-            }
-            else
-            {
-                Commentaries = null;
-            }
-            List<ShowVideo> videoDeletedScenes = JsonConvert.DeserializeObject<List<ShowVideo>>(deletedScenes);
-            if (videoDeletedScenes != null)
-            {
-                List<ShowVideoDeserialized> deletedScenesDeserialized = new List<ShowVideoDeserialized>();
-                foreach (ShowVideo delScene in videoDeletedScenes)
-                {
-                    deletedScenesDeserialized.Add(new ShowVideoDeserialized(delScene));
-                }
-                DeletedScenes = deletedScenesDeserialized;
-            }
-            else
-            {
-                DeletedScenes = null;
-            }
-            IsBonusVideo = isBonusVideo;
-            NextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(nextEpisode);
         }
 
         public int CompareTo(object obj)

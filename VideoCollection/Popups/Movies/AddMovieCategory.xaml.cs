@@ -3,20 +3,11 @@ using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using VideoCollection.CustomTypes;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
-using VideoCollection.Views;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -61,7 +52,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = (connection.Table<Movie>().ToList()).OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
@@ -131,7 +122,10 @@ namespace VideoCollection.Popups.Movies
                     foreach (MovieCategory movieCategory in categories)
                     {
                         if (movieCategory.Name == txtCategoryName.Text.ToUpper())
+                        {
                             repeat = true;
+                            break;
+                        }
                     }
 
                     if (repeat)
@@ -140,12 +134,10 @@ namespace VideoCollection.Popups.Movies
                     }
                     else
                     {
-                        List<Movie> selectedMovies = new List<Movie>();
                         connection.CreateTable<Movie>();
                         foreach (int id in _selectedMovieIds)
                         {
-                            Movie movie = connection.Query<Movie>("SELECT * FROM Movie WHERE Id = " + id.ToString())[0];
-                            selectedMovies.Add(movie);
+                            Movie movie = connection.Get<Movie>(id);
 
                             // Add category to selected movie
                             List<string> movieCategories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
@@ -154,12 +146,12 @@ namespace VideoCollection.Popups.Movies
                             connection.Update(movie);
                         }
 
-                        selectedMovies.Sort();
+                        _selectedMovieIds.Sort();
 
                         MovieCategory category = new MovieCategory()
                         {
                             Name = txtCategoryName.Text.ToUpper(),
-                            Movies = JsonConvert.SerializeObject(selectedMovies),
+                            MovieIds = JsonConvert.SerializeObject(_selectedMovieIds),
                             IsChecked = false
                         };
 
