@@ -13,7 +13,7 @@
             <sys:Double x:Key="SettingsButtonHeight">20</sys:Double>
             <sys:Double x:Key="CategorySettingsWidth">82</sys:Double>
             <sys:Double x:Key="ShowSettingsWidth">128</sys:Double>
-            <sys:Double x:Key="AddSettingsWidth">90</sys:Double>
+            <sys:Double x:Key="AddSettingsWidth">100</sys:Double>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
@@ -152,6 +152,9 @@
                     </Button>
                     <Button x:Name="btnAddCategory" Width="{StaticResource AddSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnAddCategory_Click" Cursor="Hand">
                         <TextBlock Text="ADD CATEGORY" Style="{StaticResource SettingsTextBlockStyle}"/>
+                    </Button>
+                    <Button x:Name="btnAddBulkShows" Width="{StaticResource AddSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnAddBulkShows_Click" Cursor="Hand">
+                        <TextBlock Text="ADD BULK SHOWS" Style="{StaticResource SettingsTextBlockStyle}"/>
                     </Button>
                 </StackPanel>
             </materialDesign:PopupBox>

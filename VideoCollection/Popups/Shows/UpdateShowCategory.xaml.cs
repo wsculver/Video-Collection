@@ -69,10 +69,11 @@ namespace VideoCollection.Popups.Shows
                         }
                     }
 
-                    show.IsChecked = check;
                     try
                     {
-                        shows.Add(new ShowDeserialized(show));
+                        ShowDeserialized showDeserialized = new ShowDeserialized(show);
+                        showDeserialized.IsChecked = check;
+                        shows.Add(showDeserialized);
                     }
                     catch (Exception ex)
                     {

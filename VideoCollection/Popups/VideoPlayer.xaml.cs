@@ -49,6 +49,7 @@ namespace VideoCollection.Popups
         private ShowVideo _nextEpisode = null;
         private bool _forcePlay = false;
         private double _nextEpisodeGridLength = 546.0;
+        private DispatcherTimer _timer;
 
         private const string _fullScreenLabel = "FULL SCREEN";
         private const string _exitFullScreenLabel = "EXIT FULL SCREEN";
@@ -149,10 +150,10 @@ namespace VideoCollection.Popups
                 btnSubtitles.Visibility = Visibility.Visible;
             }
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(100);
-            timer.Tick += timer_Tick;
-            timer.Start();
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromMilliseconds(100);
+            _timer.Tick += timer_Tick;
+            _timer.Start();
 
             _overlayHideTimer = new DispatcherTimer();
             _overlayHideTimer.Interval = TimeSpan.FromSeconds(1);
@@ -414,6 +415,7 @@ namespace VideoCollection.Popups
         // Close the video player
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
+            _timer.Stop();
             App.videoPlayer = null;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);

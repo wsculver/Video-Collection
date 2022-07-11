@@ -15,6 +15,7 @@ using VideoCollection.Subtitles;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
 using VideoCollection.Animations;
+using System.Threading;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -32,6 +33,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
+        private CancellationTokenSource _tokenSource;
         private List<MovieBonusSectionDeserialized> _movieBonusSectionsDeserialized;
         private List<MovieBonusVideoDeserialized> _movieBonusVideosDeserialized;
 
@@ -53,6 +55,7 @@ namespace VideoCollection.Popups.Movies
 
             _selectedCategories = new List<string>();
             _rating = "";
+            _tokenSource = new CancellationTokenSource();
 
             _movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
             _movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
@@ -219,10 +222,6 @@ namespace VideoCollection.Popups.Movies
                     case "NC-17":
                         btnNC17.IsChecked = true;
                         break;
-                    case "None":
-                    default:
-                        btnNone.IsChecked = true;
-                        break;
                 }
                 _rating = movie.Rating;
                 List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
@@ -237,6 +236,7 @@ namespace VideoCollection.Popups.Movies
                     categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, check));
                 }
                 icCategories.ItemsSource = categories;
+                setMovieBonusContent(movie);
             }
         }
 
@@ -303,11 +303,6 @@ namespace VideoCollection.Popups.Movies
                     ShowOKMessageBox("You need to select a thumbnail tile type");
                     return false;
                 }
-                else if (_rating == "")
-                {
-                    ShowOKMessageBox("You need to select a rating");
-                    return false;
-                }
                 else
                 {
                     using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
@@ -330,7 +325,6 @@ namespace VideoCollection.Popups.Movies
                         else
                         {
                             // Update the movie in the Movie table
-                            connection.CreateTable<Movie>();
                             Movie movie = connection.Get<Movie>(_movieId);
                             if (MovieContentChanged(movie))
                             {
@@ -423,6 +417,22 @@ namespace VideoCollection.Popups.Movies
             ScaleValue = ScaleValueHelper.CalculateScale(updateMovieWindow, 500f, 800f);
         }
 
+        private void setMovieBonusContent(Movie movie)
+        {
+            List<MovieBonusSection> movieBonusSections = JsonConvert.DeserializeObject<List<MovieBonusSection>>(movie.BonusSections);
+            _movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
+            foreach (MovieBonusSection section in movieBonusSections)
+            {
+                _movieBonusSectionsDeserialized.Add(new MovieBonusSectionDeserialized(section));
+            }
+            List<MovieBonusVideo> movieBonusVideos = JsonConvert.DeserializeObject<List<MovieBonusVideo>>(movie.BonusVideos);
+            _movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
+            foreach (MovieBonusVideo video in movieBonusVideos)
+            {
+                _movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
+            }
+        }
+
         // Choose the whole movie folder
         private void btnChooseMovieFolder_Click(object sender, RoutedEventArgs e)
         {
@@ -432,46 +442,36 @@ namespace VideoCollection.Popups.Movies
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
                 loadingControl.Content = new LoadingSpinner();
                 loadingControl.Visibility = Visibility.Visible;
-                Task.Run(async () =>
-                  {
-                      Movie movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
-                      try
-                      {
-                          List<MovieBonusSection> movieBonusSections = JsonConvert.DeserializeObject<List<MovieBonusSection>>(movie.BonusSections);
-                          _movieBonusSectionsDeserialized = new List<MovieBonusSectionDeserialized>();
-                          foreach (MovieBonusSection section in movieBonusSections)
-                          {
-                              _movieBonusSectionsDeserialized.Add(new MovieBonusSectionDeserialized(section));
-                          }
-                          List<MovieBonusVideo> movieBonusVideos = JsonConvert.DeserializeObject<List<MovieBonusVideo>>(movie.BonusVideos);
-                          _movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
-                          foreach (MovieBonusVideo video in movieBonusVideos)
-                          {
-                              _movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
-                          }
-                          _movie = movie;
-                      }
-                      catch (Exception ex)
-                      {
-                          ShowOKMessageBox("Error: " + ex.Message);
-                      }
-                      Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
-                         (Action)(() =>
-                         {
-                             txtMovieName.Text = _movie.Title;
-                             if (movie.Thumbnail != "")
-                             {
-                                 imgThumbnail.Source = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
-                             }
-                             txtFile.Text = _movie.MovieFilePath;
+                var token = _tokenSource.Token;
+                Task.Run(() =>
+                {
+                    Movie movie = StaticHelpers.ParseMovieVideos(dlg.FileName, token);
+                    try
+                    {
+                        setMovieBonusContent(movie);
+                        _movie = movie;
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowOKMessageBox("Error: " + ex.Message);
+                    }
+                    if (token.IsCancellationRequested) return;
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
+                    {
+                        txtMovieName.Text = _movie.Title;
+                        if (movie.Thumbnail != "")
+                        {
+                            imgThumbnail.Source = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+                        }
+                        txtFile.Text = _movie.MovieFilePath;
 
-                             if (_movie.MovieFilePath == "")
-                             {
-                                 ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
-                             }
-                             loadingControl.Visibility = Visibility.Collapsed;
-                         }));
-                  });
+                        if (_movie.MovieFilePath == "")
+                        {
+                            ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
+                        }
+                        loadingControl.Visibility = Visibility.Collapsed;
+                    });
+                }, token);
             }
         }
 

@@ -198,7 +198,6 @@ namespace VideoCollection.Popups.Shows
         // Show the update show screen with the show selected
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             UpdateShow popup = new UpdateShow(ref Splash, () => 
             { 
@@ -210,7 +209,7 @@ namespace VideoCollection.Popups.Shows
             for (int i = 0; i < popup.lvShowList.Items.Count; i++)
             {
                 ShowDeserialized show = (ShowDeserialized)popup.lvShowList.Items[i];
-                if (show.Id.ToString() == button.Tag.ToString())
+                if (show.Id.ToString() == (sender as Button).Tag.ToString())
                 {
                     popup.lvShowList.SelectedIndex = i;
                 }

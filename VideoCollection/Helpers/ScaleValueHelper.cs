@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using VideoCollection.CustomTypes;
 
 namespace VideoCollection.Helpers
 {

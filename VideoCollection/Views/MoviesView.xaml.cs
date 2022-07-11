@@ -83,6 +83,18 @@ namespace VideoCollection.Views
             popup.Show();
         }
 
+        // Popup add bulk movies window
+        private void btnAddBulkMovies_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            AddBulkMovies popup = new AddBulkMovies(ref parentWindow.Splash);
+            popup.scaleWindow(parentWindow);
+            parentWindow.addChild(popup);
+            popup.Owner = parentWindow;
+            parentWindow.Splash.Visibility = Visibility.Visible;
+            popup.Show();
+        }
+
         // Remove the category from the database and from all movie category lists
         private void btnDeleteCategory_Click(object sender, RoutedEventArgs e)
         {
@@ -238,8 +250,7 @@ namespace VideoCollection.Views
         // Left arrow button to scroll left inside a category
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -258,8 +269,7 @@ namespace VideoCollection.Views
         // Right arrow button to scroll right inside a category
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))
@@ -494,7 +504,6 @@ namespace VideoCollection.Views
         // Show the update movie screen with the movie selected
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             UpdateMovie popup = new UpdateMovie(ref parentWindow.Splash, () =>
             {
@@ -505,7 +514,7 @@ namespace VideoCollection.Views
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
             {
                 MovieDeserialized movie = (MovieDeserialized)popup.lvMovieList.Items[i];
-                if (movie.Id.ToString() == button.Tag.ToString())
+                if (movie.Id.ToString() == (sender as Button).Tag.ToString())
                 {
                     popup.lvMovieList.SelectedIndex = i;
                 }
@@ -518,9 +527,8 @@ namespace VideoCollection.Views
         // Popup a window showing all movies in the cateogry
         private void btnViewAll_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            MovieViewAll popup = new MovieViewAll((int)button.Tag, ref parentWindow.Splash, () =>
+            MovieViewAll popup = new MovieViewAll((int)(sender as Button).Tag, ref parentWindow.Splash, () =>
             {
                 UpdateCategoryDisplay();
             });

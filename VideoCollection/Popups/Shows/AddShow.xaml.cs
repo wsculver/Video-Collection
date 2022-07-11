@@ -15,6 +15,7 @@ using System.IO;
 using VideoCollection.Animations;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
+using System.Threading;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -30,6 +31,7 @@ namespace VideoCollection.Popups.Shows
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
+        private CancellationTokenSource _tokenSource;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -48,6 +50,7 @@ namespace VideoCollection.Popups.Shows
             _callback = callback;
             _selectedCategories = new List<string>();
             _show = new Show();
+            _tokenSource = new CancellationTokenSource();
 
             WidthScale = 0.43;
             HeightScale = 0.85;
@@ -85,6 +88,7 @@ namespace VideoCollection.Popups.Shows
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            _tokenSource.Cancel();
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);
             Close();
@@ -118,10 +122,6 @@ namespace VideoCollection.Popups.Shows
             {
                 ShowOKMessageBox("You need to select a thumbnail tile type");
             }
-            else if (_rating == "")
-            {
-                ShowOKMessageBox("You need to select a rating");
-            }
             else
             {
                 string thumbnail = "";
@@ -154,8 +154,7 @@ namespace VideoCollection.Popups.Shows
                     Seasons = _show.Seasons,
                     NextEpisode = _show.NextEpisode,
                     Rating = _rating,
-                    Categories = JsonConvert.SerializeObject(_selectedCategories),
-                    IsChecked = false
+                    Categories = JsonConvert.SerializeObject(_selectedCategories)
                 };
 
                 bool repeat = false;
@@ -179,7 +178,6 @@ namespace VideoCollection.Popups.Shows
                     }
                     else
                     {
-                        connection.CreateTable<Show>();
                         connection.Insert(show);
 
                         connection.CreateTable<ShowCategory>();
@@ -224,11 +222,12 @@ namespace VideoCollection.Popups.Shows
                 txtShowFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
                 loadingControl.Content = new LoadingSpinner();
                 loadingControl.Visibility = Visibility.Visible;
-                Task.Run(async () =>
+                var token = _tokenSource.Token;
+                Task.Run(() =>
                 {
-                    _show = await StaticHelpers.ParseShowVideos(dlg.FileName);
-                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
-                       (Action)(() =>
+                    _show = StaticHelpers.ParseShowVideos(dlg.FileName, token);
+                    if (token.IsCancellationRequested) return;
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                        {
                            txtShowName.Text = _show.Title;
                            if (_show.Thumbnail != "")
@@ -239,8 +238,8 @@ namespace VideoCollection.Popups.Shows
                            panelShowFields.Visibility = Visibility.Visible;
 
                            loadingControl.Visibility = Visibility.Collapsed;
-                       }));
-                });
+                       });
+                }, token);
             }
         }
 

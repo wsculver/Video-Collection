@@ -1,14 +1,13 @@
-﻿<Window x:Name="addMovieCategoryWindow" x:Class="VideoCollection.Popups.Movies.AddMovieCategory"
+﻿<Window x:Name="addBulkShowsWindow" x:Class="VideoCollection.Popups.Shows.AddBulkShows"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        WindowStyle="None" Height="500" Width="350" WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
+        WindowStyle="None" Height="500" Width="500" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="42"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
@@ -16,13 +15,14 @@
             <ScaleTransform x:Name="ApplicationScaleTransform"
                         CenterX="0"
                         CenterY="0"
-                        ScaleX="{Binding ElementName=addMovieCategoryWindow, Path=ScaleValue}"
-                        ScaleY="{Binding ElementName=addMovieCategoryWindow, Path=ScaleValue}" />
+                        ScaleX="{Binding ElementName=addBulkShowsWindow, Path=ScaleValue}"
+                        ScaleY="{Binding ElementName=addBulkShowsWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
-            <Label Foreground="White" VerticalAlignment="Center">Category Name</Label>
-            <TextBox x:Name="txtCategoryName" Width="270" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
+        <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+            <Label Foreground="White" VerticalAlignment="Center">Root Show Folder</Label>
+            <TextBox x:Name="txtRootShowFolder" Width="250" FontSize="12" IsReadOnly="True" Foreground="White" Focusable="False" IsHitTestVisible="False" VerticalAlignment="Center"/>
+            <Button x:Name="btnChooseRootShowFolder" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnChooseRootShowFolder_Click">Choose Folder</Button>
         </StackPanel>
 
         <Grid Grid.Row="1">
@@ -31,11 +31,11 @@
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             
-            <Label Grid.Row="0" Foreground="White">Add Movies:</Label>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Single" Margin="0,0,0,4">
+            <Label Grid.Row="0" Foreground="White">Add Shows:</Label>
+            <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Single" Margin="0,0,0,4" Visibility="Hidden">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Tag="{Binding Id}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" Width="364">
+                        <CheckBox Tag="{Binding Title}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" Width="480">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="59" Height="33" Source="{Binding Thumbnail}"/>
                                 <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
@@ -51,11 +51,13 @@
             </ListView>
         </Grid>
 
-        <StackPanel x:Name="buttons" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel x:Name="buttons" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnCancel" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="0,0,10,0" Click="btnCancel_Click">Cancel</Button>
             <Button x:Name="btnOK" Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="10,0,0,0" Click="btnOK_Click">OK</Button>
         </StackPanel>
 
-        <Border x:Name="Splash" Grid.RowSpan="3" Style="{StaticResource SplashStyle}"/>
+        <ContentControl x:Name="loadingControl" Grid.Row="1" Visibility="Collapsed"/>
+
+        <Border x:Name="Splash" Grid.RowSpan="2" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

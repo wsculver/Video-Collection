@@ -198,7 +198,6 @@ namespace VideoCollection.Popups.Movies
         // Show the update movie screen with the movie selected
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             UpdateMovie popup = new UpdateMovie(ref Splash, () => 
             { 
@@ -210,7 +209,7 @@ namespace VideoCollection.Popups.Movies
             for (int i = 0; i < popup.lvMovieList.Items.Count; i++)
             {
                 MovieDeserialized movie = (MovieDeserialized)popup.lvMovieList.Items[i];
-                if (movie.Id.ToString() == button.Tag.ToString())
+                if (movie.Id.ToString() == (sender as Button).Tag.ToString())
                 {
                     popup.lvMovieList.SelectedIndex = i;
                 }

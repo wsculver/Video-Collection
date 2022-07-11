@@ -17,6 +17,11 @@ using VideoCollection.Movies;
 using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 using System.Text.RegularExpressions;
+using SQLite;
+using VideoCollection.Popups;
+using VideoCollection.CustomTypes;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace VideoCollection.Helpers
 {
@@ -116,8 +121,8 @@ namespace VideoCollection.Helpers
             return bitmap;
         }
 
-        // Parse bonus video info
-        private static async Task<Tuple<string, string, string, List<SubtitleSegment>, string, int>> ParseBonusVideo(string movieFolderPath, string videoFile, IEnumerable<string> subtitleFiles, int episodeNumber = 0)
+        // Parse movie bonus video info
+        private static MovieBonusVideo ParseMovieBonusVideo(string movieFolderPath, string videoFile, IEnumerable<string> subtitleFiles)
         {
             SubtitleParser subParser = new SubtitleParser();
             string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
@@ -143,18 +148,25 @@ namespace VideoCollection.Helpers
             }
             else
             {
-                await Task.Run(() =>
-                {
-                    ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(5));
-                    bonusThumbnail = ImageSourceToBase64(image);
-                });
+                ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(5));
+                bonusThumbnail = ImageSourceToBase64(image);
             }
 
-            return Tuple.Create(bonusSection, bonusTitle, bonusThumbnail, bonusSubtitles, videoFile, episodeNumber);
+            MovieBonusVideo video = new MovieBonusVideo()
+            {
+                Title = bonusTitle.ToUpper(),
+                Thumbnail = bonusThumbnail,
+                FilePath = videoFile,
+                Section = bonusSection,
+                Runtime = GetVideoDuration(videoFile),
+                Subtitles = JsonConvert.SerializeObject(bonusSubtitles)
+            };
+
+            return video;
         }
 
         // Parse a movie bonus folder to format all videos in it
-        public static async Task<Movie> ParseMovieVideos(string movieFolderPath)
+        public static Movie ParseMovieVideos(string movieFolderPath, CancellationToken token)
         {
             var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
                 .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
@@ -175,42 +187,36 @@ namespace VideoCollection.Helpers
             }
 
             // All other videos are bonus
-            List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
-            HashSet<string> bonusSectionsSet = new HashSet<string>();
+            ConcurrentBag<MovieBonusVideo> bonusVideos = new ConcurrentBag<MovieBonusVideo>();
+            ConcurrentDictionary<string, byte> bonusSectionsSet = new ConcurrentDictionary<string, byte>();
             int numVideoFiles = videoFiles.Count();
             var tasks = new List<Task<Tuple<string, string, string, List<SubtitleSegment>, string, int>>>();
-            for(int i = 1; i < numVideoFiles; i++)
+            Parallel.For(1, numVideoFiles, i =>
             {
+                if (token.IsCancellationRequested) return;
                 string videoFile = videoFiles.ElementAt(i);
-                tasks.Add(ParseBonusVideo(movieFolderPath, videoFile, subtitleFiles));
-            }
-            foreach (var task in await Task.WhenAll(tasks))
-            {
-                bonusSectionsSet.Add(task.Item1);
-                MovieBonusVideo video = new MovieBonusVideo()
-                {
-                    Title = task.Item2.ToUpper(),
-                    Thumbnail = task.Item3,
-                    FilePath = task.Item5,
-                    Section = task.Item1,
-                    Runtime = GetVideoDuration(task.Item5),
-                    Subtitles = JsonConvert.SerializeObject(task.Item4)
-                };
-                bonusVideos.Add(video);
-            }
+                var bonusVideo = ParseMovieBonusVideo(movieFolderPath, videoFile, subtitleFiles);
+                bonusSectionsSet[bonusVideo.Section] = 0;
+                bonusVideos.Add(bonusVideo);
+            });
+            if (token.IsCancellationRequested) return new Movie();
 
             List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
-            foreach(string sectionName in bonusSectionsSet)
+            foreach(KeyValuePair<string, byte> entry in bonusSectionsSet)
             {
                 MovieBonusSection section = new MovieBonusSection()
                 {
-                    Name = sectionName,
+                    Name = entry.Key,
                     Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
                 };
                 bonusSections.Add(section);
             }
 
+            // Sort bonus sections so they are consistent
+            bonusSections.Sort();
+
             // Get the thumbnail file if it exists, otherwise create one
+            string thumbnailVisibility = "Collapsed";
             var imageFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
                 .Where(s => s.EndsWith(movieTitle + ".png", StringComparison.OrdinalIgnoreCase)
                 || s.EndsWith(movieTitle + ".jpg", StringComparison.OrdinalIgnoreCase)
@@ -219,6 +225,7 @@ namespace VideoCollection.Helpers
             if (imageFiles.Any())
             {
                 movieThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(imageFiles.First())));
+                thumbnailVisibility = "Visible";
             }
             else if(movieFile != null)
             {
@@ -239,23 +246,129 @@ namespace VideoCollection.Helpers
             Movie movie = new Movie()
             {
                 Title = movieTitle.ToUpper(),
+                MovieFolderPath = movieFolderPath,
                 Thumbnail = movieThumbnail,
+                ThumbnailVisibility = thumbnailVisibility,
                 MovieFilePath = movieFilePath,
                 BonusSections = JsonConvert.SerializeObject(bonusSections),
                 BonusVideos = JsonConvert.SerializeObject(bonusVideos),
-                Categories = "",
-                Subtitles = JsonConvert.SerializeObject(subtitles),
-                IsChecked = false
+                Categories = JsonConvert.SerializeObject(new List<string>()),
+                Subtitles = JsonConvert.SerializeObject(subtitles)
             };
 
             return movie;
         }
 
-        // Parse episode info
-        private static async Task<Tuple<int, string, string, List<SubtitleSegment>, string>> ParseEpisode(int episodeNumber, string seasonFolderPath, string videoFile, IEnumerable<string> subtitleFiles)
+        // Parse each movie folder in the root folder
+        public static ConcurrentDictionary<string, Movie> ParseBulkMovies(string rootMovieFolderPath, CancellationToken token)
+        {
+            var movieFolders = Directory.GetDirectories(rootMovieFolderPath);
+
+            ConcurrentDictionary<string, Movie> movies = new ConcurrentDictionary<string, Movie>();
+            Parallel.ForEach(movieFolders, folder =>
+            {
+                var movieTitle = Path.GetFileName(folder).ToUpper();
+                bool repeat = false;
+
+                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+                {
+                    connection.CreateTable<Movie>();
+                    List<Movie> databaseMovies = connection.Table<Movie>().ToList();
+                    foreach (Movie m in databaseMovies)
+                    {
+                        if (m.Title == movieTitle)
+                        {
+                            repeat = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!repeat)
+                {
+                    Movie movie = ParseMovieVideos(folder, token);
+                    if (token.IsCancellationRequested) return;
+
+                    Movie newMovie = new Movie()
+                    {
+                        Title = movie.Title,
+                        MovieFolderPath = movie.MovieFolderPath,
+                        Thumbnail = movie.Thumbnail,
+                        ThumbnailVisibility = movie.ThumbnailVisibility,
+                        MovieFilePath = movie.MovieFilePath,
+                        Runtime = GetVideoDuration(movie.MovieFilePath),
+                        BonusSections = movie.BonusSections,
+                        BonusVideos = movie.BonusVideos,
+                        Rating = "",
+                        Categories = JsonConvert.SerializeObject(new List<string>()),
+                        Subtitles = movie.Subtitles
+                    };
+
+                    movies[movie.Title] = newMovie;
+                }
+            });
+
+            return movies;
+        }
+
+        // Parse show bonus video info
+        private static ShowVideo ParseShowBonusVideo(string showFolderPath, string videoFile, IEnumerable<string> subtitleFiles, int seasonNumber, int episodeNumber = 0)
         {
             SubtitleParser subParser = new SubtitleParser();
-            string episodeTitle = Path.GetFileNameWithoutExtension(videoFile);
+            string showTitle = Path.GetFileName(showFolderPath);
+            string bonusSection = Path.GetFileName(Path.GetDirectoryName(videoFile)).ToUpper();
+            string bonusTitle = Path.GetFileNameWithoutExtension(videoFile);
+            string bonusSubtitleFile = "";
+            List<SubtitleSegment> bonusSubtitles = new List<SubtitleSegment>();
+            var bonusSubtitleFiles = subtitleFiles
+                .Where(s => s.EndsWith(bonusTitle + ".srt", StringComparison.OrdinalIgnoreCase));
+            if (bonusSubtitleFiles.Any())
+            {
+                bonusSubtitleFile = bonusSubtitleFiles.FirstOrDefault();
+                bonusSubtitles = subParser.ExtractSubtitles(bonusSubtitleFile);
+            }
+
+            var bonusImageFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(bonusTitle + ".png", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(bonusTitle + ".jpg", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(bonusTitle + ".jpeg", StringComparison.OrdinalIgnoreCase));
+            string bonusThumbnail = "";
+            if (bonusImageFiles.Any())
+            {
+                bonusThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(bonusImageFiles.First())));
+            }
+            else
+            {
+                ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(5));
+                bonusThumbnail = ImageSourceToBase64(image);
+            }
+
+            ShowVideo video = new ShowVideo()
+            {
+                SeasonNumber = seasonNumber,
+                EpisodeNumber = episodeNumber,
+                Title = bonusTitle,
+                ShowTitle = showTitle.ToUpper(),
+                Thumbnail = bonusThumbnail,
+                FilePath = GetRelativePathStringFromCurrent(videoFile),
+                Commentaries = "",
+                DeletedScenes = "",
+                Section = bonusSection,
+                Runtime = GetVideoDuration(videoFile),
+                Subtitles = JsonConvert.SerializeObject(bonusSubtitles),
+                NextEpisode = "",
+                IsBonusVideo = true
+            };
+
+            return video;
+        }
+
+        // Parse episode info
+        private static ShowVideo ParseEpisode(int seasonNumber, int episodeNumber, string seasonFolderPath, string videoFile, IEnumerable<string> subtitleFiles, List<ShowVideo> commentaries, List<ShowVideo> deletedScenes)
+        {
+            SubtitleParser subParser = new SubtitleParser();
+            string showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolderPath));
+            string episodeTitle = Path.GetFileNameWithoutExtension(videoFile).ToUpper();
             string episodeSubtitleFile = "";
             List<SubtitleSegment> episodeSubtitles = new List<SubtitleSegment>();
             var episodeSubtitleFiles = subtitleFiles
@@ -277,18 +390,58 @@ namespace VideoCollection.Helpers
             }
             else
             {
-                await Task.Run(() =>
-                {
-                    ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(60));
-                    episodeThumbnail = ImageSourceToBase64(image);
-                });
+                ImageSource image = CreateThumbnailFromVideoFile(videoFile, TimeSpan.FromSeconds(60));
+                episodeThumbnail = ImageSourceToBase64(image);
             }
 
-            return Tuple.Create(episodeNumber, episodeTitle, episodeThumbnail, episodeSubtitles, videoFile);
+            // Link commentaries and deleted scenes if there are any
+            List<ShowVideo> episodeCommentaries = null;
+            List<ShowVideo> episodeDeletedScenes = null;
+            foreach (ShowVideo com in commentaries)
+            {
+                if (com.Title.StartsWith(episodeTitle, true, null))
+                {
+                    if (episodeCommentaries == null)
+                    {
+                        episodeCommentaries = new List<ShowVideo>();
+                    }
+                    episodeCommentaries.Add(com);
+                }
+            }
+            foreach (ShowVideo del in deletedScenes)
+            {
+                if (del.Title.StartsWith(episodeTitle, true, null))
+                {
+                    if (episodeDeletedScenes == null)
+                    {
+                        episodeDeletedScenes = new List<ShowVideo>();
+                    }
+                    episodeDeletedScenes.Add(del);
+                }
+            }
+
+            ShowVideo episode = new ShowVideo()
+            {
+                SeasonNumber = seasonNumber,
+                EpisodeNumber = episodeNumber,
+                Title = episodeTitle,
+                ShowTitle = showTitle.ToUpper(),
+                Thumbnail = episodeThumbnail,
+                FilePath = GetRelativePathStringFromCurrent(videoFile),
+                Commentaries = JsonConvert.SerializeObject(episodeCommentaries),
+                DeletedScenes = JsonConvert.SerializeObject(episodeDeletedScenes),
+                Section = "EPISODES",
+                Runtime = GetVideoDuration(videoFile),
+                Subtitles = JsonConvert.SerializeObject(episodeSubtitles),
+                NextEpisode = "",
+                IsBonusVideo = false
+            };
+
+            return episode;
         }
 
         // Parse a show folder to format all videos in it
-        public static async Task<Show> ParseShowVideos(string showFolderPath)
+        public static Show ParseShowVideos(string showFolderPath, CancellationToken token)
         {
             string showThumbnailVideoFile = "";
 
@@ -298,14 +451,17 @@ namespace VideoCollection.Helpers
             List<List<ShowSection>> showSections = new List<List<ShowSection>>();
 
             var seasonFolders = Directory.GetDirectories(showFolderPath, "*.*", SearchOption.TopDirectoryOnly);
-            var showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolders.First()));
+            var showTitle = Path.GetFileName(showFolderPath);
             int numSeasons = seasonFolders.Count();
             for (int n = 0; n < numSeasons; n++)
             {
+                seasons.Add(null);
                 showVideos.Add(new List<ShowVideo>());
+                showSections.Add(new List<ShowSection>());
             }
-            for (int n = 0; n < numSeasons; n++)
+            Parallel.For(0, numSeasons, n =>
             {
+                if (token.IsCancellationRequested) return;
                 int season = n + 1;
                 string seasonFolder = seasonFolders.ElementAt(n);
                 Regex rx = new Regex(@"(Season)\s+(?<season>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -334,16 +490,16 @@ namespace VideoCollection.Helpers
                 var subdirectories = Directory.GetDirectories(seasonFolder, "*.*", SearchOption.TopDirectoryOnly);
                 IEnumerable<string> bonusVideoFiles = null;
                 IEnumerable<string> bonusSubtitleFiles = null;
-                foreach(var directory in subdirectories)
+                foreach (var directory in subdirectories)
                 {
-                    if(bonusVideoFiles == null)
+                    if (bonusVideoFiles == null)
                     {
                         bonusVideoFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
                             .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
                             || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
                             || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
                             || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
-                    } 
+                    }
                     else
                     {
                         bonusVideoFiles.Concat(Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
@@ -353,7 +509,7 @@ namespace VideoCollection.Helpers
                             || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase)));
                     }
 
-                    if(bonusSubtitleFiles == null)
+                    if (bonusSubtitleFiles == null)
                     {
                         bonusSubtitleFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
                             .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
@@ -368,176 +524,115 @@ namespace VideoCollection.Helpers
                 List<ShowVideo> commentaries = new List<ShowVideo>();
                 List<ShowVideo> deletedScenes = new List<ShowVideo>();
 
-                // Episodes
-                var episodeTasks = new List<Task<Tuple<int, string, string, List<SubtitleSegment>, string>>>();
-                int numEpisodeVideoFiles = episodeVideoFiles.Count();
-                for (int i = 0; i < numEpisodeVideoFiles; i++)
-                {
-                    string videoFile = episodeVideoFiles.ElementAt(i);
-                    Regex rxEpisode = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                    MatchCollection matchesEpisode = rxEpisode.Matches(videoFile);
-                    Match matchEpisode = matchesEpisode.FirstOrDefault();
-                    if (matchEpisode != null)
-                    {
-                        GroupCollection groups = matchEpisode.Groups;
-                        int episodeNumber = i + 1;
-                        bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
-                        episodeTasks.Add(ParseEpisode(episodeNumber, showFolderPath, videoFile, episodeSubtitleFiles));
-                    }
-                    else
-                    {
-                        episodeTasks.Add(ParseEpisode(i + 1, showFolderPath, videoFile, episodeSubtitleFiles));
-                    }
-                }
-
                 // Bonus videos
-                HashSet<string> bonusSectionsSet = new HashSet<string>();
+                ConcurrentDictionary<string, byte> bonusSectionsSet = new ConcurrentDictionary<string, byte>();
                 int numBonusVideoFiles = 0;
                 if (bonusVideoFiles != null)
                 {
                     numBonusVideoFiles = bonusVideoFiles.Count();
                 }
-                var bonusTasks = new List<Task<Tuple<string, string, string, List<SubtitleSegment>, string, int>>>();
                 for (int i = 0; i < numBonusVideoFiles; i++)
                 {
+                    if (token.IsCancellationRequested) return;
                     string videoFile = bonusVideoFiles.ElementAt(i);
                     Regex rxBonus = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     MatchCollection matchesBonus = rxBonus.Matches(videoFile);
                     Match matchBonus = matchesBonus.FirstOrDefault();
+                    ShowVideo video;
                     if (matchBonus != null)
                     {
                         GroupCollection groups = matchBonus.Groups;
                         int episodeNumber = 0;
                         bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
-                        if(success)
+                        if (success)
                         {
-                            bonusTasks.Add(ParseBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, episodeNumber));
+                            video = ParseShowBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, season, episodeNumber);
                         }
                         else
                         {
-                            bonusTasks.Add(ParseBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles));
+                            video = ParseShowBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, season);
                         }
                     }
                     else
                     {
-                        bonusTasks.Add(ParseBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles));
+                        video = ParseShowBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, season);
                     }
-                }
 
-                // Wait for episode and bonus tasks to finish
-                foreach (var task in await Task.WhenAll(bonusTasks))
-                {
-                    bonusSectionsSet.Add(task.Item1);
-                    ShowVideo video = new ShowVideo()
-                    {
-                        SeasonNumber = season,
-                        EpisodeNumber = task.Item6,
-                        Title = task.Item2.ToUpper(),
-                        ShowTitle = showTitle.ToUpper(),
-                        Thumbnail = task.Item3,
-                        FilePath = GetRelativePathStringFromCurrent(task.Item5),
-                        Commentaries = "",
-                        DeletedScenes = "",
-                        Section = task.Item1,
-                        Runtime = GetVideoDuration(task.Item5),
-                        Subtitles = JsonConvert.SerializeObject(task.Item4),
-                        NextEpisode = "",
-                        IsBonusVideo = true
-                    };
+                    bonusSectionsSet[video.Section] = 0;
                     videos.Add(video);
 
                     // Add to commentaries and deleted scenes
-                    if (task.Item1.ToUpper() == "COMMENTARIES")
+                    if (video.Section.ToUpper() == "COMMENTARIES")
                     {
                         commentaries.Add(video);
                     }
-                    else if (task.Item1.ToUpper() == "DELETED SCENES")
+                    else if (video.Section.ToUpper() == "DELETED SCENES")
                     {
                         deletedScenes.Add(video);
                     }
                 }
-                List<ShowVideo> episodes = new List<ShowVideo>();
-                foreach (var task in await Task.WhenAll(episodeTasks))
+
+                // Episodes
+                int numEpisodeVideoFiles = episodeVideoFiles.Count();
+                for (int i = 0; i < numEpisodeVideoFiles; i++)
                 {
-                    // Link commentaries and deleted scenes if there are any
-                    List<ShowVideo> episodeCommentaries = null;
-                    List<ShowVideo> episodeDeletedScenes = null;
-                    foreach (ShowVideo com in commentaries)
+                    if (token.IsCancellationRequested) return;
+                    string videoFile = episodeVideoFiles.ElementAt(i);
+                    Regex rxEpisode = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    MatchCollection matchesEpisode = rxEpisode.Matches(videoFile);
+                    Match matchEpisode = matchesEpisode.FirstOrDefault();
+                    ShowVideo episode;
+                    if (matchEpisode != null)
                     {
-                        if (com.Title.StartsWith(task.Item2, true, null))
-                        {
-                            if (episodeCommentaries == null)
-                            {
-                                episodeCommentaries = new List<ShowVideo>();
-                            }
-                            episodeCommentaries.Add(com);
-                        }
+                        GroupCollection groups = matchEpisode.Groups;
+                        int episodeNumber = i + 1;
+                        bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
+                        episode = ParseEpisode(season, episodeNumber, seasonFolder, videoFile, episodeSubtitleFiles, commentaries, deletedScenes);
                     }
-                    foreach (ShowVideo del in deletedScenes)
+                    else
                     {
-                        if (del.Title.StartsWith(task.Item2, true, null))
-                        {
-                            if (episodeDeletedScenes == null)
-                            {
-                                episodeDeletedScenes = new List<ShowVideo>();
-                            }
-                            episodeDeletedScenes.Add(del);
-                        }
+                        episode = ParseEpisode(season, i + 1, seasonFolder, videoFile, episodeSubtitleFiles, commentaries, deletedScenes);
                     }
 
-                    ShowVideo episode = new ShowVideo()
-                    {
-                        SeasonNumber = season,
-                        EpisodeNumber = task.Item1,
-                        Title = task.Item2.ToUpper(),
-                        ShowTitle = showTitle.ToUpper(),
-                        Thumbnail = task.Item3,
-                        FilePath = GetRelativePathStringFromCurrent(task.Item5),
-                        Commentaries = JsonConvert.SerializeObject(episodeCommentaries),
-                        DeletedScenes = JsonConvert.SerializeObject(episodeDeletedScenes),
-                        Section = "EPISODES",
-                        Runtime = GetVideoDuration(task.Item5),
-                        Subtitles = JsonConvert.SerializeObject(task.Item4),
-                        NextEpisode = "",
-                        IsBonusVideo = false
-                    };
                     videos.Add(episode);
 
                     // Set the initial next episode to episode 1
-                    if (season == 1 && task.Item1 == 1)
+                    if (season == 1 && episode.EpisodeNumber == 1)
                     {
                         nextEpisode = episode;
                     }
                 }
 
                 List<ShowSection> sections = new List<ShowSection>();
+                foreach (KeyValuePair<string, byte> entry in bonusSectionsSet)
+                {
+                    ShowSection section = new ShowSection()
+                    {
+                        Name = entry.Key,
+                        Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
+                    };
+                    sections.Add(section);
+                }
+                sections.Sort();
                 ShowSection episodeSection = new ShowSection()
                 {
                     Name = "EPISODES",
                     Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
                 };
-                sections.Add(episodeSection);
-                foreach (string sectionName in bonusSectionsSet)
-                {
-                    ShowSection section = new ShowSection()
-                    {
-                        Name = sectionName,
-                        Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
-                    };
-                    sections.Add(section);
-                }
-                showSections.Add(sections);
+                sections = sections.Prepend(episodeSection).ToList();
+                showSections[n] = sections;
 
                 // Sort the videos
-                showVideos[season - 1] = videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
-            }
+                showVideos[n] = videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
+            });
+            if (token.IsCancellationRequested) return new Show();
 
-            int numShowVideos = showVideos.Count();
-            for (int i = 0; i < numShowVideos; i++)
+            // Separate loop to make sure the next season is done for next episodes
+            Parallel.For(0, numSeasons, i =>
             {
                 // Set the next episode for each episode
                 var seasonList = showVideos.ElementAt(i);
-                var nextSeasonIndex = (i + 1) % numShowVideos;
+                var nextSeasonIndex = (i + 1) % numSeasons;
                 var nextSeasonList = showVideos.ElementAt(nextSeasonIndex);
                 int numVideos = seasonList.Count();
                 for (int j = 0; j < numVideos - 1; j++)
@@ -551,9 +646,9 @@ namespace VideoCollection.Helpers
                 {
                     int videoIndex = 0;
                     int numNextVideos = nextSeasonList.Count();
-                    for(int k = 0; k < numNextVideos; k++)
+                    for (int k = 0; k < numNextVideos; k++)
                     {
-                        if(!nextSeasonList.ElementAt(k).IsBonusVideo && nextSeasonList.ElementAt(k).EpisodeNumber == 1)
+                        if (!nextSeasonList.ElementAt(k).IsBonusVideo && nextSeasonList.ElementAt(k).EpisodeNumber == 1)
                         {
                             videoIndex = k;
                             break;
@@ -569,10 +664,13 @@ namespace VideoCollection.Helpers
                     Sections = JsonConvert.SerializeObject(showSections.ElementAt(i)),
                     Videos = JsonConvert.SerializeObject(seasonList)
                 };
-                seasons.Add(season);
-            }
+                seasons[i] = season;
+                if (token.IsCancellationRequested) return;
+            });
+            if (token.IsCancellationRequested) return new Show();
 
             // Get the thumbnail file if it exists, otherwise create one
+           string thumbnailVisibility = "Collapsed";
             var imageFiles = Directory.GetFiles(showFolderPath, "*.*", SearchOption.AllDirectories)
                 .Where(s => s.EndsWith(showTitle + ".png", StringComparison.OrdinalIgnoreCase) 
                 || s.EndsWith(showTitle + ".jpg", StringComparison.OrdinalIgnoreCase) 
@@ -581,6 +679,7 @@ namespace VideoCollection.Helpers
             if (imageFiles.Any())
             {
                 showThumbnail = ImageSourceToBase64(BitmapFromUri(new Uri(imageFiles.First())));
+                thumbnailVisibility = "Visible";
             }
             else if (showThumbnailVideoFile != null)
             {
@@ -593,13 +692,62 @@ namespace VideoCollection.Helpers
                 Title = showTitle.ToUpper(),
                 ShowFolderPath = showFolderPath,
                 Thumbnail = showThumbnail,
+                ThumbnailVisibility = thumbnailVisibility,
                 Seasons = JsonConvert.SerializeObject(seasons),
                 NextEpisode = JsonConvert.SerializeObject(nextEpisode),
-                Categories = "",
-                IsChecked = false
+                Categories = JsonConvert.SerializeObject(new List<string>())
             };
 
             return show;
+        }
+
+        // Parse each movie folder in the root folder
+        public static ConcurrentDictionary<string, Show> ParseBulkShows(string rootShowFolderPath, CancellationToken token)
+        {
+            var showFolders = Directory.GetDirectories(rootShowFolderPath);
+
+            ConcurrentDictionary<string, Show> shows = new ConcurrentDictionary<string, Show>();
+            Parallel.ForEach(showFolders, folder =>
+            {
+                var showTitle = Path.GetFileName(folder).ToUpper();
+                bool repeat = false;
+
+                using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
+                {
+                    connection.CreateTable<Show>();
+                    List<Show> databaseShows = connection.Table<Show>().ToList();
+                    foreach (Show s in databaseShows)
+                    {
+                        if (s.Title == showTitle)
+                        {
+                            repeat = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!repeat)
+                {
+                    Show show = ParseShowVideos(folder, token);
+                    if (token.IsCancellationRequested) return;
+
+                    Show newShow = new Show()
+                    {
+                        Title = show.Title,
+                        ShowFolderPath = show.ShowFolderPath,
+                        Thumbnail = show.Thumbnail,
+                        ThumbnailVisibility = show.ThumbnailVisibility,
+                        Seasons = show.Seasons,
+                        NextEpisode = show.NextEpisode,
+                        Rating = "",
+                        Categories = JsonConvert.SerializeObject(new List<string>())
+                    };
+
+                    shows[show.Title] = newShow;
+                }
+            });
+
+            return shows;
         }
 
         // Create a thumbnail from a provided video file at the frame seconds in

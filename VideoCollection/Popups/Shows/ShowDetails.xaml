@@ -46,7 +46,7 @@
 
             <StackPanel Grid.Column="1" Margin="22,-2,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <Label FontWeight="Bold">Rating:</Label>
+                    <Label x:Name="labelRating" FontWeight="Bold">Rating:</Label>
                     <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">

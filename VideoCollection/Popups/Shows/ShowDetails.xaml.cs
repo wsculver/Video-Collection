@@ -29,6 +29,7 @@ namespace VideoCollection.Popups.Shows
         private int _selectedSeasonIndex = 0;
         private Border _splash;
         private Action _callback;
+        private DispatcherTimer _timer;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -57,6 +58,11 @@ namespace VideoCollection.Popups.Shows
                 ShowDeserialized showDeserialized = new ShowDeserialized(show);
                 labelTitle.Content = show.Title;
                 imageShowThumbnail.Source = showDeserialized.Thumbnail;
+                if (show.Rating == "")
+                {
+                    labelRating.Visibility = Visibility.Collapsed;
+                    txtRating.Visibility = Visibility.Collapsed;
+                }
                 txtRating.Text = show.Rating;
                 string categories = "";
                 List<string> categoriesList = JsonConvert.DeserializeObject<List<string>>(show.Categories);
@@ -87,10 +93,10 @@ namespace VideoCollection.Popups.Shows
                 _callback();
             }
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(1000);
-            timer.Tick += timer_Tick;
-            timer.Start();
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromMilliseconds(1000);
+            _timer.Tick += timer_Tick;
+            _timer.Start();
 
             UpdateVideoScrollButtons();
         }
@@ -138,6 +144,7 @@ namespace VideoCollection.Popups.Shows
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            _timer.Stop();
             _callback();
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);
@@ -235,8 +242,7 @@ namespace VideoCollection.Popups.Shows
 
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -254,8 +260,7 @@ namespace VideoCollection.Popups.Shows
 
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))

@@ -56,6 +56,11 @@ namespace VideoCollection.Popups.Movies
                 labelTitle.Content = movie.Title;
                 imageMovieThumbnail.Source = movieDeserialized.Thumbnail;
                 txtRuntime.Text = movie.Runtime;
+                if (movie.Rating == "")
+                {
+                    labelRating.Visibility = Visibility.Collapsed;
+                    txtRating.Visibility = Visibility.Collapsed;
+                }
                 txtRating.Text = movie.Rating;
                 string categories = "";
                 List<string> categoriesList = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
@@ -221,8 +226,7 @@ namespace VideoCollection.Popups.Movies
 
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location - _scrollDistance) <= 0)
@@ -240,8 +244,7 @@ namespace VideoCollection.Popups.Movies
 
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (sender as Button);
-            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>(button.Parent);
+            AnimatedScrollViewer scroll = StaticHelpers.GetObject<AnimatedScrollViewer>((sender as Button).Parent);
             double location = scroll.HorizontalOffset;
 
             if (Math.Round(location + _scrollDistance) >= Math.Round(scroll.ScrollableWidth))

@@ -5,7 +5,7 @@ using System.Windows.Interop;
 
 namespace VideoCollection.Helpers
 {
-    public static partial class Extensions
+    public static class Extensions
     {
         static class OSInterop
         {

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace VideoCollection.Shows
 {
-    public class ShowSeason : IComparable
+    public class ShowSeason
     {
         [PrimaryKey, AutoIncrement]
         public int SeasonNumber { get; set; }
@@ -33,12 +33,6 @@ namespace VideoCollection.Shows
                 videos.Add(new ShowVideo(video));
             }
             Videos = JsonConvert.SerializeObject(videos);
-        }
-
-        public int CompareTo(object obj)
-        {
-            ShowSeason m = obj as ShowSeason;
-            return SeasonNumber.CompareTo(m.SeasonNumber);
         }
     }
 }

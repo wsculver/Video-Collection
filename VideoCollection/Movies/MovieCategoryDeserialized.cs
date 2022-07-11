@@ -26,8 +26,7 @@ namespace VideoCollection.Movies
             {
                 try
                 {
-                    Movie movie = DatabaseFunctions.GetMovie(id);
-                    moviesDeserialized.Add(new MovieDeserialized(movie));
+                    moviesDeserialized.Add(new MovieDeserialized(DatabaseFunctions.GetMovie(id)));
                 }
                 catch (Exception ex)
                 {
@@ -41,6 +40,7 @@ namespace VideoCollection.Movies
                     parentWindow.Splash.Visibility = Visibility.Collapsed;
                 }
             }
+            moviesDeserialized.Sort();
             Movies = moviesDeserialized;
             IsChecked = category.IsChecked;
         }

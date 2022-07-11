@@ -120,7 +120,6 @@
                 <RadioButton x:Name="btnPG13" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">PG-13</RadioButton>
                 <RadioButton x:Name="btnR" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">R</RadioButton>
                 <RadioButton x:Name="btnNC17" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">NC-17</RadioButton>
-                <RadioButton x:Name="btnNone" GroupName="Rating" Click="RatingButtonClick" Foreground="White" Margin="4,0,16,0">None</RadioButton>
             </StackPanel>
 
             <Label Foreground="White">Categories:</Label>

@@ -14,6 +14,7 @@ using VideoCollection.Helpers;
 using VideoCollection.Animations;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
+using System.Threading;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -29,6 +30,7 @@ namespace VideoCollection.Popups.Movies
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
+        private CancellationTokenSource _tokenSource;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -47,6 +49,7 @@ namespace VideoCollection.Popups.Movies
             _callback = callback;
             _selectedCategories = new List<string>();
             _movie = new Movie();
+            _tokenSource = new CancellationTokenSource();
 
             WidthScale = 0.43;
             HeightScale = 0.85;
@@ -84,6 +87,7 @@ namespace VideoCollection.Popups.Movies
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            _tokenSource.Cancel();
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);
             Close();
@@ -121,10 +125,6 @@ namespace VideoCollection.Popups.Movies
             {
                 ShowOKMessageBox("You need to select a thumbnail tile type");
             }
-            else if (_rating == "")
-            {
-                ShowOKMessageBox("You need to select a rating");
-            }
             else
             {
                 string thumbnail = "";
@@ -150,8 +150,7 @@ namespace VideoCollection.Popups.Movies
                     BonusVideos = _movie.BonusVideos,
                     Rating = _rating,
                     Categories = JsonConvert.SerializeObject(_selectedCategories),
-                    Subtitles = _movie.Subtitles,
-                    IsChecked = false
+                    Subtitles = _movie.Subtitles
                 };
 
                 bool repeat = false;
@@ -175,7 +174,6 @@ namespace VideoCollection.Popups.Movies
                     }
                     else
                     {
-                        connection.CreateTable<Movie>();
                         connection.Insert(movie);
 
                         connection.CreateTable<MovieCategory>();
@@ -230,11 +228,12 @@ namespace VideoCollection.Popups.Movies
                 txtMovieFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
                 loadingControl.Content = new LoadingSpinner();
                 loadingControl.Visibility = Visibility.Visible;
-                Task.Run(async () =>
+                var token = _tokenSource.Token;
+                Task.Run(() => 
                 {
-                    _movie = await StaticHelpers.ParseMovieVideos(dlg.FileName);
-                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
-                       (Action)(() =>
+                    _movie = StaticHelpers.ParseMovieVideos(dlg.FileName, token);
+                    if (token.IsCancellationRequested) return;
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                        {
                            txtMovieName.Text = _movie.Title;
                            if (_movie.Thumbnail != "")
@@ -250,8 +249,8 @@ namespace VideoCollection.Popups.Movies
                                ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
                            }
                            loadingControl.Visibility = Visibility.Collapsed;
-                       }));
-                });
+                       });
+                }, token);
             }
         }
 

@@ -155,7 +155,6 @@ namespace VideoCollection.Popups.Shows
                             IsChecked = false
                         };
 
-                        connection.CreateTable<ShowCategory>();
                         connection.Query<ShowCategory>("CREATE TRIGGER IF NOT EXISTS updatePosition AFTER INSERT ON ShowCategory BEGIN UPDATE ShowCategory SET Position = new.Id WHERE Id = new.Id; END; ");
                         connection.Insert(category);
                     }

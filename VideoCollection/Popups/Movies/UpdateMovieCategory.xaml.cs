@@ -69,10 +69,11 @@ namespace VideoCollection.Popups.Movies
                         }
                     }
 
-                    movie.IsChecked = check;
                     try
                     {
-                        movies.Add(new MovieDeserialized(movie));
+                        MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
+                        movieDeserialized.IsChecked = check;
+                        movies.Add(movieDeserialized);
                     }
                     catch (Exception ex)
                     {

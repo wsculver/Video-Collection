@@ -1,9 +1,10 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 using VideoCollection.Helpers;
 
 namespace VideoCollection.Movies
 {
-    public class MovieDeserialized
+    public class MovieDeserialized : IComparable
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -17,7 +18,14 @@ namespace VideoCollection.Movies
             Title = movie.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
             ThumbnailVisibility = movie.ThumbnailVisibility;
-            IsChecked = movie.IsChecked;
+            IsChecked = false;
+        }
+
+        public int CompareTo(object obj)
+        {
+            MovieDeserialized m = obj as MovieDeserialized;
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+            return comparer.Compare(Title, m.Title);
         }
     }
 }

@@ -3,7 +3,7 @@ using System;
 
 namespace VideoCollection.Movies
 {
-    public class Movie : IComparable
+    public class Movie
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -22,14 +22,5 @@ namespace VideoCollection.Movies
         public string Categories { get; set; }
         // JSON encoded List<SubtitleSegment>
         public string Subtitles { get; set; }
-        // Used for editing categories
-        public bool IsChecked { get; set; }
-
-        public int CompareTo(object obj)
-        {
-            Movie m = obj as Movie;
-            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
-            return comparer.Compare(Title, m.Title);
-        }
     }
 }

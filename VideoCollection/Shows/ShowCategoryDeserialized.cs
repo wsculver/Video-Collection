@@ -40,6 +40,7 @@ namespace VideoCollection.Shows
                     parentWindow.Splash.Visibility = Visibility.Collapsed;
                 }
             }
+            showsDeserialized.Sort();
             Shows = showsDeserialized;
             IsChecked = category.IsChecked;
         }

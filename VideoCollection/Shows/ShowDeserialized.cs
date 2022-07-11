@@ -1,10 +1,11 @@
 ﻿using System.Windows.Media;
 using VideoCollection.Helpers;
 using Newtonsoft.Json;
+using System;
 
 namespace VideoCollection.Shows
 {
-    public class ShowDeserialized
+    public class ShowDeserialized : IComparable
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -21,7 +22,14 @@ namespace VideoCollection.Shows
             ThumbnailVisibility = show.ThumbnailVisibility;
             ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
             NextEpisode = new ShowVideoDeserialized(nextEpisode);
-            IsChecked = show.IsChecked;
+            IsChecked = false;
+        }
+
+        public int CompareTo(object obj)
+        {
+            ShowDeserialized s = obj as ShowDeserialized;
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+            return comparer.Compare(Title, s.Title);
         }
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using VideoCollection.Helpers;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
+using System.Threading;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -30,6 +31,7 @@ namespace VideoCollection.Popups.Shows
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
+        private CancellationTokenSource _tokenSource;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -50,6 +52,7 @@ namespace VideoCollection.Popups.Shows
             _seasons = new List<ShowSeasonDeserialized>();
             _selectedCategories = new List<string>();
             _rating = "";
+            _tokenSource = new CancellationTokenSource();
 
             WidthScale = 0.73;
             HeightScale = 0.85;
@@ -125,6 +128,7 @@ namespace VideoCollection.Popups.Shows
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
+            _tokenSource.Cancel();
             if(_showDeleted)
             {
                 _callback();
@@ -212,10 +216,6 @@ namespace VideoCollection.Popups.Shows
                     case "TV MA":
                         btnTVMA.IsChecked = true;
                         break;
-                    case "None":
-                    default:
-                        btnNone.IsChecked = true;
-                        break;
                 }
                 _rating = show.Rating;
                 List<ShowCategoryDeserialized> categories = new List<ShowCategoryDeserialized>();
@@ -280,10 +280,6 @@ namespace VideoCollection.Popups.Shows
                 else if (_thumbnailVisibility == "")
                 {
                     ShowOKMessageBox("You need to select a thumbnail tile type");
-                }
-                else if (_rating == "")
-                {
-                    ShowOKMessageBox("You need to select a rating");
                     return false;
                 }
                 else
@@ -381,27 +377,20 @@ namespace VideoCollection.Popups.Shows
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtShowFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
-                Task.Run(async () =>
+                var token = _tokenSource.Token;
+                Task.Run(() =>
                 {
-                    Show show = await StaticHelpers.ParseShowVideos(dlg.FileName);
-                    try
-                    {
-                        _show = show;
-                    }
-                    catch (Exception ex)
-                    {
-                        ShowOKMessageBox("Error: " + ex.Message);
-                    }
-                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal,
-                       (Action)(() =>
+                    _show = StaticHelpers.ParseShowVideos(dlg.FileName, token);
+                    if (token.IsCancellationRequested) return;
+                    Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                        {
                            txtShowName.Text = _show.Title;
-                           if (show.Thumbnail != "")
+                           if (_show.Thumbnail != "")
                            {
-                               imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(show.Thumbnail));
+                               imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(_show.Thumbnail));
                            }
-                       }));
-                });
+                       });
+                }, token);
             }
         }
 
@@ -414,8 +403,7 @@ namespace VideoCollection.Popups.Shows
         // Delete a show from the database
         private void btnDeleteShow_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            string showId = button.Tag.ToString();
+            int showId = (int)(sender as Button).Tag;
             Show show = DatabaseFunctions.GetShow(showId);
 
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
