@@ -94,7 +94,7 @@ namespace VideoCollection.Popups.Shows
             }
 
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(1000);
+            _timer.Interval = TimeSpan.FromMilliseconds(3000);
             _timer.Tick += timer_Tick;
             _timer.Start();
 
@@ -194,7 +194,7 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 string[] split = (sender as Image).Tag.ToString().Split(new[] {",,,"}, StringSplitOptions.None);
-                ShowVideo bonusVideo = new ShowVideo()
+                ShowVideo showVideo = new ShowVideo()
                 {
                     Title = split[0],
                     FilePath = split[1],
@@ -202,9 +202,9 @@ namespace VideoCollection.Popups.Shows
                     Subtitles = split[3],
                     Commentaries = split[4],
                     DeletedScenes = split[5],
-                    IsBonusVideo = true,
                     ShowTitle = split[6],
-                    NextEpisode = split[7]
+                    NextEpisode = split[7],
+                    IsBonusVideo = !split[8].ToLower().Equals("episodes")
                 };
 
                 if (App.videoPlayer == null)
@@ -212,7 +212,7 @@ namespace VideoCollection.Popups.Shows
                     MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                     try
                     {
-                        VideoPlayer popup = new VideoPlayer(bonusVideo);
+                        VideoPlayer popup = new VideoPlayer(showVideo);
                         App.videoPlayer = popup;
                         popup.WidthScale = 1.0;
                         popup.HeightScale = 1.0;
@@ -235,7 +235,7 @@ namespace VideoCollection.Popups.Shows
                 }
                 else
                 {
-                    App.videoPlayer.updateVideo(bonusVideo);
+                    App.videoPlayer.updateVideo(showVideo);
                 }
             }
         }

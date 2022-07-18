@@ -18,8 +18,6 @@ using VideoCollection.Shows;
 using VideoCollection.Subtitles;
 using System.Text.RegularExpressions;
 using SQLite;
-using VideoCollection.Popups;
-using VideoCollection.CustomTypes;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -364,7 +362,7 @@ namespace VideoCollection.Helpers
         }
 
         // Parse episode info
-        private static ShowVideo ParseEpisode(int seasonNumber, int episodeNumber, string seasonFolderPath, string videoFile, IEnumerable<string> subtitleFiles, List<ShowVideo> commentaries, List<ShowVideo> deletedScenes)
+        private static ShowVideo ParseEpisode(int seasonNumber, int episodeNumber, string seasonFolderPath, string videoFile, IEnumerable<string> subtitleFiles, ref List<ShowVideo> commentaries, ref List<ShowVideo> deletedScenes)
         {
             SubtitleParser subParser = new SubtitleParser();
             string showTitle = Path.GetFileName(Path.GetDirectoryName(seasonFolderPath));
@@ -397,27 +395,42 @@ namespace VideoCollection.Helpers
             // Link commentaries and deleted scenes if there are any
             List<ShowVideo> episodeCommentaries = null;
             List<ShowVideo> episodeDeletedScenes = null;
-            foreach (ShowVideo com in commentaries)
+            List<int> removeCommentariesIndecies = new List<int>();
+            int commentariesLength = commentaries.Count;
+            for (int i = 0; i < commentariesLength; i++)
             {
-                if (com.Title.StartsWith(episodeTitle, true, null))
+                if (commentaries.ElementAt(i).Title.StartsWith(episodeTitle, true, null))
                 {
                     if (episodeCommentaries == null)
                     {
                         episodeCommentaries = new List<ShowVideo>();
                     }
-                    episodeCommentaries.Add(com);
+                    episodeCommentaries.Add(commentaries.ElementAt(i));
+                    removeCommentariesIndecies.Add(i);
                 }
             }
-            foreach (ShowVideo del in deletedScenes)
+            // Remove already linked commentaries to improve future loops for other episodes
+            foreach (int index in removeCommentariesIndecies)
             {
-                if (del.Title.StartsWith(episodeTitle, true, null))
+                commentaries.RemoveAt(index);
+            }
+            List<int> removeDeletedScenesIndecies = new List<int>();
+            int deletedScenesLength = deletedScenes.Count;
+            for (int i = 0; i < deletedScenesLength; i++)
+            {
+                if (deletedScenes.ElementAt(i).Title.StartsWith(episodeTitle, true, null))
                 {
                     if (episodeDeletedScenes == null)
                     {
                         episodeDeletedScenes = new List<ShowVideo>();
                     }
-                    episodeDeletedScenes.Add(del);
+                    episodeDeletedScenes.Add(deletedScenes.ElementAt(i));
+                    removeDeletedScenesIndecies.Add(i);
                 }
+            }
+            foreach (int index in removeDeletedScenesIndecies)
+            {
+                deletedScenes.RemoveAt(index);
             }
 
             ShowVideo episode = new ShowVideo()
@@ -525,7 +538,7 @@ namespace VideoCollection.Helpers
                 List<ShowVideo> deletedScenes = new List<ShowVideo>();
 
                 // Bonus videos
-                ConcurrentDictionary<string, byte> bonusSectionsSet = new ConcurrentDictionary<string, byte>();
+                List<string> bonusSectionsSet = new List<string>();
                 int numBonusVideoFiles = 0;
                 if (bonusVideoFiles != null)
                 {
@@ -535,7 +548,7 @@ namespace VideoCollection.Helpers
                 {
                     if (token.IsCancellationRequested) return;
                     string videoFile = bonusVideoFiles.ElementAt(i);
-                    Regex rxBonus = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    Regex rxBonus = new Regex(@"[S]\s*(?<season>\d+)\s*[E]\s*(?<episode>\d+)|(Episode)\s*(?<episode>\d+)|[E]\s*(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     MatchCollection matchesBonus = rxBonus.Matches(videoFile);
                     Match matchBonus = matchesBonus.FirstOrDefault();
                     ShowVideo video;
@@ -558,7 +571,7 @@ namespace VideoCollection.Helpers
                         video = ParseShowBonusVideo(showFolderPath, videoFile, bonusSubtitleFiles, season);
                     }
 
-                    bonusSectionsSet[video.Section] = 0;
+                    bonusSectionsSet.Add(video.Section);
                     videos.Add(video);
 
                     // Add to commentaries and deleted scenes
@@ -578,7 +591,7 @@ namespace VideoCollection.Helpers
                 {
                     if (token.IsCancellationRequested) return;
                     string videoFile = episodeVideoFiles.ElementAt(i);
-                    Regex rxEpisode = new Regex(@"[S](?<season>\d+)\s+[E](?<episode>\d+)|(Episode)\s+(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    Regex rxEpisode = new Regex(@"[S]\s*(?<season>\d+)\s*[E]\s*(?<episode>\d+)|(Episode)\s*(?<episode>\d+)|[E]\s*(?<episode>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     MatchCollection matchesEpisode = rxEpisode.Matches(videoFile);
                     Match matchEpisode = matchesEpisode.FirstOrDefault();
                     ShowVideo episode;
@@ -587,11 +600,11 @@ namespace VideoCollection.Helpers
                         GroupCollection groups = matchEpisode.Groups;
                         int episodeNumber = i + 1;
                         bool success = int.TryParse(groups["episode"].Value, out episodeNumber);
-                        episode = ParseEpisode(season, episodeNumber, seasonFolder, videoFile, episodeSubtitleFiles, commentaries, deletedScenes);
+                        episode = ParseEpisode(season, episodeNumber, seasonFolder, videoFile, episodeSubtitleFiles, ref commentaries, ref deletedScenes);
                     }
                     else
                     {
-                        episode = ParseEpisode(season, i + 1, seasonFolder, videoFile, episodeSubtitleFiles, commentaries, deletedScenes);
+                        episode = ParseEpisode(season, i + 1, seasonFolder, videoFile, episodeSubtitleFiles, ref commentaries, ref deletedScenes);
                     }
 
                     videos.Add(episode);
@@ -604,11 +617,11 @@ namespace VideoCollection.Helpers
                 }
 
                 List<ShowSection> sections = new List<ShowSection>();
-                foreach (KeyValuePair<string, byte> entry in bonusSectionsSet)
+                foreach (string bonusSection in bonusSectionsSet)
                 {
                     ShowSection section = new ShowSection()
                     {
-                        Name = entry.Key,
+                        Name = bonusSection,
                         Background = JsonConvert.SerializeObject(System.Windows.Media.Color.FromArgb(0, 0, 0, 0))
                     };
                     sections.Add(section);

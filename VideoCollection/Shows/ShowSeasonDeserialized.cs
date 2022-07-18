@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace VideoCollection.Shows
@@ -22,12 +25,14 @@ namespace VideoCollection.Shows
             }
             Sections = showSectionsDeserialized;
             List<ShowVideo> showVideos = JsonConvert.DeserializeObject<List<ShowVideo>>(show.Videos);
-            List<ShowVideoDeserialized> showVideosDeserialized = new List<ShowVideoDeserialized>();
-            foreach (ShowVideo video in showVideos)
+            ConcurrentBag<ShowVideoDeserialized> showVideosDeserialized = new ConcurrentBag<ShowVideoDeserialized>();
+            Parallel.ForEach(showVideos, video =>
             {
                 showVideosDeserialized.Add(new ShowVideoDeserialized(video));
-            }
-            Videos = showVideosDeserialized;
+            });
+            List<ShowVideoDeserialized> showVideosDeserializedList = showVideosDeserialized.ToList();
+            showVideosDeserializedList.Sort();
+            Videos = showVideosDeserializedList;
         }
     }
 }

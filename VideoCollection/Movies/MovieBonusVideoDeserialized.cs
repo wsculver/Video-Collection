@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using VideoCollection.Helpers;
@@ -6,7 +7,7 @@ using VideoCollection.Subtitles;
 
 namespace VideoCollection.Movies
 {
-    public class MovieBonusVideoDeserialized
+    public class MovieBonusVideoDeserialized : IComparable
     {
         public string Title { get; set; }
         public ImageSource Thumbnail { get; set; }
@@ -20,11 +21,19 @@ namespace VideoCollection.Movies
         {
             Title = video.Title;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
+            Thumbnail.Freeze();
             FilePath = video.FilePath;
             Section = video.Section;
             Runtime = video.Runtime;
             SubtitlesSerialized = video.Subtitles;
             Subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(video.Subtitles);
+        }
+
+        public int CompareTo(object obj)
+        {
+            MovieBonusVideoDeserialized m = obj as MovieBonusVideoDeserialized;
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+            return comparer.Compare(Title, m.Title);
         }
     }
 }

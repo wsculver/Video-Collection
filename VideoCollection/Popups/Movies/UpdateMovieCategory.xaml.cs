@@ -2,7 +2,6 @@
 using SQLite;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using VideoCollection.Database;
@@ -55,24 +54,24 @@ namespace VideoCollection.Popups.Movies
                 MovieCategoryDeserialized movieCategoryDeserialized = new MovieCategoryDeserialized(movieCategory);
 
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
+                foreach (MovieDeserialized movieDeserialized in movieCategoryDeserialized.Movies)
+                {
+                    movieDeserialized.IsChecked = true;
+                    _selectedMovieIds.Add(movieDeserialized.Id);
+                    movies.Add(movieDeserialized);
+                }
                 foreach (Movie movie in rawMovies)
                 {
-                    bool check = false;
-                    foreach (MovieDeserialized movieDeserialized in movieCategoryDeserialized.Movies)
+                    if (_selectedMovieIds.Contains(movie.Id))
                     {
-                        if (movieDeserialized.Id == movie.Id)
-                        {
-                            check = true;
-                            _selectedMovieIds.Add(movie.Id);
-                        }
+                        continue;
                     }
 
                     try
                     {
                         MovieDeserialized movieDeserialized = new MovieDeserialized(movie);
-                        movieDeserialized.IsChecked = check;
                         movies.Add(movieDeserialized);
                     }
                     catch (Exception ex)
@@ -86,6 +85,7 @@ namespace VideoCollection.Popups.Movies
                         _callback();
                     }
                 }
+                movies.Sort();
                 lvMovieList.ItemsSource = movies;
             }
 

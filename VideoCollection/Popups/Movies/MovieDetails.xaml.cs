@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -364,23 +366,21 @@ namespace VideoCollection.Popups.Movies
 
         private List<MovieBonusVideoDeserialized> getSectionVideos(string section)
         {    
-            List<MovieBonusVideoDeserialized> sectionVideos = new List<MovieBonusVideoDeserialized>();
+            ConcurrentBag<MovieBonusVideoDeserialized> sectionVideos = new ConcurrentBag<MovieBonusVideoDeserialized>();
             Movie movie = DatabaseFunctions.GetMovie(_movieId);
             List<MovieBonusVideo> movieBonusVideos = JsonConvert.DeserializeObject<List<MovieBonusVideo>>(movie.BonusVideos);
-            List<MovieBonusVideoDeserialized> movieBonusVideosDeserialized = new List<MovieBonusVideoDeserialized>();
-            foreach (MovieBonusVideo video in movieBonusVideos)
+            Parallel.ForEach(movieBonusVideos, video =>
             {
-                movieBonusVideosDeserialized.Add(new MovieBonusVideoDeserialized(video));
-            }
-            foreach (MovieBonusVideoDeserialized video in movieBonusVideosDeserialized)
-            {
+                MovieBonusVideoDeserialized videoDeserialized = new MovieBonusVideoDeserialized(video);
                 if (video.Section == section)
                 {
-                    sectionVideos.Add(video);
+                    sectionVideos.Add(videoDeserialized);
                 }
-            }
+            });
+            List<MovieBonusVideoDeserialized> sectionVideosList = sectionVideos.ToList();
+            sectionVideosList.Sort();
 
-            return sectionVideos;
+            return sectionVideosList;
         }
 
         private void scrollCategories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

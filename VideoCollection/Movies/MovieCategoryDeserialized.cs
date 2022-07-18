@@ -22,7 +22,7 @@ namespace VideoCollection.Movies
             Name = category.Name;
             List<int> movieIds = JsonConvert.DeserializeObject<List<int>>(category.MovieIds);
             List<MovieDeserialized> moviesDeserialized = new List<MovieDeserialized>();
-            foreach (int id in movieIds) 
+            foreach (int id in movieIds)
             {
                 try
                 {

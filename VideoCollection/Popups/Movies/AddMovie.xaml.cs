@@ -185,6 +185,9 @@ namespace VideoCollection.Popups.Movies
                                 DatabaseFunctions.AddMovieToCategory(movie.Id, category);
                             }
                         }
+
+                        imgThumbnail.Source.Freeze();
+                        App.movieThumbnails[movie.Id] = imgThumbnail.Source;
                     }
                 }
 

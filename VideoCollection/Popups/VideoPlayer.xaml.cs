@@ -50,6 +50,7 @@ namespace VideoCollection.Popups
         private bool _forcePlay = false;
         private double _nextEpisodeGridLength = 546.0;
         private DispatcherTimer _timer;
+        private bool _isShowEpisode = false;
 
         private const string _fullScreenLabel = "FULL SCREEN";
         private const string _exitFullScreenLabel = "EXIT FULL SCREEN";
@@ -191,6 +192,7 @@ namespace VideoCollection.Popups
             DataContext = null;
             _nextEpisode = null;
             gridNextEpisode.Visibility = Visibility.Collapsed;
+            _isShowEpisode = false;
             update();
         }
         public void updateVideo(MovieBonusVideo movieBonusVideo)
@@ -203,6 +205,7 @@ namespace VideoCollection.Popups
             DataContext = null;
             _nextEpisode = null;
             gridNextEpisode.Visibility = Visibility.Collapsed;
+            _isShowEpisode = false;
             update();
         }
 
@@ -216,10 +219,14 @@ namespace VideoCollection.Popups
             _subtitles = JsonConvert.DeserializeObject<List<SubtitleSegment>>(nextEpisode.Subtitles);
             DataContext = show.NextEpisode;
             _nextEpisode = show.GetNextEpisode();
-            gridNextEpisode.Visibility = Visibility.Visible;
+            if (_expanded)
+            {
+                gridNextEpisode.Visibility = Visibility.Visible;
+            }
             imageThumbnailNextEpisode.Source = StaticHelpers.Base64ToImageSource(_nextEpisode.Thumbnail);
             txtNextEpisodeTitle.Text = _nextEpisode.Title;
             show.UpdateNextEpisode();
+            _isShowEpisode = true;
             update();
         }
         public void updateVideo(ShowVideo showVideo)
@@ -235,15 +242,19 @@ namespace VideoCollection.Popups
             {
                 _nextEpisode = null;
                 gridNextEpisode.Visibility = Visibility.Collapsed;
+                _isShowEpisode = false;
             }
             else
             {
                 Tuple<int, int> nextEpisode = JsonConvert.DeserializeObject<Tuple<int, int>>(showVideo.NextEpisode);
                 _nextEpisode = show.GetEpisode(nextEpisode.Item1, nextEpisode.Item2);
-                gridNextEpisode.Visibility = Visibility.Visible;
+                if (_expanded)
+                {
+                    gridNextEpisode.Visibility = Visibility.Visible;
+                }
                 imageThumbnailNextEpisode.Source = StaticHelpers.Base64ToImageSource(_nextEpisode.Thumbnail);
                 txtNextEpisodeTitle.Text = _nextEpisode.Title;
-                show.UpdateNextEpisode();
+                _isShowEpisode = true;
             }
             update();
         }
@@ -581,7 +592,10 @@ namespace VideoCollection.Popups
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 150);
                 popupExpand.HorizontalOffset = _collapseHorizontalOffset;
                 txtExpand.Text = _collapseLabel;
-                gridNextEpisode.Visibility = Visibility.Visible;
+                if (_isShowEpisode)
+                {
+                    gridNextEpisode.Visibility = Visibility.Visible;
+                }
                 var colDef = new ColumnDefinition();
                 colDef.Width = new GridLength(_nextEpisodeGridLength);
                 gridTitle.ColumnDefinitions.Add(colDef);

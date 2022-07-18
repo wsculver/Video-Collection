@@ -2,6 +2,7 @@
 using SQLite;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using VideoCollection.Movies;
 using VideoCollection.Shows;
 
@@ -64,21 +65,18 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<Movie> movies = connection.Table<Movie>().ToList().ToList();
-                foreach(Movie movie in movies)
+                List<Movie> movies = connection.Table<Movie>().ToList();
+                Parallel.ForEach(movies, movie =>
                 {
                     List<string> categories = JsonConvert.DeserializeObject<List<string>>(movie.Categories);
                     categories.Remove(oldName);
-                    foreach (int id in selectedMovieIds)
+                    if (selectedMovieIds.Contains(movie.Id))
                     {
-                        if (id == movie.Id)
-                        {
-                            categories.Add(newName);
-                        }
+                        categories.Add(newName);
                     }
                     movie.Categories = JsonConvert.SerializeObject(categories);
                     connection.Update(movie);
-                }
+                });
             }
         }
 
@@ -88,20 +86,17 @@ namespace VideoCollection.Database
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 List<Show> shows = (connection.Table<Show>().ToList()).ToList();
-                foreach (Show show in shows)
+                Parallel.ForEach(shows, show =>
                 {
                     List<string> categories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
                     categories.Remove(oldName);
-                    foreach (int id in selectedShowIds)
+                    if (selectedShowIds.Contains(show.Id))
                     {
-                        if (id == show.Id)
-                        {
-                            categories.Add(newName);
-                        }
+                        categories.Add(newName);
                     }
                     show.Categories = JsonConvert.SerializeObject(categories);
                     connection.Update(show);
-                }
+                });
             }
         }
 
@@ -113,12 +108,10 @@ namespace VideoCollection.Database
                 List<MovieCategory> movieCategories = connection.Table<MovieCategory>().ToList();
                 foreach (MovieCategory category in movieCategories)
                 {
-                    List<int> movieIds = JsonConvert.DeserializeObject<List<int>>(category.MovieIds);
-                    movieIds.Remove(movieId);
-                    category.MovieIds = JsonConvert.SerializeObject(movieIds);
-                    connection.Update(category);
+                    RemoveMovieFromCategory(movieId, category);
                 }
                 connection.Delete<Movie>(movieId);
+                App.movieThumbnails.Remove(movieId, out var val);
             }
         }
 
@@ -130,12 +123,10 @@ namespace VideoCollection.Database
                 List<ShowCategory> showCategories = connection.Table<ShowCategory>().ToList();
                 foreach (ShowCategory category in showCategories)
                 {
-                    List<int> showIds = JsonConvert.DeserializeObject<List<int>>(category.ShowIds);
-                    showIds.Remove(showId);
-                    category.ShowIds = JsonConvert.SerializeObject(showIds);
-                    connection.Update(category);
+                    RemoveShowFromCategory(showId, category);
                 }
                 connection.Delete<Show>(showId);
+                App.showThumbnails.Remove(showId, out var val);
             }
         }
 

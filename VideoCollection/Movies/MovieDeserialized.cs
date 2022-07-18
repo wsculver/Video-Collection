@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Media;
-using VideoCollection.Helpers;
 
 namespace VideoCollection.Movies
 {
@@ -16,7 +15,7 @@ namespace VideoCollection.Movies
         {
             Id = movie.Id;
             Title = movie.Title;
-            Thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+            Thumbnail = App.movieThumbnails[movie.Id];
             ThumbnailVisibility = movie.ThumbnailVisibility;
             IsChecked = false;
         }

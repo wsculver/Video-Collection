@@ -13,6 +13,7 @@ using VideoCollection.Helpers;
 using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
 using System.Threading;
+using VideoCollection.Animations;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -239,10 +240,16 @@ namespace VideoCollection.Popups.Shows
             ApplyUpdate();
         }
 
-        // Check if any show content has changed from what was already saved
+        // Check if any movie content has changed from what was already saved
         private bool ShowContentChanged(Show show)
         {
-            return (show.Title != txtShowName.Text) || (show.Thumbnail != imgThumbnail.Source.ToString()) || (show.Categories != JsonConvert.SerializeObject(_selectedCategories));
+            return (show.Title != txtShowName.Text)
+                || (show.ShowFolderPath != txtShowFolder.Text)
+                || (show.Thumbnail != imgThumbnail.Source.ToString())
+                || (show.ThumbnailVisibility != _thumbnailVisibility)
+                || (show.Seasons != _show.Seasons)
+                || (show.Rating != _rating)
+                || (show.Categories != JsonConvert.SerializeObject(_selectedCategories));
         }
 
         // Shows a custom OK message box
@@ -305,32 +312,38 @@ namespace VideoCollection.Popups.Shows
                         {
                             // Update the show in the Show table
                             Show show = connection.Get<Show>(_showId);
-                            bool showContentChanged = ShowContentChanged(show);
-                            show.Title = txtShowName.Text.ToUpper();
-                            show.ShowFolderPath = txtShowFolder.Text;
-                            show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
-                            show.ThumbnailVisibility = _thumbnailVisibility;
-                            List<ShowSeason> seasons = new List<ShowSeason>();
-                            foreach (ShowSeasonDeserialized season in _seasons)
+                            if (ShowContentChanged(show))
                             {
-                                ShowSeason s = new ShowSeason(season);
-                                seasons.Add(s);
-                            }
-                            show.Seasons = JsonConvert.SerializeObject(seasons);
-                            show.Rating = _rating;
-                            show.Categories = JsonConvert.SerializeObject(_selectedCategories);
-                            connection.Update(show);
-
-                            // Update the ShowCateogry table
-                            connection.CreateTable<ShowCategory>();
-                            List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
-                            foreach (ShowCategory category in categories)
-                            {
-                                if (!_selectedCategories.Contains(category.Name))
+                                bool showContentChanged = ShowContentChanged(show);
+                                show.Title = txtShowName.Text.ToUpper();
+                                show.ShowFolderPath = txtShowFolder.Text;
+                                show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
+                                show.ThumbnailVisibility = _thumbnailVisibility;
+                                List<ShowSeason> seasons = new List<ShowSeason>();
+                                foreach (ShowSeasonDeserialized season in _seasons)
                                 {
-                                    // Remove show from categories in the ShowCategory table
-                                    DatabaseFunctions.RemoveShowFromCategory(_show.Id, category);
+                                    ShowSeason s = new ShowSeason(season);
+                                    seasons.Add(s);
                                 }
+                                show.Seasons = JsonConvert.SerializeObject(seasons);
+                                show.Rating = _rating;
+                                show.Categories = JsonConvert.SerializeObject(_selectedCategories);
+                                connection.Update(show);
+
+                                // Update the ShowCateogry table
+                                connection.CreateTable<ShowCategory>();
+                                List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
+                                foreach (ShowCategory category in categories)
+                                {
+                                    if (!_selectedCategories.Contains(category.Name))
+                                    {
+                                        // Remove show from categories in the ShowCategory table
+                                        DatabaseFunctions.RemoveShowFromCategory(_show.Id, category);
+                                    }
+                                }
+
+                                imgThumbnail.Source.Freeze();
+                                App.showThumbnails[show.Id] = imgThumbnail.Source;
                             }
                         }
                     }
@@ -377,6 +390,8 @@ namespace VideoCollection.Popups.Shows
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 txtShowFolder.Text = StaticHelpers.GetRelativePathStringFromCurrent(dlg.FileName);
+                loadingControl.Content = new LoadingSpinner();
+                loadingControl.Visibility = Visibility.Visible;
                 var token = _tokenSource.Token;
                 Task.Run(() =>
                 {
@@ -387,8 +402,9 @@ namespace VideoCollection.Popups.Shows
                            txtShowName.Text = _show.Title;
                            if (_show.Thumbnail != "")
                            {
-                               imgThumbnail.Source = StaticHelpers.BitmapFromUri(new Uri(_show.Thumbnail));
+                               imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
                            }
+                           loadingControl.Visibility = Visibility.Collapsed;
                        });
                 }, token);
             }

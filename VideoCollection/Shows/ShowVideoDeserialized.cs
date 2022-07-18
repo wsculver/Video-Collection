@@ -34,6 +34,7 @@ namespace VideoCollection.Shows
             Title = video.Title;
             ShowTitle = video.ShowTitle;
             Thumbnail = StaticHelpers.Base64ToImageSource(video.Thumbnail);
+            Thumbnail.Freeze();
             FilePath = video.FilePath;
             CommentariesSerialized = video.Commentaries;
             List<ShowVideo> commentaries = JsonConvert.DeserializeObject<List<ShowVideo>>(video.Commentaries);
@@ -77,6 +78,10 @@ namespace VideoCollection.Shows
         public int CompareTo(object obj)
         {
             ShowVideoDeserialized video = obj as ShowVideoDeserialized;
+            if (EpisodeNumber.Equals(video.EpisodeNumber))
+            {
+                return Title.CompareTo(video.Title);
+            }
             return EpisodeNumber.CompareTo(video.EpisodeNumber);
         }
     }

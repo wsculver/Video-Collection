@@ -2,7 +2,6 @@
 using SQLite;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using VideoCollection.Database;
@@ -55,24 +54,24 @@ namespace VideoCollection.Popups.Shows
                 ShowCategoryDeserialized showCategoryDeserialized = new ShowCategoryDeserialized(showCategory);
 
                 connection.CreateTable<Show>();
-                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
+                foreach (ShowDeserialized showDeserialized in showCategoryDeserialized.Shows)
+                {
+                    showDeserialized.IsChecked = true;
+                    _selectedShowIds.Add(showDeserialized.Id);
+                    shows.Add(showDeserialized);
+                }
                 foreach (Show show in rawShows)
                 {
-                    bool check = false;
-                    foreach (ShowDeserialized showDeserialized in showCategoryDeserialized.Shows)
+                    if (_selectedShowIds.Contains(show.Id))
                     {
-                        if (showDeserialized.Id == show.Id)
-                        {
-                            check = true;
-                            _selectedShowIds.Add(show.Id);
-                        }
+                        continue;
                     }
 
                     try
                     {
                         ShowDeserialized showDeserialized = new ShowDeserialized(show);
-                        showDeserialized.IsChecked = check;
                         shows.Add(showDeserialized);
                     }
                     catch (Exception ex)
@@ -86,6 +85,7 @@ namespace VideoCollection.Popups.Shows
                         _callback();
                     }
                 }
+                shows.Sort();
                 lvShowList.ItemsSource = shows;
             }
 

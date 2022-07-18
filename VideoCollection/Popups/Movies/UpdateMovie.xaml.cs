@@ -378,6 +378,9 @@ namespace VideoCollection.Popups.Movies
                                         DatabaseFunctions.RemoveMovieFromCategory(_movie.Id, category);
                                     }
                                 }
+
+                                imgThumbnail.Source.Freeze();
+                                App.movieThumbnails[movie.Id] = imgThumbnail.Source;
                             }
                         }
                     }
@@ -459,9 +462,9 @@ namespace VideoCollection.Popups.Movies
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                     {
                         txtMovieName.Text = _movie.Title;
-                        if (movie.Thumbnail != "")
+                        if (_movie.Thumbnail != "")
                         {
-                            imgThumbnail.Source = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+                            imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_movie.Thumbnail);
                         }
                         txtFile.Text = _movie.MovieFilePath;
 
