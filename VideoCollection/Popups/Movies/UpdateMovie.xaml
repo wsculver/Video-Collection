@@ -61,7 +61,10 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
-            <Label Grid.Row="0" Foreground="White">Movies:</Label>
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Label Foreground="White" VerticalAlignment="Center">Movies:</Label>
+                <TextBox Width="240" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+            </StackPanel>
             <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single" Margin="0,0,0,3">
                 <ListView.ItemTemplate>
                     <DataTemplate>

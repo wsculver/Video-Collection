@@ -13,6 +13,7 @@ namespace VideoCollection.Shows
             Name = section.Name;
             Color backgroundColor = JsonConvert.DeserializeObject<Color>(section.Background);
             Background = new SolidColorBrush(backgroundColor);
+            Background.Freeze();
         }
     }
 }

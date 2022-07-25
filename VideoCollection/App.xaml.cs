@@ -28,6 +28,15 @@ namespace VideoCollection
         public static ConcurrentDictionary<int, ImageSource> movieThumbnails = new ConcurrentDictionary<int, ImageSource>();
         public static ConcurrentDictionary<int, ImageSource> showThumbnails = new ConcurrentDictionary<int, ImageSource>();
 
+        public static bool ForceSoftwareRendering
+        {
+            get
+            {
+                int renderingTier = RenderCapability.Tier >> 16;
+                return renderingTier == 0;
+            }
+        }
+
         private void Application_Activated(object sender, EventArgs e)
         {
             if (videoPlayer != null)

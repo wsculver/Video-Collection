@@ -8,6 +8,7 @@ using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 using VideoCollection.CustomTypes;
+using System.Windows.Data;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -88,6 +89,12 @@ namespace VideoCollection.Popups.Movies
                 movies.Sort();
                 lvMovieList.ItemsSource = movies;
             }
+
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource);
+            view.Filter = MovieFilter;
+            txtFilter.IsReadOnly = false;
+            txtFilter.Focusable = true;
+            txtFilter.IsHitTestVisible = true;
 
             txtCategoryName.Focus();
         }
@@ -202,6 +209,22 @@ namespace VideoCollection.Popups.Movies
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private bool MovieFilter(object item)
+        {
+            if (String.IsNullOrEmpty(txtFilter.Text))
+                return true;
+            else
+                return (item as MovieDeserialized).Title.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void txtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (lvMovieList.ItemsSource != null)
+            {
+                CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource).Refresh();
+            }
         }
     }
 }

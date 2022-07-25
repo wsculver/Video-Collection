@@ -60,8 +60,11 @@
                 <RowDefinition Height="25"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
-            <Label Grid.Row="0" Foreground="White">Shows:</Label>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Label Foreground="White" VerticalAlignment="Center">Shows:</Label>
+                <TextBox Width="245" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+            </StackPanel>
             <ListView Grid.Row="1" x:Name="lvShowList" SelectionChanged="lvShowList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single" Margin="0,0,0,3">
                 <ListView.ItemTemplate>
                     <DataTemplate>

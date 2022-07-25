@@ -142,14 +142,15 @@ namespace VideoCollection.Popups
         {
             if (_subtitles.Count == 0)
             {
-                _subtitlesOn = false;
-                rectSubtitlesEnabled.Visibility = Visibility.Hidden;
                 btnSubtitles.Visibility = Visibility.Collapsed;
             }
             else
             {
                 btnSubtitles.Visibility = Visibility.Visible;
             }
+            _subtitlesOn = false;
+            rectSubtitlesEnabled.Visibility = Visibility.Hidden;
+            _subtitleIndex = 0;
 
             _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromMilliseconds(100);
@@ -254,6 +255,10 @@ namespace VideoCollection.Popups
                 }
                 imageThumbnailNextEpisode.Source = StaticHelpers.Base64ToImageSource(_nextEpisode.Thumbnail);
                 txtNextEpisodeTitle.Text = _nextEpisode.Title;
+                if (JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode).Title == showVideo.Title)
+                {
+                    show.UpdateNextEpisode();
+                }
                 _isShowEpisode = true;
             }
             update();
@@ -632,7 +637,10 @@ namespace VideoCollection.Popups
                 iconFullScreen.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapseAll;
                 if (!_expanded)
                 {
-                    gridNextEpisode.Visibility = Visibility.Visible;
+                    if (_isShowEpisode)
+                    {
+                        gridNextEpisode.Visibility = Visibility.Visible;
+                    }
                     var colDef = new ColumnDefinition();
                     colDef.Width = new GridLength(_nextEpisodeGridLength);
                     gridTitle.ColumnDefinitions.Add(colDef);

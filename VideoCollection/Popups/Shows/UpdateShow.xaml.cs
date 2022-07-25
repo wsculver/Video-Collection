@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
 using System.Threading;
 using VideoCollection.Animations;
+using System.Windows.Data;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -28,11 +29,11 @@ namespace VideoCollection.Popups.Shows
         private List<ShowSeasonDeserialized> _seasons;
         private string _rating;
         private string _originalShowName;
-        private bool _showDeleted = false;
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
         private CancellationTokenSource _tokenSource;
+        private ShowDeserialized _selectedShow = null;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -109,6 +110,12 @@ namespace VideoCollection.Popups.Shows
                 }
                 lvShowList.ItemsSource = shows;
             }
+
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvShowList.ItemsSource);
+            view.Filter = ShowFilter;
+            txtFilter.IsReadOnly = false;
+            txtFilter.Focusable = true;
+            txtFilter.IsHitTestVisible = true;
         }
 
         // Select a category
@@ -130,10 +137,7 @@ namespace VideoCollection.Popups.Shows
         {
             _splash.Visibility = Visibility.Collapsed;
             _tokenSource.Cancel();
-            if(_showDeleted)
-            {
-                _callback();
-            }
+            _callback();
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);
             Close();
@@ -231,6 +235,7 @@ namespace VideoCollection.Popups.Shows
                     categories.Add(new ShowCategoryDeserialized(category.Id, category.Position, category.Name, category.Shows, check));
                 }
                 icCategories.ItemsSource = categories;
+                _selectedShow = showDeserialized;
             }
         }
 
@@ -268,11 +273,10 @@ namespace VideoCollection.Popups.Shows
         // Save changes
         private bool ApplyUpdate()
         {
-            ShowDeserialized selectedShow = (ShowDeserialized)lvShowList.SelectedItem;
             bool repeat = false;
-            if (selectedShow != null)
+            if (_selectedShow != null)
             {
-                int selectedShowId = selectedShow.Id;
+                int selectedShowId = _selectedShow.Id;
 
                 if (txtShowFolder.Text == "")
                 {
@@ -295,14 +299,14 @@ namespace VideoCollection.Popups.Shows
                     {
                         connection.CreateTable<Show>();
                         List<Show> shows = connection.Table<Show>().ToList();
-                        foreach (Show m in shows)
+                        string showName = txtShowName.Text.ToUpper();
+                        Parallel.ForEach(shows, s =>
                         {
-                            if (m.Title != _originalShowName && m.Title == txtShowName.Text.ToUpper())
+                            if (s.Title != _originalShowName && s.Title == showName)
                             {
                                 repeat = true;
-                                break;
                             }
-                        }
+                        });
 
                         if (repeat)
                         {
@@ -320,7 +324,7 @@ namespace VideoCollection.Popups.Shows
                                 show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);
                                 show.ThumbnailVisibility = _thumbnailVisibility;
                                 List<ShowSeason> seasons = new List<ShowSeason>();
-                                foreach (ShowSeasonDeserialized season in _seasons)
+                                foreach(ShowSeasonDeserialized season in _seasons)
                                 {
                                     ShowSeason s = new ShowSeason(season);
                                     seasons.Add(s);
@@ -350,6 +354,9 @@ namespace VideoCollection.Popups.Shows
 
                     if (!repeat)
                     {
+                        string filterValue = txtFilter.Text;
+                        txtFilter.Text = "";
+
                         UpdateShowList();
                         // Reselect the show that is being edited
                         for (int i = 0; i < lvShowList.Items.Count; i++)
@@ -358,8 +365,11 @@ namespace VideoCollection.Popups.Shows
                             if (show.Id == selectedShowId)
                             {
                                 lvShowList.SelectedIndex = i;
+                                break;
                             }
                         }
+
+                        txtFilter.Text = filterValue;
 
                         return true;
                     }
@@ -432,7 +442,6 @@ namespace VideoCollection.Popups.Shows
             {
                 DatabaseFunctions.DeleteShow(show.Id);
                 UpdateShowList();
-                _showDeleted = true;
                 panelShowInfo.Visibility = Visibility.Collapsed;
             }
             Splash.Visibility = Visibility.Collapsed;
@@ -466,6 +475,22 @@ namespace VideoCollection.Popups.Shows
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private bool ShowFilter(object item)
+        {
+            if (String.IsNullOrEmpty(txtFilter.Text))
+                return true;
+            else
+                return (item as ShowDeserialized).Title.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void txtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (lvShowList.ItemsSource != null)
+            {
+                CollectionViewSource.GetDefaultView(lvShowList.ItemsSource).Refresh();
+            }
         }
     }
 }

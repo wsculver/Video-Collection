@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using VideoCollection.CustomTypes;
 using VideoCollection.Animations;
 using System.Threading;
+using System.Windows.Data;
+using System.Collections.Concurrent;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -29,13 +31,13 @@ namespace VideoCollection.Popups.Movies
         private Movie _movie;
         private string _rating;
         private string _originalMovieName;
-        private bool _movieDeleted = false;
         private Border _splash;
         private Action _callback;
         private string _thumbnailVisibility = "";
         private CancellationTokenSource _tokenSource;
         private List<MovieBonusSectionDeserialized> _movieBonusSectionsDeserialized;
         private List<MovieBonusVideoDeserialized> _movieBonusVideosDeserialized;
+        private MovieDeserialized _selectedMovie = null;
 
         public double WidthScale { get; set; }
         public double HeightScale { get; set; }
@@ -114,6 +116,12 @@ namespace VideoCollection.Popups.Movies
                 }
                 lvMovieList.ItemsSource = movies;
             }
+
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource);
+            view.Filter = MovieFilter;
+            txtFilter.IsReadOnly = false;
+            txtFilter.Focusable = true;
+            txtFilter.IsHitTestVisible = true;
         }
 
         // Select a category
@@ -134,10 +142,7 @@ namespace VideoCollection.Popups.Movies
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             _splash.Visibility = Visibility.Collapsed;
-            if(_movieDeleted)
-            {
-                _callback();
-            }
+            _callback();
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
             parentWindow.removeChild(this);
             Close();
@@ -236,6 +241,7 @@ namespace VideoCollection.Popups.Movies
                     categories.Add(new MovieCategoryDeserialized(category.Id, category.Position, category.Name, category.Movies, check));
                 }
                 icCategories.ItemsSource = categories;
+                _selectedMovie = movieDeserialized;
                 setMovieBonusContent(movie);
             }
         }
@@ -277,11 +283,10 @@ namespace VideoCollection.Popups.Movies
         // Save changes
         private bool ApplyUpdate()
         {
-            MovieDeserialized selectedMovie = (MovieDeserialized)lvMovieList.SelectedItem;
             bool repeat = false;
-            if (selectedMovie != null)
+            if (_selectedMovie != null)
             {
-                int selectedMovieId = selectedMovie.Id;
+                int selectedMovieId = _selectedMovie.Id;
 
                 if (txtMovieFolder.Text == "")
                 {
@@ -309,14 +314,14 @@ namespace VideoCollection.Popups.Movies
                     {
                         connection.CreateTable<Movie>();
                         List<Movie> movies = connection.Table<Movie>().ToList();
-                        foreach (Movie m in movies)
+                        string movieName = txtMovieName.Text.ToUpper();
+                        Parallel.ForEach(movies, m =>
                         {
-                            if (m.Title != _originalMovieName && m.Title == txtMovieName.Text.ToUpper())
+                            if (m.Title != _originalMovieName && m.Title == movieName)
                             {
                                 repeat = true;
-                                break;
                             }
-                        }
+                        });
 
                         if (repeat)
                         {
@@ -334,8 +339,8 @@ namespace VideoCollection.Popups.Movies
                                 movie.ThumbnailVisibility = _thumbnailVisibility;
                                 movie.MovieFilePath = txtFile.Text;
                                 movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
-                                List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
-                                foreach (MovieBonusSectionDeserialized section in _movieBonusSectionsDeserialized)
+                                ConcurrentBag<MovieBonusSection> bonusSections = new ConcurrentBag<MovieBonusSection>();
+                                Parallel.ForEach(_movieBonusSectionsDeserialized, section =>
                                 {
                                     MovieBonusSection sec = new MovieBonusSection()
                                     {
@@ -343,10 +348,10 @@ namespace VideoCollection.Popups.Movies
                                         Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
                                     };
                                     bonusSections.Add(sec);
-                                }
+                                });
                                 movie.BonusSections = JsonConvert.SerializeObject(bonusSections);
-                                List<MovieBonusVideo> bonusVideos = new List<MovieBonusVideo>();
-                                foreach (MovieBonusVideoDeserialized video in _movieBonusVideosDeserialized)
+                                ConcurrentBag<MovieBonusVideo> bonusVideos = new ConcurrentBag<MovieBonusVideo>();
+                                Parallel.ForEach(_movieBonusVideosDeserialized, video =>
                                 {
                                     MovieBonusVideo vid = new MovieBonusVideo()
                                     {
@@ -358,7 +363,7 @@ namespace VideoCollection.Popups.Movies
                                         Subtitles = video.SubtitlesSerialized
                                     };
                                     bonusVideos.Add(vid);
-                                }
+                                });
                                 movie.BonusVideos = JsonConvert.SerializeObject(bonusVideos);
                                 movie.Rating = _rating;
                                 movie.Categories = JsonConvert.SerializeObject(_selectedCategories);
@@ -387,16 +392,21 @@ namespace VideoCollection.Popups.Movies
 
                     if (!repeat)
                     {
+                        string filterValue = txtFilter.Text;
+                        txtFilter.Text = "";
+
                         UpdateMovieList();
                         // Reselect the movie that is being edited
-                        for (int i = 0; i < lvMovieList.Items.Count; i++)
+                        Parallel.For(0, lvMovieList.Items.Count, i =>
                         {
                             MovieDeserialized movie = (MovieDeserialized)lvMovieList.Items[i];
                             if (movie.Id == selectedMovieId)
                             {
                                 lvMovieList.SelectedIndex = i;
                             }
-                        }
+                        });
+
+                        txtFilter.Text = filterValue;
 
                         return true;
                     }
@@ -516,7 +526,6 @@ namespace VideoCollection.Popups.Movies
             {
                 DatabaseFunctions.DeleteMovie(movie.Id);
                 UpdateMovieList();
-                _movieDeleted = true;
                 panelMovieInfo.Visibility = Visibility.Collapsed;
             }
             Splash.Visibility = Visibility.Collapsed;
@@ -534,6 +543,22 @@ namespace VideoCollection.Popups.Movies
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private bool MovieFilter(object item)
+        {
+            if (String.IsNullOrEmpty(txtFilter.Text))
+                return true;
+            else
+                return (item as MovieDeserialized).Title.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void txtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (lvMovieList.ItemsSource != null)
+            {
+                CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource).Refresh();
+            }
         }
     }
 }

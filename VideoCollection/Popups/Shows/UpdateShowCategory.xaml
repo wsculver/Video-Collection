@@ -8,7 +8,7 @@
         WindowStyle="None" Height="500" Width="350" WindowStartupLocation="CenterOwner" Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
@@ -21,18 +21,21 @@
                         ScaleY="{Binding ElementName=updateShowCategoryWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,0">
             <Label Foreground="White" VerticalAlignment="Center">Category Name</Label>
             <TextBox x:Name="txtCategoryName" Width="270" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
         </StackPanel>
 
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="25"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
 
-            <Label Grid.Row="0" Foreground="White">Shows:</Label>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White" VerticalAlignment="Center">Shows:</Label>
+                <TextBox Width="316" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+            </StackPanel>
             <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Single" Margin="0,0,0,4">
                 <ListView.ItemTemplate>
                     <DataTemplate>

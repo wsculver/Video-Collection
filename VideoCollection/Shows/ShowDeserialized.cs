@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media;
 using Newtonsoft.Json;
 using System;
+using VideoCollection.Helpers;
 
 namespace VideoCollection.Shows
 {
@@ -17,7 +18,14 @@ namespace VideoCollection.Shows
         {
             Id = show.Id;
             Title = show.Title;
-            Thumbnail = App.showThumbnails[show.Id];
+            if (App.showThumbnails.ContainsKey(show.Id))
+            {
+                Thumbnail = App.showThumbnails[show.Id];
+            } 
+            else
+            {
+                Thumbnail = StaticHelpers.Base64ToImageSource(show.Thumbnail);
+            }
             ThumbnailVisibility = show.ThumbnailVisibility;
             ShowVideo nextEpisode = JsonConvert.DeserializeObject<ShowVideo>(show.NextEpisode);
             NextEpisode = new ShowVideoDeserialized(nextEpisode);

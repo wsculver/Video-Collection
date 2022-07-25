@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using VideoCollection.Helpers;
 using VideoCollection.CustomTypes;
+using System.Windows.Interop;
 
 namespace VideoCollection.Popups
 {
@@ -108,6 +109,16 @@ namespace VideoCollection.Popups
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private void customMessageBoxWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (App.ForceSoftwareRendering)
+            {
+                HwndSource hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+                HwndTarget hwndTarget = hwndSource.CompositionTarget;
+                hwndTarget.RenderMode = RenderMode.SoftwareOnly;
+            }
         }
     }
 }

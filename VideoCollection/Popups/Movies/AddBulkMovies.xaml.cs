@@ -11,6 +11,8 @@ using VideoCollection.Animations;
 using VideoCollection.CustomTypes;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Windows.Data;
+using System.Windows.Media;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -88,6 +90,9 @@ namespace VideoCollection.Popups.Movies
                         if (_selectedMovieTitles.Contains(entry.Key))
                         {
                             connection.Insert(entry.Value);
+                            ImageSource thumbnail = StaticHelpers.Base64ToImageSource(entry.Value.Thumbnail);
+                            thumbnail.Freeze();
+                            App.movieThumbnails[entry.Value.Id] = thumbnail;
                         }
                     }
                 }
@@ -115,35 +120,47 @@ namespace VideoCollection.Popups.Movies
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                     {
-                        List<MovieDeserialized> movies = new List<MovieDeserialized>();
-                        foreach (KeyValuePair<string, Movie> entry in _movies)
+                        if (!_movies.IsEmpty)
                         {
-                            try
+                            List<MovieDeserialized> movies = new List<MovieDeserialized>();
+                            foreach (KeyValuePair<string, Movie> entry in _movies)
                             {
-                                MovieDeserialized movieDeserialized = new MovieDeserialized(entry.Value);
-                                movieDeserialized.IsChecked = true;
-                                movies.Add(movieDeserialized);
-                                _selectedMovieTitles.Add(entry.Key);
-                            }
-                            catch (Exception ex)
-                            {
-                                if (GetWindow(this).Owner != null)
+                                try
                                 {
-                                    ShowOKMessageBox("Error: " + ex.Message);
+                                    MovieDeserialized movieDeserialized = new MovieDeserialized(entry.Value);
+                                    movieDeserialized.IsChecked = true;
+                                    movies.Add(movieDeserialized);
+                                    _selectedMovieTitles.Add(entry.Key);
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                                    popup.scaleWindow(parentWindow);
-                                    parentWindow.addChild(popup);
-                                    popup.Owner = parentWindow;
-                                    popup.ShowDialog();
+                                    if (GetWindow(this).Owner != null)
+                                    {
+                                        ShowOKMessageBox("Error: " + ex.Message);
+                                    }
+                                    else
+                                    {
+                                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                                        CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                                        popup.scaleWindow(parentWindow);
+                                        parentWindow.addChild(popup);
+                                        popup.Owner = parentWindow;
+                                        popup.ShowDialog();
+                                    }
                                 }
                             }
+                            lvMovieList.ItemsSource = movies;
+                            lvMovieList.Visibility = Visibility.Visible;
+                            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource);
+                            view.Filter = MovieFilter;
+                            txtFilter.IsReadOnly = false;
+                            txtFilter.Focusable = true;
+                            txtFilter.IsHitTestVisible = true;
                         }
-                        lvMovieList.ItemsSource = movies;
-                        lvMovieList.Visibility = Visibility.Visible;
+                        else
+                        {
+                            ShowOKMessageBox("No new movies found in that folder.");
+                        }
                         loadingControl.Visibility = Visibility.Collapsed;
                     });
                 }, token);
@@ -188,6 +205,22 @@ namespace VideoCollection.Popups.Movies
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private bool MovieFilter(object item)
+        {
+            if (String.IsNullOrEmpty(txtFilter.Text))
+                return true;
+            else
+                return (item as MovieDeserialized).Title.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void txtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (lvMovieList.ItemsSource != null)
+            {
+                CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource).Refresh();
+            }
         }
     }
 }

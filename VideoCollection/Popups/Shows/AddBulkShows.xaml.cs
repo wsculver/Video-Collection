@@ -11,6 +11,8 @@ using VideoCollection.Animations;
 using VideoCollection.CustomTypes;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Windows.Media;
+using System.Windows.Data;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -88,6 +90,9 @@ namespace VideoCollection.Popups.Shows
                         if (_selectedShowTitles.Contains(entry.Key))
                         {
                             connection.Insert(entry.Value);
+                            ImageSource thumbnail = StaticHelpers.Base64ToImageSource(entry.Value.Thumbnail);
+                            thumbnail.Freeze();
+                            App.showThumbnails[entry.Value.Id] = thumbnail;
                         }
                     }
                 }
@@ -115,35 +120,47 @@ namespace VideoCollection.Popups.Shows
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                     {
-                        List<ShowDeserialized> shows = new List<ShowDeserialized>();
-                        foreach (KeyValuePair<string, Show> entry in _shows)
+                        if (!_shows.IsEmpty)
                         {
-                            try
+                            List<ShowDeserialized> shows = new List<ShowDeserialized>();
+                            foreach (KeyValuePair<string, Show> entry in _shows)
                             {
-                                ShowDeserialized showDeserialized = new ShowDeserialized(entry.Value);
-                                showDeserialized.IsChecked = true;
-                                shows.Add(showDeserialized);
-                                _selectedShowTitles.Add(entry.Key);
-                            }
-                            catch (Exception ex)
-                            {
-                                if (GetWindow(this).Owner != null)
+                                try
                                 {
-                                    ShowOKMessageBox("Error: " + ex.Message);
+                                    ShowDeserialized showDeserialized = new ShowDeserialized(entry.Value);
+                                    showDeserialized.IsChecked = true;
+                                    shows.Add(showDeserialized);
+                                    _selectedShowTitles.Add(entry.Key);
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                                    CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                                    popup.scaleWindow(parentWindow);
-                                    parentWindow.addChild(popup);
-                                    popup.Owner = parentWindow;
-                                    popup.ShowDialog();
+                                    if (GetWindow(this).Owner != null)
+                                    {
+                                        ShowOKMessageBox("Error: " + ex.Message);
+                                    }
+                                    else
+                                    {
+                                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+                                        CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
+                                        popup.scaleWindow(parentWindow);
+                                        parentWindow.addChild(popup);
+                                        popup.Owner = parentWindow;
+                                        popup.ShowDialog();
+                                    }
                                 }
                             }
+                            lvShowList.ItemsSource = shows;
+                            lvShowList.Visibility = Visibility.Visible;
+                            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvShowList.ItemsSource);
+                            view.Filter = ShowFilter;
+                            txtFilter.IsReadOnly = false;
+                            txtFilter.Focusable = true;
+                            txtFilter.IsHitTestVisible = true;
                         }
-                        lvShowList.ItemsSource = shows;
-                        lvShowList.Visibility = Visibility.Visible;
+                        else
+                        {
+                            ShowOKMessageBox("No new shows found in that folder.");
+                        }
                         loadingControl.Visibility = Visibility.Collapsed;
                     });
                 }, token);
@@ -188,6 +205,22 @@ namespace VideoCollection.Popups.Shows
 
             Left = parent.Left + (parent.Width - ActualWidth) / 2;
             Top = parent.Top + (parent.Height - ActualHeight) / 2;
+        }
+
+        private bool ShowFilter(object item)
+        {
+            if (String.IsNullOrEmpty(txtFilter.Text))
+                return true;
+            else
+                return (item as ShowDeserialized).Title.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void txtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (lvShowList.ItemsSource != null)
+            {
+                CollectionViewSource.GetDefaultView(lvShowList.ItemsSource).Refresh();
+            }
         }
     }
 }

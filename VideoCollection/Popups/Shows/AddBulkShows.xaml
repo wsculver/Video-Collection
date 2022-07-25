@@ -30,8 +30,11 @@
                 <RowDefinition Height="25"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            
-            <Label Grid.Row="0" Foreground="White">Add Shows:</Label>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Label Foreground="White" VerticalAlignment="Center">Add Shows:</Label>
+                <TextBox Width="414" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+            </StackPanel>
             <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Single" Margin="0,0,0,4" Visibility="Hidden">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -58,6 +61,6 @@
 
         <ContentControl x:Name="loadingControl" Grid.Row="1" Visibility="Collapsed"/>
 
-        <Border x:Name="Splash" Grid.RowSpan="2" Style="{StaticResource SplashStyle}"/>
+        <Border x:Name="Splash" Grid.RowSpan="3" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

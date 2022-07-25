@@ -8,7 +8,7 @@
         Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
@@ -20,19 +20,22 @@
                         ScaleY="{Binding ElementName=addMovieCategoryWindow, Path=ScaleValue}" />
         </Grid.LayoutTransform>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,0">
             <Label Foreground="White" VerticalAlignment="Center">Category Name</Label>
             <TextBox x:Name="txtCategoryName" Width="270" FontSize="12" Foreground="White" VerticalAlignment="Center"></TextBox>
         </StackPanel>
 
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="25"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            
-            <Label Grid.Row="0" Foreground="White">Add Movies:</Label>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Single" Margin="0,0,0,4">
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5">
+                <Label Foreground="White" VerticalAlignment="Center">Add Movies:</Label>
+                <TextBox Width="287" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+            </StackPanel>
+            <ListView Grid.Row="2" Grid.ColumnSpan="2" x:Name="lvMovieList" SelectionMode="Single" Margin="0,0,0,4">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <CheckBox Tag="{Binding Id}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" Width="364">
