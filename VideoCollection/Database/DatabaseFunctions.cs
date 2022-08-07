@@ -65,6 +65,7 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
+                connection.CreateTable<Movie>();
                 List<Movie> movies = connection.Table<Movie>().ToList();
                 Parallel.ForEach(movies, movie =>
                 {
@@ -85,7 +86,8 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<Show> shows = (connection.Table<Show>().ToList()).ToList();
+                connection.CreateTable<Show>();
+                List<Show> shows = connection.Table<Show>().ToList();
                 Parallel.ForEach(shows, show =>
                 {
                     List<string> categories = JsonConvert.DeserializeObject<List<string>>(show.Categories);
@@ -105,6 +107,7 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
+                connection.CreateTable<MovieCategory>();
                 List<MovieCategory> movieCategories = connection.Table<MovieCategory>().ToList();
                 foreach (MovieCategory category in movieCategories)
                 {
@@ -120,6 +123,7 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
+                connection.CreateTable<ShowCategory>();
                 List<ShowCategory> showCategories = connection.Table<ShowCategory>().ToList();
                 foreach (ShowCategory category in showCategories)
                 {
@@ -150,6 +154,7 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
+                connection.CreateTable<Show>();
                 return connection.Table<Show>().FirstOrDefault(x => x.Title == title);
             }
         }

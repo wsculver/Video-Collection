@@ -59,25 +59,12 @@ namespace VideoCollection.Popups.Movies
             Close();
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtRootMovieFolder.Text == "")
             {
-                ShowOKMessageBox("You need to select a root movie folder");
+                Messages.ShowOKMessageBox("You need to select a root movie folder", ref Splash);
             }
             else
             {
@@ -116,10 +103,21 @@ namespace VideoCollection.Popups.Movies
                 var token = _tokenSource.Token;
                 Task.Run(() => 
                 {
-                    _movies = StaticHelpers.ParseBulkMovies(dlg.FileName, token);
+                    var result = StaticHelpers.ParseBulkMovies(dlg.FileName, token);
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                     {
+                        if (result.IsFailure)
+                        {
+                            Messages.Error(result.Error, ref Splash, "Parse");
+                            if (!result.IsPartial)
+                            {
+                                txtRootMovieFolder.Text = "";
+                                loadingControl.Visibility = Visibility.Collapsed;
+                                return;
+                            }
+                        }
+                        _movies = result.Value;
                         if (!_movies.IsEmpty)
                         {
                             List<MovieDeserialized> movies = new List<MovieDeserialized>();
@@ -134,21 +132,10 @@ namespace VideoCollection.Popups.Movies
                                 }
                                 catch (Exception ex)
                                 {
-                                    if (GetWindow(this).Owner != null)
-                                    {
-                                        ShowOKMessageBox("Error: " + ex.Message);
-                                    }
-                                    else
-                                    {
-                                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                                        CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                                        popup.scaleWindow(parentWindow);
-                                        parentWindow.addChild(popup);
-                                        popup.Owner = parentWindow;
-                                        popup.ShowDialog();
-                                    }
+                                    Messages.Error(ex.Message, ref Splash);
                                 }
                             }
+                            movies.Sort();
                             lvMovieList.ItemsSource = movies;
                             lvMovieList.Visibility = Visibility.Visible;
                             CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource);
@@ -159,7 +146,8 @@ namespace VideoCollection.Popups.Movies
                         }
                         else
                         {
-                            ShowOKMessageBox("No new movies found in that folder.");
+                            txtRootMovieFolder.Text = "";
+                            Messages.ShowOKMessageBox("No new movies found in that folder.", ref Splash);
                         }
                         loadingControl.Visibility = Visibility.Collapsed;
                     });

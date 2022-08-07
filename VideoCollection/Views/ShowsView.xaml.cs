@@ -112,6 +112,7 @@ namespace VideoCollection.Views
                 parentWindow.Splash.Visibility = Visibility.Visible;
                 if (popup.ShowDialog() == true)
                 {
+                    connection.CreateTable<Show>();
                     List<Show> shows = connection.Table<Show>().ToList();
                     foreach (Show show in shows)
                     {
@@ -192,7 +193,6 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-
                 List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Position).ToList();
 
                 ShowCategory previousCategory = categories[0];
@@ -223,7 +223,6 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-
                 List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderByDescending(c => c.Position).ToList();
 
                 ShowCategory previousCategory = categories[0];

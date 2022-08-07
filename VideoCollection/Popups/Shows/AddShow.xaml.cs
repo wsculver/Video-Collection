@@ -94,33 +94,20 @@ namespace VideoCollection.Popups.Shows
             Close();
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtShowFolder.Text == "")
             {
-                ShowOKMessageBox("You need to select a show folder");
+                Messages.ShowOKMessageBox("You need to select a show folder", ref Splash);
             }
             else if (txtShowName.Text == "")
             {
-                ShowOKMessageBox("You need to enter a show name");
+                Messages.ShowOKMessageBox("You need to enter a show name", ref Splash);
             }
             else if (_thumbnailVisibility == "")
             {
-                ShowOKMessageBox("You need to select a thumbnail tile type");
+                Messages.ShowOKMessageBox("You need to select a thumbnail tile type", ref Splash);
             }
             else
             {
@@ -136,7 +123,7 @@ namespace VideoCollection.Popups.Shows
                     } 
                     else
                     {
-                        ShowOKMessageBox("Unable to create a thumbnail. Please select one manually.");
+                        Messages.ShowOKMessageBox("Unable to create a thumbnail. Please select one manually.", ref Splash);
                         return;
                     }
                 }
@@ -174,7 +161,7 @@ namespace VideoCollection.Popups.Shows
 
                     if (repeat)
                     {
-                        ShowOKMessageBox("A show with that name already exists");
+                        Messages.ShowOKMessageBox("A show with that name already exists", ref Splash);
                     }
                     else
                     {
@@ -228,20 +215,28 @@ namespace VideoCollection.Popups.Shows
                 var token = _tokenSource.Token;
                 Task.Run(() =>
                 {
-                    _show = StaticHelpers.ParseShowVideos(dlg.FileName, token);
+                    var result = StaticHelpers.ParseShowVideos(dlg.FileName, token);
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
-                       {
-                           txtShowName.Text = _show.Title;
-                           if (_show.Thumbnail != "")
-                           {
-                               imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
-                           }
+                    {
+                        if (result.IsSuccess)
+                        {
+                            _show = result.Value;
+                            txtShowName.Text = _show.Title;
+                            if (_show.Thumbnail != "")
+                            {
+                                imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
+                            }
 
-                           panelShowFields.Visibility = Visibility.Visible;
-
-                           loadingControl.Visibility = Visibility.Collapsed;
-                       });
+                            panelShowFields.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            txtShowFolder.Text = "";
+                            Messages.Error(result.Error, ref Splash, "Parse");
+                        }
+                        loadingControl.Visibility = Visibility.Collapsed;
+                    });
                 }, token);
             }
         }

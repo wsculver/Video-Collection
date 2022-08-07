@@ -150,14 +150,7 @@ namespace VideoCollection.Popups.Shows
             }
             catch (Exception ex)
             {
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                popup.scaleWindow(parentWindow);
-                parentWindow.addChild(popup);
-                popup.Owner = parentWindow;
-                Splash.Visibility = Visibility.Visible;
-                popup.ShowDialog();
-                Splash.Visibility = Visibility.Collapsed;
+                Messages.Error(ex.Message, ref Splash);
                 _callback();
             }
         }
@@ -286,6 +279,7 @@ namespace VideoCollection.Popups.Shows
                 Splash.Visibility = Visibility.Visible;
                 if (popup.ShowDialog() == true)
                 {
+                    connection.CreateTable<Show>();
                     List<Show> shows = connection.Table<Show>().ToList();
                     foreach (Show show in shows)
                     {

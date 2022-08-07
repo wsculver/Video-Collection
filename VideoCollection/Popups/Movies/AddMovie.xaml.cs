@@ -93,37 +93,24 @@ namespace VideoCollection.Popups.Movies
             Close();
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtMovieFolder.Text == "")
             {
-                ShowOKMessageBox("You need to select a movie folder");
+                Messages.ShowOKMessageBox("You need to select a movie folder", ref Splash);
             }
             else if (txtMovieName.Text == "")
             {
-                ShowOKMessageBox("You need to enter a movie name");
+                Messages.ShowOKMessageBox("You need to enter a movie name", ref Splash);
             }
             else if (txtFile.Text == "")
             { 
-                ShowOKMessageBox("You need to select a movie file");
+                Messages.ShowOKMessageBox("You need to select a movie file", ref Splash);
             }
             else if (_thumbnailVisibility == "")
             {
-                ShowOKMessageBox("You need to select a thumbnail tile type");
+                Messages.ShowOKMessageBox("You need to select a thumbnail tile type", ref Splash);
             }
             else
             {
@@ -170,7 +157,7 @@ namespace VideoCollection.Popups.Movies
 
                     if (repeat)
                     {
-                        ShowOKMessageBox("A movie with that name already exists");
+                        Messages.ShowOKMessageBox("A movie with that name already exists", ref Splash);
                     }
                     else
                     {
@@ -234,22 +221,31 @@ namespace VideoCollection.Popups.Movies
                 var token = _tokenSource.Token;
                 Task.Run(() => 
                 {
-                    _movie = StaticHelpers.ParseMovieVideos(dlg.FileName, token);
+                    var result = StaticHelpers.ParseMovieVideos(dlg.FileName, token);
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                        {
-                           txtMovieName.Text = _movie.Title;
-                           if (_movie.Thumbnail != "")
+                           if (result.IsSuccess)
                            {
-                               imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_movie.Thumbnail);
-                           }
-                           txtFile.Text = _movie.MovieFilePath;
+                               _movie = result.Value;
+                               txtMovieName.Text = _movie.Title;
+                               if (_movie.Thumbnail != "")
+                               {
+                                   imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_movie.Thumbnail);
+                               }
+                               txtFile.Text = _movie.MovieFilePath;
 
-                           panelMovieFields.Visibility = Visibility.Visible;
+                               panelMovieFields.Visibility = Visibility.Visible;
 
-                           if (_movie.MovieFilePath == "")
+                               if (_movie.MovieFilePath == "")
+                               {
+                                   Messages.Warning("No movie file could be found in the folder you selected. You will have to manually select a movie file.", ref Splash);
+                               }
+                           } 
+                           else
                            {
-                               ShowOKMessageBox("Warning: No movie file could be found in the folder you selected. You will have to manually select a movie file.");
+                               txtMovieFolder.Text = "";
+                               Messages.Error(result.Error, ref Splash, "Parse");
                            }
                            loadingControl.Visibility = Visibility.Collapsed;
                        });

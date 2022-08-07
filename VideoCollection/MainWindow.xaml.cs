@@ -25,6 +25,9 @@ namespace VideoCollection
             MinHeight = _minHeight;
             MinWidth = _minWidth;
             SourceInitialized += Window_SourceInitialized;
+            btnMovies.Background = Application.Current.Resources["SelectedButtonBackgroundBrush"] as SolidColorBrush;
+            btnShows.Background = null;
+            contentControl.Content = new MoviesView();
         }
 
         void Window_SourceInitialized(object sender, EventArgs e)

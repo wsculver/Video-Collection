@@ -24,8 +24,8 @@
         </Grid.LayoutTransform>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Height="32">
-            <Button x:Name="btnShows" Click="btnShows_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Margin="0,0,5,3" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">SHOWS</Button>
-            <Button x:Name="btnMovies" Click="btnMovies_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Margin="5,0,0,3" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">MOVIES</Button>
+            <Button x:Name="btnMovies" Click="btnMovies_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Margin="0,0,5,3" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">MOVIES</Button>
+            <Button x:Name="btnShows" Click="btnShows_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" Margin="5,0,0,3" Background="{x:Null}" Foreground="White" BorderBrush="{x:Null}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Height="22">SHOWS</Button>
         </StackPanel>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Hand" Height="16">

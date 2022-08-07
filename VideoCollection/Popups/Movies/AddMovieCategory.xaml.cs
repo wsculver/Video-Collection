@@ -63,20 +63,8 @@ namespace VideoCollection.Popups.Movies
                     }
                     catch (Exception ex)
                     {
-                        if (GetWindow(this).Owner != null)
-                        {
-                            ShowOKMessageBox("Error: " + ex.Message);
-                        }
-                        else
-                        {
-                            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                            CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                            popup.scaleWindow(parentWindow);
-                            parentWindow.addChild(popup);
-                            popup.Owner = parentWindow;
-                            popup.ShowDialog();
-                            _callback();
-                        }
+                        Messages.Error(ex.Message, ref Splash);
+                        _callback();
                     }
                 }
                 lvMovieList.ItemsSource = movies;
@@ -98,25 +86,12 @@ namespace VideoCollection.Popups.Movies
             Close();
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtCategoryName.Text == "")
             {
-                ShowOKMessageBox("You need to enter a category name");
+                Messages.ShowOKMessageBox("You need to enter a category name", ref Splash);
             }
             else 
             { 
@@ -137,7 +112,7 @@ namespace VideoCollection.Popups.Movies
 
                     if (repeat)
                     {
-                        ShowOKMessageBox("A category with that name already exists");
+                        Messages.ShowOKMessageBox("A category with that name already exists", ref Splash);
                     }
                     else
                     {

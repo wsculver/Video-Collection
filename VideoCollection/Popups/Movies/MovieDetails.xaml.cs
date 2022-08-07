@@ -90,12 +90,7 @@ namespace VideoCollection.Popups.Movies
             }
             catch (Exception ex)
             {
-                MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                popup.scaleWindow(parentWindow);
-                parentWindow.addChild(popup);
-                popup.Owner = parentWindow;
-                popup.ShowDialog();
+                Messages.Error(ex.Message, ref Splash);
                 _callback();
             }
 

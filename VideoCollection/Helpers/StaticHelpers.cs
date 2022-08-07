@@ -164,13 +164,17 @@ namespace VideoCollection.Helpers
         }
 
         // Parse a movie bonus folder to format all videos in it
-        public static Movie ParseMovieVideos(string movieFolderPath, CancellationToken token)
+        public static Result<Movie> ParseMovieVideos(string movieFolderPath, CancellationToken token)
         {
             var videoFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
                 .Where(s => s.EndsWith(".m4v", StringComparison.OrdinalIgnoreCase)
                 || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
                 || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
                 || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
+            if (videoFiles.Count() == 0)
+            {
+                return Result.Fail<Movie>(movieFolderPath + " contains no video files. Skipping parsing for this folder.");
+            }
             var subtitleFiles = Directory.GetFiles(movieFolderPath, "*.*", SearchOption.AllDirectories)
                 .Where(s => s.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
 
@@ -197,7 +201,7 @@ namespace VideoCollection.Helpers
                 bonusSectionsSet[bonusVideo.Section] = 0;
                 bonusVideos.Add(bonusVideo);
             });
-            if (token.IsCancellationRequested) return new Movie();
+            if (token.IsCancellationRequested) return Result.Ok(new Movie());
 
             List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
             foreach(KeyValuePair<string, byte> entry in bonusSectionsSet)
@@ -254,14 +258,15 @@ namespace VideoCollection.Helpers
                 Subtitles = JsonConvert.SerializeObject(subtitles)
             };
 
-            return movie;
+            return Result.Ok(movie);
         }
 
         // Parse each movie folder in the root folder
-        public static ConcurrentDictionary<string, Movie> ParseBulkMovies(string rootMovieFolderPath, CancellationToken token)
+        public static Result<ConcurrentDictionary<string, Movie>> ParseBulkMovies(string rootMovieFolderPath, CancellationToken token)
         {
             var movieFolders = Directory.GetDirectories(rootMovieFolderPath);
 
+            int numFails = 0;
             ConcurrentDictionary<string, Movie> movies = new ConcurrentDictionary<string, Movie>();
             Parallel.ForEach(movieFolders, folder =>
             {
@@ -284,8 +289,13 @@ namespace VideoCollection.Helpers
 
                 if (!repeat)
                 {
-                    Movie movie = ParseMovieVideos(folder, token);
+                    var result = ParseMovieVideos(folder, token);
+                    if (result.IsFailure) {
+                        numFails++;
+                        return;
+                    }
                     if (token.IsCancellationRequested) return;
+                    Movie movie = result.Value;
 
                     Movie newMovie = new Movie()
                     {
@@ -306,7 +316,12 @@ namespace VideoCollection.Helpers
                 }
             });
 
-            return movies;
+            var errorMessage = numFails + " movie folders failed to parse. Make sure all folders are in the correct format.";
+            return numFails == 0 ? 
+                Result.Ok(movies) 
+                : movies.Count == 0 ? 
+                   Result.Fail<ConcurrentDictionary<string, Movie>>(errorMessage)
+                   : Result.Partial(movies, errorMessage);
         }
 
         // Parse show bonus video info
@@ -454,7 +469,7 @@ namespace VideoCollection.Helpers
         }
 
         // Parse a show folder to format all videos in it
-        public static Show ParseShowVideos(string showFolderPath, CancellationToken token)
+        public static Result<Show> ParseShowVideos(string showFolderPath, CancellationToken token)
         {
             string showThumbnailVideoFile = "";
 
@@ -464,6 +479,7 @@ namespace VideoCollection.Helpers
             List<List<ShowSection>> showSections = new List<List<ShowSection>>();
 
             var seasonFolders = Directory.GetDirectories(showFolderPath, "*.*", SearchOption.TopDirectoryOnly);
+            if (seasonFolders.Count() == 0) return Result.Fail<Show>(showFolderPath + " contains no season folders. Skipping parsing for this folder.");
             var showTitle = Path.GetFileName(showFolderPath);
             int numSeasons = seasonFolders.Count();
             for (int n = 0; n < numSeasons; n++)
@@ -472,6 +488,7 @@ namespace VideoCollection.Helpers
                 showVideos.Add(new List<ShowVideo>());
                 showSections.Add(new List<ShowSection>());
             }
+            int numFails = 0;
             Parallel.For(0, numSeasons, n =>
             {
                 if (token.IsCancellationRequested) return;
@@ -493,6 +510,11 @@ namespace VideoCollection.Helpers
                     || s.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
                     || s.EndsWith(".MOV", StringComparison.OrdinalIgnoreCase)
                     || s.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase));
+                if (episodeVideoFiles.Count() == 0)
+                {
+                    numFails++;
+                    return;
+                }
                 if (season == 1)
                 {
                     showThumbnailVideoFile = episodeVideoFiles.FirstOrDefault();
@@ -638,7 +660,8 @@ namespace VideoCollection.Helpers
                 // Sort the videos
                 showVideos[n] = videos.OrderByDescending(x => x.IsBonusVideo).ThenBy(x => x.EpisodeNumber).ToList();
             });
-            if (token.IsCancellationRequested) return new Show();
+            if (token.IsCancellationRequested) return Result.Ok(new Show());
+            if (numFails != 0) return Result.Fail<Show>(numFails + " season folders failed to parse. Make sure all folders are in the correct format.");
 
             // Separate loop to make sure the next season is done for next episodes
             Parallel.For(0, numSeasons, i =>
@@ -680,7 +703,7 @@ namespace VideoCollection.Helpers
                 seasons[i] = season;
                 if (token.IsCancellationRequested) return;
             });
-            if (token.IsCancellationRequested) return new Show();
+            if (token.IsCancellationRequested) return Result.Ok(new Show());
 
             // Get the thumbnail file if it exists, otherwise create one
            string thumbnailVisibility = "Collapsed";
@@ -711,14 +734,15 @@ namespace VideoCollection.Helpers
                 Categories = JsonConvert.SerializeObject(new List<string>())
             };
 
-            return show;
+            return Result.Ok(show);
         }
 
         // Parse each movie folder in the root folder
-        public static ConcurrentDictionary<string, Show> ParseBulkShows(string rootShowFolderPath, CancellationToken token)
+        public static Result<ConcurrentDictionary<string, Show>> ParseBulkShows(string rootShowFolderPath, CancellationToken token)
         {
             var showFolders = Directory.GetDirectories(rootShowFolderPath);
 
+            int numFails = 0;
             ConcurrentDictionary<string, Show> shows = new ConcurrentDictionary<string, Show>();
             Parallel.ForEach(showFolders, folder =>
             {
@@ -741,9 +765,14 @@ namespace VideoCollection.Helpers
 
                 if (!repeat)
                 {
-                    Show show = ParseShowVideos(folder, token);
+                    var result = ParseShowVideos(folder, token);
+                    if (result.IsFailure)
+                    {
+                        numFails++;
+                        return;
+                    }
                     if (token.IsCancellationRequested) return;
-
+                    Show show = result.Value;
                     Show newShow = new Show()
                     {
                         Title = show.Title,
@@ -760,7 +789,12 @@ namespace VideoCollection.Helpers
                 }
             });
 
-            return shows;
+            var errorMessage = numFails + " show folders failed to parse. Make sure all folders are in the correct format.";
+            return numFails == 0 ?
+                Result.Ok(shows)
+                : shows.Count == 0 ?
+                   Result.Fail<ConcurrentDictionary<string, Show>>(errorMessage)
+                   : Result.Partial(shows, errorMessage);
         }
 
         // Create a thumbnail from a provided video file at the frame seconds in

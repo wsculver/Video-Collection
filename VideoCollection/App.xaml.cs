@@ -46,6 +46,7 @@ namespace VideoCollection
 
             using (SQLiteConnection connection = new SQLiteConnection(databasePath))
             {
+                connection.CreateTable<Movie>();
                 List<Movie> movies = connection.Table<Movie>().ToList();
                 Parallel.ForEach(movies, movie =>
                 {
@@ -54,6 +55,7 @@ namespace VideoCollection
                     movieThumbnails[movie.Id] = thumbnail;
                 });
 
+                connection.CreateTable<Show>();
                 List<Show> shows = connection.Table<Show>().ToList();
                 Parallel.ForEach(shows, show =>
                 {

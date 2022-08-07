@@ -13,7 +13,7 @@
     <Resource Include="Windows Logo.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Views\license.txt" />
+    <Resource Include="license.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="4.4.0" />

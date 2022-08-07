@@ -92,20 +92,8 @@ namespace VideoCollection.Popups.Shows
                     }
                     catch (Exception ex)
                     {
-                        if (GetWindow(this).Owner != null)
-                        {
-                            ShowOKMessageBox("Error: " + ex.Message);
-                        }
-                        else
-                        {
-                            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                            CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message, CustomMessageBox.MessageBoxType.OK);
-                            popup.scaleWindow(parentWindow);
-                            parentWindow.addChild(popup);
-                            popup.Owner = parentWindow;
-                            popup.ShowDialog();
-                            _callback();
-                        }
+                        Messages.Error(ex.Message, ref Splash);
+                        _callback();
                     }
                 }
                 lvShowList.ItemsSource = shows;
@@ -257,19 +245,6 @@ namespace VideoCollection.Popups.Shows
                 || (show.Categories != JsonConvert.SerializeObject(_selectedCategories));
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save changes
         private bool ApplyUpdate()
         {
@@ -280,17 +255,17 @@ namespace VideoCollection.Popups.Shows
 
                 if (txtShowFolder.Text == "")
                 {
-                    ShowOKMessageBox("You need to select a show folder");
+                    Messages.ShowOKMessageBox("You need to select a show folder", ref Splash);
                     return false;
                 }
                 else if (txtShowName.Text == "")
                 {
-                    ShowOKMessageBox("You need to enter a show name");
+                    Messages.ShowOKMessageBox("You need to enter a show name", ref Splash);
                     return false;
                 }
                 else if (_thumbnailVisibility == "")
                 {
-                    ShowOKMessageBox("You need to select a thumbnail tile type");
+                    Messages.ShowOKMessageBox("You need to select a thumbnail tile type", ref Splash);
                     return false;
                 }
                 else
@@ -310,7 +285,7 @@ namespace VideoCollection.Popups.Shows
 
                         if (repeat)
                         {
-                            ShowOKMessageBox("A category with that name already exists");
+                            Messages.ShowOKMessageBox("A category with that name already exists", ref Splash);
                         }
                         else
                         {
@@ -405,17 +380,26 @@ namespace VideoCollection.Popups.Shows
                 var token = _tokenSource.Token;
                 Task.Run(() =>
                 {
-                    _show = StaticHelpers.ParseShowVideos(dlg.FileName, token);
+                    var result = StaticHelpers.ParseShowVideos(dlg.FileName, token);
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
-                       {
-                           txtShowName.Text = _show.Title;
-                           if (_show.Thumbnail != "")
-                           {
-                               imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
-                           }
-                           loadingControl.Visibility = Visibility.Collapsed;
-                       });
+                    {
+                        if (result.IsSuccess)
+                        {
+                            _show = result.Value;
+                            txtShowName.Text = _show.Title;
+                            if (_show.Thumbnail != "")
+                            {
+                                imgThumbnail.Source = StaticHelpers.Base64ToImageSource(_show.Thumbnail);
+                            }
+                        }
+                        else
+                        {
+                            txtShowFolder.Text = "";
+                            Messages.Error(result.Error, ref Splash);
+                        }
+                        loadingControl.Visibility = Visibility.Collapsed;
+                    });
                 }, token);
             }
         }

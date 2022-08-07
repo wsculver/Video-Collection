@@ -59,25 +59,12 @@ namespace VideoCollection.Popups.Shows
             Close();
         }
 
-        // Shows a custom OK message box
-        private void ShowOKMessageBox(string message)
-        {
-            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            CustomMessageBox popup = new CustomMessageBox(message, CustomMessageBox.MessageBoxType.OK);
-            popup.scaleWindow(parentWindow);
-            parentWindow.addChild(popup);
-            popup.Owner = parentWindow;
-            Splash.Visibility = Visibility.Visible;
-            popup.ShowDialog();
-            Splash.Visibility = Visibility.Collapsed;
-        }
-
         // Save entered info
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             if (txtRootShowFolder.Text == "")
             {
-                ShowOKMessageBox("You need to select a root show folder");
+                Messages.ShowOKMessageBox("You need to select a root show folder", ref Splash);
             }
             else
             {
@@ -116,10 +103,21 @@ namespace VideoCollection.Popups.Shows
                 var token = _tokenSource.Token;
                 Task.Run(() => 
                 {
-                    _shows = StaticHelpers.ParseBulkShows(dlg.FileName, token);
+                    var result = StaticHelpers.ParseBulkShows(dlg.FileName, token);
                     if (token.IsCancellationRequested) return;
                     Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, () =>
                     {
+                        if (result.IsFailure)
+                        {
+                            Messages.Error(result.Error, ref Splash, "Parse");
+                            if (!result.IsPartial)
+                            {
+                                txtRootShowFolder.Text = "";
+                                loadingControl.Visibility = Visibility.Collapsed;
+                                return;
+                            }
+                        }
+                        _shows = result.Value;
                         if (!_shows.IsEmpty)
                         {
                             List<ShowDeserialized> shows = new List<ShowDeserialized>();
@@ -134,21 +132,10 @@ namespace VideoCollection.Popups.Shows
                                 }
                                 catch (Exception ex)
                                 {
-                                    if (GetWindow(this).Owner != null)
-                                    {
-                                        ShowOKMessageBox("Error: " + ex.Message);
-                                    }
-                                    else
-                                    {
-                                        MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                                        CustomMessageBox popup = new CustomMessageBox("Error: " + ex.Message + ".", CustomMessageBox.MessageBoxType.OK);
-                                        popup.scaleWindow(parentWindow);
-                                        parentWindow.addChild(popup);
-                                        popup.Owner = parentWindow;
-                                        popup.ShowDialog();
-                                    }
+                                    Messages.Error(ex.Message, ref Splash);
                                 }
                             }
+                            shows.Sort();
                             lvShowList.ItemsSource = shows;
                             lvShowList.Visibility = Visibility.Visible;
                             CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvShowList.ItemsSource);
@@ -159,7 +146,8 @@ namespace VideoCollection.Popups.Shows
                         }
                         else
                         {
-                            ShowOKMessageBox("No new shows found in that folder.");
+                            txtRootShowFolder.Text = "";
+                            Messages.ShowOKMessageBox("No new shows found in that folder.", ref Splash);
                         }
                         loadingControl.Visibility = Visibility.Collapsed;
                     });
