@@ -410,9 +410,8 @@ namespace VideoCollection.Helpers
             // Link commentaries and deleted scenes if there are any
             List<ShowVideo> episodeCommentaries = null;
             List<ShowVideo> episodeDeletedScenes = null;
-            List<int> removeCommentariesIndecies = new List<int>();
             int commentariesLength = commentaries.Count;
-            for (int i = 0; i < commentariesLength; i++)
+            for (int i = commentariesLength - 1; i >= 0; i--)
             {
                 if (commentaries.ElementAt(i).Title.StartsWith(episodeTitle, true, null))
                 {
@@ -421,13 +420,13 @@ namespace VideoCollection.Helpers
                         episodeCommentaries = new List<ShowVideo>();
                     }
                     episodeCommentaries.Add(commentaries.ElementAt(i));
-                    removeCommentariesIndecies.Add(i);
+                    // Remove already linked commentaries to improve future loops for other episodes
+                    commentaries.RemoveAt(i);
                 }
             }
-            // Remove already linked commentaries to improve future loops for other episodes
-            foreach (int index in removeCommentariesIndecies)
+            if (episodeDeletedScenes != null)
             {
-                commentaries.RemoveAt(index);
+                episodeCommentaries.Sort();
             }
             List<int> removeDeletedScenesIndecies = new List<int>();
             int deletedScenesLength = deletedScenes.Count;
