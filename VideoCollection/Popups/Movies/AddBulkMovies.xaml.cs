@@ -140,9 +140,8 @@ namespace VideoCollection.Popups.Movies
                             lvMovieList.Visibility = Visibility.Visible;
                             CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource);
                             view.Filter = MovieFilter;
-                            txtFilter.IsReadOnly = false;
-                            txtFilter.Focusable = true;
-                            txtFilter.IsHitTestVisible = true;
+                            selectButtons.Visibility = Visibility.Visible;
+                            panelAddMovies.Visibility = Visibility.Visible;
                         }
                         else
                         {
@@ -209,6 +208,16 @@ namespace VideoCollection.Popups.Movies
             {
                 CollectionViewSource.GetDefaultView(lvMovieList.ItemsSource).Refresh();
             }
+        }
+
+        private void btnSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            lvMovieList.SelectAll();
+        }
+
+        private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            lvMovieList.UnselectAll();
         }
     }
 }

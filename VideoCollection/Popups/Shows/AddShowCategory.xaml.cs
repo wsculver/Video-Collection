@@ -209,5 +209,15 @@ namespace VideoCollection.Popups.Shows
                 CollectionViewSource.GetDefaultView(lvShowList.ItemsSource).Refresh();
             }
         }
+
+        private void btnSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            lvShowList.SelectAll();
+        }
+
+        private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            lvShowList.UnselectAll();
+        }
     }
 }

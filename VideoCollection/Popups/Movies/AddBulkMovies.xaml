@@ -28,18 +28,19 @@
 
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="25"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="1*"/>
+                <RowDefinition Height="32"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,0">
+            <StackPanel x:Name="panelAddMovies" Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,5" Visibility="Hidden">
                 <Label Foreground="White" VerticalAlignment="Center">Add Movies:</Label>
-                <TextBox Width="414" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
+                <TextBox x:Name="txtFilter" Width="414" FontSize="12" Foreground="White" VerticalAlignment="Center" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Single" Margin="0,0,0,4" Visibility="Hidden">
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Multiple" Margin="0,8,0,4" Visibility="Hidden">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Tag="{Binding Title}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" Width="480">
+                        <CheckBox Tag="{Binding Title}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="59" Height="33" Source="{Binding Thumbnail}"/>
                                 <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
@@ -49,10 +50,33 @@
                 </ListView.ItemTemplate>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
-                        <Setter Property="Focusable" Value="false"/>
+                        <Setter Property="IsSelected" Value="{Binding IsChecked}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border Background="{TemplateBinding Background}" BorderThickness="2">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="{StaticResource Primary500}" Opacity="0.3"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </ListView.ItemContainerStyle>
             </ListView>
+
+            <Grid x:Name="selectButtons" Grid.Row="2" Visibility="Hidden">
+                <Button x:Name="btnSelectAll" Background="{x:Null}" BorderBrush="{x:Null}" FontSize="12" HorizontalAlignment="Left" Click="btnSelectAll_Click">Select All</Button>
+                <Button x:Name="btnUnselectAll" Background="{x:Null}" BorderBrush="{x:Null}" FontSize="12" HorizontalAlignment="Right" Click="btnUnselectAll_Click">Unselect All</Button>
+            </Grid>
         </Grid>
 
         <StackPanel x:Name="buttons" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">

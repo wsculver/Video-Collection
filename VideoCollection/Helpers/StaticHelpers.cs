@@ -559,7 +559,7 @@ namespace VideoCollection.Helpers
                 List<ShowVideo> deletedScenes = new List<ShowVideo>();
 
                 // Bonus videos
-                List<string> bonusSectionsSet = new List<string>();
+                HashSet<string> bonusSectionsSet = new HashSet<string>();
                 int numBonusVideoFiles = 0;
                 if (bonusVideoFiles != null)
                 {

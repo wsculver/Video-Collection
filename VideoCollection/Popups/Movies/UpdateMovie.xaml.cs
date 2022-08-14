@@ -236,7 +236,25 @@ namespace VideoCollection.Popups.Movies
         // Always save changes on apply
         private void btnApply_Click(object sender, RoutedEventArgs e)
         {
-            ApplyUpdate();
+            if (ApplyUpdate())
+            {
+                int selectedMovieId = _selectedMovie.Id;
+                string filterValue = txtFilter.Text;
+                txtFilter.Text = "";
+
+                UpdateMovieList();
+                // Reselect the movie that is being edited
+                for (int i = 0; i < lvMovieList.Items.Count; i++)
+                {
+                    MovieDeserialized movie = (MovieDeserialized)lvMovieList.Items[i];
+                    if (movie.Id == selectedMovieId)
+                    {
+                        lvMovieList.SelectedIndex = i;
+                    }
+                }
+
+                txtFilter.Text = filterValue;
+            }
         }
 
         // Check if any movie content has changed from what was already saved
@@ -355,6 +373,8 @@ namespace VideoCollection.Popups.Movies
                                     {
                                         // Remove movie from categories in the MovieCategory table
                                         DatabaseFunctions.RemoveMovieFromCategory(_movie.Id, category);
+                                    } else {
+                                        DatabaseFunctions.AddMovieToCategory(_movie.Id, category);
                                     }
                                 }
 
@@ -362,28 +382,7 @@ namespace VideoCollection.Popups.Movies
                                 App.movieThumbnails[movie.Id] = imgThumbnail.Source;
                             }
                         }
-                    }
-
-                    if (!repeat)
-                    {
-                        string filterValue = txtFilter.Text;
-                        txtFilter.Text = "";
-
-                        UpdateMovieList();
-                        // Reselect the movie that is being edited
-                        Parallel.For(0, lvMovieList.Items.Count, i =>
-                        {
-                            MovieDeserialized movie = (MovieDeserialized)lvMovieList.Items[i];
-                            if (movie.Id == selectedMovieId)
-                            {
-                                lvMovieList.SelectedIndex = i;
-                            }
-                        });
-
-                        txtFilter.Text = filterValue;
-
-                        return true;
-                    }
+                    }                    
                 }
             }
 

@@ -230,7 +230,25 @@ namespace VideoCollection.Popups.Shows
         // Always save changes on apply
         private void btnApply_Click(object sender, RoutedEventArgs e)
         {
-            ApplyUpdate();
+            if (ApplyUpdate())
+            {
+                int selectedShowId = _selectedShow.Id;
+                string filterValue = txtFilter.Text;
+                txtFilter.Text = "";
+
+                UpdateShowList();
+                // Reselect the movie that is being edited
+                for (int i = 0; i < lvShowList.Items.Count; i++)
+                {
+                    ShowDeserialized movie = (ShowDeserialized)lvShowList.Items[i];
+                    if (movie.Id == selectedShowId)
+                    {
+                        lvShowList.SelectedIndex = i;
+                    }
+                }
+
+                txtFilter.Text = filterValue;
+            }
         }
 
         // Check if any movie content has changed from what was already saved
@@ -318,6 +336,8 @@ namespace VideoCollection.Popups.Shows
                                     {
                                         // Remove show from categories in the ShowCategory table
                                         DatabaseFunctions.RemoveShowFromCategory(_show.Id, category);
+                                    } else {
+                                        DatabaseFunctions.AddShowToCategory(_show.Id, category);
                                     }
                                 }
 
@@ -325,28 +345,6 @@ namespace VideoCollection.Popups.Shows
                                 App.showThumbnails[show.Id] = imgThumbnail.Source;
                             }
                         }
-                    }
-
-                    if (!repeat)
-                    {
-                        string filterValue = txtFilter.Text;
-                        txtFilter.Text = "";
-
-                        UpdateShowList();
-                        // Reselect the show that is being edited
-                        for (int i = 0; i < lvShowList.Items.Count; i++)
-                        {
-                            ShowDeserialized show = (ShowDeserialized)lvShowList.Items[i];
-                            if (show.Id == selectedShowId)
-                            {
-                                lvShowList.SelectedIndex = i;
-                                break;
-                            }
-                        }
-
-                        txtFilter.Text = filterValue;
-
-                        return true;
                     }
                 }
             }

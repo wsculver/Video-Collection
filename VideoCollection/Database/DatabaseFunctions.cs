@@ -39,9 +39,8 @@ namespace VideoCollection.Database
         {
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
-                List<int> movieIds = JsonConvert.DeserializeObject<List<int>>(category.MovieIds);
+                HashSet<int> movieIds = JsonConvert.DeserializeObject<HashSet<int>>(category.MovieIds);
                 movieIds.Add(movieId);
-                movieIds.Sort();
                 category.MovieIds = JsonConvert.SerializeObject(movieIds);
                 connection.Update(category);
             }
