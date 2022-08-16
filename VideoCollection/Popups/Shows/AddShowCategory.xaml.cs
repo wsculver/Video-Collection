@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using VideoCollection.CustomTypes;
+using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Shows;
 
@@ -17,7 +18,7 @@ namespace VideoCollection.Popups.Shows
     /// </summary>
     public partial class AddShowCategory : Window, ScaleableWindow
     {
-        private List<int> _selectedShowIds;
+        private SortedSet<int> _selectedShowIds;
         private Border _splash;
         private Action _callback;
 
@@ -36,7 +37,7 @@ namespace VideoCollection.Popups.Shows
 
             _splash = splash;
             _callback = callback;
-            _selectedShowIds = new List<int>();
+            _selectedShowIds = new SortedSet<int>();
 
             UpdateShowList();
 
@@ -53,7 +54,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Show>();
-                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().OrderBy(c => c.Title).ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
                 foreach (Show show in rawShows)
                 {
@@ -116,6 +117,11 @@ namespace VideoCollection.Popups.Shows
                     }
                     else
                     {
+                        if (DatabaseFunctions.ShowAllCategories.Contains(txtCategoryName.Text.ToUpper()))
+                        {
+                            lvShowList.SelectAll();
+                        }
+
                         connection.CreateTable<Show>();
                         foreach (int id in _selectedShowIds)
                         {
@@ -126,18 +132,15 @@ namespace VideoCollection.Popups.Shows
                             showCategories.Add(txtCategoryName.Text.ToUpper());
                             show.Categories = JsonConvert.SerializeObject(showCategories);
                             connection.Update(show);
-                        }
-
-                        _selectedShowIds.Sort();
+                        }                        
 
                         ShowCategory category = new ShowCategory()
                         {
+                            Position = categories.Count > 0 ? categories[0].Position + 1 : 1,
                             Name = txtCategoryName.Text.ToUpper(),
-                            ShowIds = JsonConvert.SerializeObject(_selectedShowIds),
-                            IsChecked = false
+                            ShowIds = JsonConvert.SerializeObject(_selectedShowIds)
                         };
 
-                        connection.Query<ShowCategory>("CREATE TRIGGER IF NOT EXISTS updatePosition AFTER INSERT ON ShowCategory BEGIN UPDATE ShowCategory SET Position = new.Id WHERE Id = new.Id; END; ");
                         connection.Insert(category);
                     }
                 }
@@ -151,19 +154,6 @@ namespace VideoCollection.Popups.Shows
                     Close();
                 }
             }
-        }
-
-
-        // Select a show
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowIds.Add((int)(sender as CheckBox).Tag);
-        }
-
-        // Unselect a show
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowIds.Remove((int)(sender as CheckBox).Tag);
         }
 
         // Scale based on the size of the window
@@ -218,6 +208,15 @@ namespace VideoCollection.Popups.Shows
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvShowList.UnselectAll();
+        }
+
+        private void lvShowList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedShowIds.Clear();
+            foreach (ShowDeserialized show in lvShowList.SelectedItems)
+            {
+                _selectedShowIds.Add(show.Id);
+            }
         }
     }
 }

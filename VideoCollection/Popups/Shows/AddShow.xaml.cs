@@ -24,7 +24,6 @@ namespace VideoCollection.Popups.Shows
     /// </summary>
     public partial class AddShow : Window, ScaleableWindow
     {
-        private List<ShowCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
         private Show _show;
         private string _rating = "";
@@ -60,13 +59,13 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
-                _categories = new List<ShowCategoryDeserialized>();
+                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().OrderBy(c => c.Name).ToList();
+                SortedSet<ShowCategoryDeserialized> categories = new SortedSet<ShowCategoryDeserialized>();
                 foreach (ShowCategory category in rawCategories)
                 {
-                    _categories.Add(new ShowCategoryDeserialized(category));
+                    categories.Add(new ShowCategoryDeserialized(category));
                 }
-                icCategories.ItemsSource = _categories;
+                icCategories.ItemsSource = categories;
             }
         }
 
@@ -168,14 +167,15 @@ namespace VideoCollection.Popups.Shows
                         connection.Insert(show);
 
                         connection.CreateTable<ShowCategory>();
-                        List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
+                        List<ShowCategory> categories = connection.Table<ShowCategory>().OrderBy(c => c.Name).ToList();
                         foreach (ShowCategory category in categories)
                         {
                             if (_selectedCategories.Contains(category.Name))
                             {
-                                DatabaseFunctions.AddShowToCategory(show.Id, category);
+                                DatabaseFunctions.AddShowToCategory(show.Id, category, connection);
                             }
                         }
+                        DatabaseFunctions.AddShowToAllCategory(show.Id, connection);
 
                         imgThumbnail.Source.Freeze();
                         App.showThumbnails[show.Id] = imgThumbnail.Source;

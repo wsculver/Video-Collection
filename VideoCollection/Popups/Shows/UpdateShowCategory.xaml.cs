@@ -17,7 +17,7 @@ namespace VideoCollection.Popups.Shows
     /// </summary>
     public partial class UpdateShowCategory : Window, ScaleableWindow
     {
-        private List<int> _selectedShowIds;
+        private SortedSet<int> _selectedShowIds;
         private string _originalCategoryName;
         private Border _splash;
         private Action _callback;
@@ -35,7 +35,7 @@ namespace VideoCollection.Popups.Shows
 
             Closed += (a, b) => { Owner.Activate(); };
 
-            _selectedShowIds = new List<int>();
+            _selectedShowIds = new SortedSet<int>();
 
             Tag = id;
             _splash = splash;
@@ -134,7 +134,10 @@ namespace VideoCollection.Popups.Shows
                     else
                     {
                         ShowCategory result = connection.Get<ShowCategory>((int)Tag);
-                        _selectedShowIds.Sort();
+                        if (DatabaseFunctions.ShowAllCategories.Contains(txtCategoryName.Text.ToUpper()))
+                        {
+                            lvShowList.SelectAll();
+                        }
                         DatabaseFunctions.UpdateCategoryInShows(result.Name, txtCategoryName.Text.ToUpper(), _selectedShowIds);
                         result.Name = txtCategoryName.Text.ToUpper();
                         result.ShowIds = JsonConvert.SerializeObject(_selectedShowIds);
@@ -151,18 +154,6 @@ namespace VideoCollection.Popups.Shows
                     Close();
                 }
             }
-        }
-
-        // Add show to selected
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowIds.Add((int)(sender as CheckBox).Tag);
-        }
-
-        // Remove show from selected
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowIds.Remove((int)(sender as CheckBox).Tag);
         }
 
         // Scale based on the size of the window
@@ -217,6 +208,15 @@ namespace VideoCollection.Popups.Shows
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvShowList.UnselectAll();
+        }
+
+        private void lvShowList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedShowIds.Clear();
+            foreach (ShowDeserialized show in lvShowList.SelectedItems)
+            {
+                _selectedShowIds.Add(show.Id);
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Data;
+using VideoCollection.Database;
 
 namespace VideoCollection.Popups.Shows
 {
@@ -22,7 +23,7 @@ namespace VideoCollection.Popups.Shows
     public partial class AddBulkShows : Window, ScaleableWindow
     {
         private ConcurrentDictionary<string, Show> _shows;
-        private List<string> _selectedShowTitles;
+        private HashSet<string> _selectedShowTitles;
         private Border _splash;
         private CancellationTokenSource _tokenSource;
 
@@ -41,7 +42,7 @@ namespace VideoCollection.Popups.Shows
 
             _splash = splash;
             _shows = new ConcurrentDictionary<string, Show>();
-            _selectedShowTitles = new List<string>();
+            _selectedShowTitles = new HashSet<string>();
             _tokenSource = new CancellationTokenSource();
 
             WidthScale = 0.43;
@@ -77,6 +78,7 @@ namespace VideoCollection.Popups.Shows
                         if (_selectedShowTitles.Contains(entry.Key))
                         {
                             connection.Insert(entry.Value);
+                            DatabaseFunctions.AddShowToAllCategory(entry.Value.Id, connection);
                             ImageSource thumbnail = StaticHelpers.Base64ToImageSource(entry.Value.Thumbnail);
                             thumbnail.Freeze();
                             App.showThumbnails[entry.Value.Id] = thumbnail;
@@ -154,18 +156,6 @@ namespace VideoCollection.Popups.Shows
             }
         }
 
-        // Select a show
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowTitles.Add((sender as CheckBox).Tag.ToString()); 
-        }
-
-        // Unselect a show
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _selectedShowTitles.Remove((sender as CheckBox).Tag.ToString());
-        }
-
         // Scale based on the size of the window
         #region ScaleValue Depdency Property
         public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<AddBulkShows>();
@@ -218,6 +208,15 @@ namespace VideoCollection.Popups.Shows
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvShowList.UnselectAll();
+        }
+
+        private void lvShowList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedShowTitles.Clear();
+            foreach (ShowDeserialized show in lvShowList.SelectedItems)
+            {
+                _selectedShowTitles.Add(show.Title);
+            }
         }
     }
 }

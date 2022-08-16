@@ -23,7 +23,6 @@ namespace VideoCollection.Popups.Movies
     /// </summary>
     public partial class AddMovie : Window, ScaleableWindow
     {
-        private List<MovieCategoryDeserialized> _categories;
         private List<string> _selectedCategories;
         private Movie _movie;
         private string _rating = "";
@@ -59,13 +58,13 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
-                _categories = new List<MovieCategoryDeserialized>();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().OrderBy(c => c.Name).ToList();
+                SortedSet<MovieCategoryDeserialized> categories = new SortedSet<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
-                    _categories.Add(new MovieCategoryDeserialized(category));
+                    categories.Add(new MovieCategoryDeserialized(category));
                 }
-                icCategories.ItemsSource = _categories;
+                icCategories.ItemsSource = categories;
             }
         }
 
@@ -164,14 +163,15 @@ namespace VideoCollection.Popups.Movies
                         connection.Insert(movie);
 
                         connection.CreateTable<MovieCategory>();
-                        List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
+                        List<MovieCategory> categories = connection.Table<MovieCategory>().OrderBy(c => c.Name).ToList();
                         foreach (MovieCategory category in categories)
                         {
                             if (_selectedCategories.Contains(category.Name))
                             {
-                                DatabaseFunctions.AddMovieToCategory(movie.Id, category);
+                                DatabaseFunctions.AddMovieToCategory(movie.Id, category, connection);
                             }
                         }
+                        DatabaseFunctions.AddMovieToAllCategory(movie.Id, connection);
 
                         imgThumbnail.Source.Freeze();
                         App.movieThumbnails[movie.Id] = imgThumbnail.Source;

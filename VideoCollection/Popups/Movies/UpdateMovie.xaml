@@ -134,7 +134,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
+                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsEnabled}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

@@ -40,7 +40,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Position).ToList();
+                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().OrderBy(c => c.Position).ToList();
                 _categories = new List<ShowCategoryDeserialized>();
                 foreach (ShowCategory category in rawCategories)
                 {
@@ -66,6 +66,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup add show window
@@ -81,6 +82,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup add bulk movies window
@@ -93,6 +95,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the category from the database and from all show category lists
@@ -121,6 +124,19 @@ namespace VideoCollection.Views
                         show.Categories = JsonConvert.SerializeObject(categories);
                         connection.Update(show);
                     }
+
+                    int categoryPosition = category.Position;
+                    List<ShowCategory> showCategories = connection.Table<ShowCategory>().OrderByDescending(c => c.Position).ToList();
+                    foreach (ShowCategory cat in showCategories)
+                    {
+                        if (cat.Position == categoryPosition)
+                        {
+                            break;
+                        }
+                        cat.Position -= 1;
+                        connection.Update(cat);
+                    }
+
                     connection.Delete<ShowCategory>(categoryId);
                     deleted = true;
                 }
@@ -146,6 +162,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the show from the category list and the category from the list for the show
@@ -184,6 +201,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Shift a category up by one
@@ -193,7 +211,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Position).ToList();
+                List<ShowCategory> categories = connection.Table<ShowCategory>().OrderBy(c => c.Position).ToList();
 
                 ShowCategory previousCategory = categories[0];
                 foreach (ShowCategory category in categories)
@@ -223,7 +241,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderByDescending(c => c.Position).ToList();
+                List<ShowCategory> categories = connection.Table<ShowCategory>().OrderByDescending(c => c.Position).ToList();
 
                 ShowCategory previousCategory = categories[0];
                 foreach (ShowCategory category in categories)
@@ -310,6 +328,7 @@ namespace VideoCollection.Views
                 parentWindow.addChild(popup);
                 parentWindow.Splash.Visibility = Visibility.Visible;
                 popup.Show();
+                popup.Activate();
             }
         }
 
@@ -440,6 +459,7 @@ namespace VideoCollection.Views
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {
@@ -478,6 +498,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Delete the show from the database
@@ -521,6 +542,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup a window showing all shows in the cateogry
@@ -536,6 +558,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
     }
 }

@@ -47,7 +47,7 @@
                                             <materialDesign:PackIcon Kind="DotsVertical" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" Width="12" Height="36"/>
                                         </materialDesign:PopupBox.ToggleContent>
                                         <StackPanel Background="{StaticResource PopupStackPanelBackgroundColor}">
-                                            <Button x:Name="btnUpdateCategory" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdateCategory_Click" Tag="{Binding Id}" Cursor="Hand">
+                                            <Button x:Name="btnUpdateCategory" IsEnabled="{Binding IsEnabled}" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdateCategory_Click" Tag="{Binding Id}" Cursor="Hand">
                                                 <TextBlock Text="EDIT" Style="{StaticResource SettingsTextBlockStyle}"/>
                                             </Button>
                                             <Button x:Name="btnDeleteCategory" Width="{StaticResource CategorySettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDeleteCategory_Click" Tag="{Binding Id}" Cursor="Hand">
@@ -113,7 +113,7 @@
                                                             <Button x:Name="btnUpdate" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnUpdate_Click" Tag="{Binding Id}" Cursor="Hand">
                                                                 <TextBlock Text="UPDATE" Style="{StaticResource SettingsTextBlockStyle}"/>
                                                             </Button>
-                                                            <Button x:Name="btnRemoveShowFromCategory" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnRemoveShowFromCategory_Click" Tag="{Binding Text, ElementName=hiddenText}" Cursor="Hand">
+                                                            <Button x:Name="btnRemoveShowFromCategory" IsEnabled="{Binding RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}, Path=DataContext.IsEnabled}" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnRemoveShowFromCategory_Click" Tag="{Binding Text, ElementName=hiddenText}" Cursor="Hand">
                                                                 <TextBlock Text="REMOVE FROM CATEGORY" Style="{StaticResource SettingsTextBlockStyle}"/>
                                                             </Button>
                                                             <Button x:Name="btnDeleteShow" Width="{StaticResource ShowSettingsWidth}" Height="{StaticResource SettingsButtonHeight}" Click="btnDeleteShow_Click" Tag="{Binding Id}" Cursor="Hand">

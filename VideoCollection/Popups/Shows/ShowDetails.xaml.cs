@@ -167,6 +167,7 @@ namespace VideoCollection.Popups.Shows
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {
@@ -218,6 +219,7 @@ namespace VideoCollection.Popups.Shows
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {

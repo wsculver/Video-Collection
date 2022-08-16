@@ -94,6 +94,7 @@ namespace VideoCollection.Popups.Movies
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 popup.Show();
+                popup.Activate();
             }
         }
 
@@ -133,6 +134,7 @@ namespace VideoCollection.Popups.Movies
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {
@@ -165,6 +167,7 @@ namespace VideoCollection.Popups.Movies
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Delete the movie from the database
@@ -210,6 +213,7 @@ namespace VideoCollection.Popups.Movies
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the movie from the category list and the category from the list for the movie
@@ -261,6 +265,7 @@ namespace VideoCollection.Popups.Movies
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the category from the database and from all movie category lists

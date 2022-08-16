@@ -66,8 +66,8 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<ShowCategory>();
-                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
-                List<ShowCategoryDeserialized> categories = new List<ShowCategoryDeserialized>();
+                List<ShowCategory> rawCategories = connection.Table<ShowCategory>().OrderBy(c => c.Name).ToList();
+                SortedSet<ShowCategoryDeserialized> categories = new SortedSet<ShowCategoryDeserialized>();
                 foreach (ShowCategory category in rawCategories)
                 {
                     categories.Add(new ShowCategoryDeserialized(category));
@@ -82,7 +82,7 @@ namespace VideoCollection.Popups.Shows
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Show>();
-                List<Show> rawShows = connection.Table<Show>().ToList().OrderBy(c => c.Title).ToList();
+                List<Show> rawShows = connection.Table<Show>().OrderBy(c => c.Title).ToList();
                 List<ShowDeserialized> shows = new List<ShowDeserialized>();
                 foreach (Show show in rawShows)
                 {
@@ -329,7 +329,7 @@ namespace VideoCollection.Popups.Shows
 
                                 // Update the ShowCateogry table
                                 connection.CreateTable<ShowCategory>();
-                                List<ShowCategory> categories = connection.Table<ShowCategory>().ToList().OrderBy(c => c.Name).ToList();
+                                List<ShowCategory> categories = connection.Table<ShowCategory>().OrderBy(c => c.Name).ToList();
                                 foreach (ShowCategory category in categories)
                                 {
                                     if (!_selectedCategories.Contains(category.Name))
@@ -337,7 +337,7 @@ namespace VideoCollection.Popups.Shows
                                         // Remove show from categories in the ShowCategory table
                                         DatabaseFunctions.RemoveShowFromCategory(_show.Id, category);
                                     } else {
-                                        DatabaseFunctions.AddShowToCategory(_show.Id, category);
+                                        DatabaseFunctions.AddShowToCategory(_show.Id, category, connection);
                                     }
                                 }
 

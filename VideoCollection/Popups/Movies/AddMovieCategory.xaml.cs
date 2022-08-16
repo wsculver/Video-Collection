@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using VideoCollection.CustomTypes;
+using VideoCollection.Database;
 using VideoCollection.Helpers;
 using VideoCollection.Movies;
 
@@ -17,7 +18,7 @@ namespace VideoCollection.Popups.Movies
     /// </summary>
     public partial class AddMovieCategory : Window, ScaleableWindow
     {
-        private List<int> _selectedMovieIds;
+        private SortedSet<int> _selectedMovieIds;
         private Border _splash;
         private Action _callback;
 
@@ -36,7 +37,7 @@ namespace VideoCollection.Popups.Movies
 
             _splash = splash;
             _callback = callback;
-            _selectedMovieIds = new List<int>();
+            _selectedMovieIds = new SortedSet<int>();
 
             UpdateMovieList();
 
@@ -53,7 +54,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
@@ -100,7 +101,7 @@ namespace VideoCollection.Popups.Movies
                 using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
                 {
                     connection.CreateTable<MovieCategory>();
-                    List<MovieCategory> categories = connection.Table<MovieCategory>().ToList();
+                    List<MovieCategory> categories = connection.Table<MovieCategory>().OrderByDescending(c => c.Position).ToList();
                     foreach (MovieCategory movieCategory in categories)
                     {
                         if (movieCategory.Name == txtCategoryName.Text.ToUpper())
@@ -116,6 +117,11 @@ namespace VideoCollection.Popups.Movies
                     }
                     else
                     {
+                        if (DatabaseFunctions.MovieAllCategories.Contains(txtCategoryName.Text.ToUpper()))
+                        {
+                            lvMovieList.SelectAll();
+                        }
+
                         connection.CreateTable<Movie>();
                         foreach (int id in _selectedMovieIds)
                         {
@@ -128,16 +134,13 @@ namespace VideoCollection.Popups.Movies
                             connection.Update(movie);
                         }
 
-                        _selectedMovieIds.Sort();
-
                         MovieCategory category = new MovieCategory()
                         {
+                            Position = categories.Count > 0 ? categories[0].Position + 1 : 1,
                             Name = txtCategoryName.Text.ToUpper(),
-                            MovieIds = JsonConvert.SerializeObject(_selectedMovieIds),
-                            IsChecked = false
+                            MovieIds = JsonConvert.SerializeObject(_selectedMovieIds)
                         };
 
-                        connection.Query<MovieCategory>("CREATE TRIGGER IF NOT EXISTS updatePosition AFTER INSERT ON MovieCategory BEGIN UPDATE MovieCategory SET Position = new.Id WHERE Id = new.Id; END; ");
                         connection.Insert(category);
                     }
                 }
@@ -218,6 +221,15 @@ namespace VideoCollection.Popups.Movies
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvMovieList.UnselectAll();
+        }
+
+        private void lvMovieList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedMovieIds.Clear();
+            foreach (MovieDeserialized movie in lvMovieList.SelectedItems)
+            {
+                _selectedMovieIds.Add(movie.Id);
+            }
         }
     }
 }

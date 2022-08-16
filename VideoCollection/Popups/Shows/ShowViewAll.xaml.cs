@@ -94,6 +94,7 @@ namespace VideoCollection.Popups.Shows
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 popup.Show();
+                popup.Activate();
             }
         }
 
@@ -133,6 +134,7 @@ namespace VideoCollection.Popups.Shows
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {
@@ -165,6 +167,7 @@ namespace VideoCollection.Popups.Shows
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Delete the show from the database
@@ -210,6 +213,7 @@ namespace VideoCollection.Popups.Shows
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the show from the category list and the category from the list for the show
@@ -261,6 +265,7 @@ namespace VideoCollection.Popups.Shows
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the category from the database and from all show category lists

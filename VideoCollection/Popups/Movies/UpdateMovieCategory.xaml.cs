@@ -17,7 +17,7 @@ namespace VideoCollection.Popups.Movies
     /// </summary>
     public partial class UpdateMovieCategory : Window, ScaleableWindow
     {
-        private List<int> _selectedMovieIds;
+        private SortedSet<int> _selectedMovieIds;
         private string _originalCategoryName;
         private Border _splash;
         private Action _callback;
@@ -35,7 +35,7 @@ namespace VideoCollection.Popups.Movies
 
             Closed += (a, b) => { Owner.Activate(); };
 
-            _selectedMovieIds = new List<int>();
+            _selectedMovieIds = new SortedSet<int>();
 
             Tag = id;
             _splash = splash;
@@ -134,7 +134,10 @@ namespace VideoCollection.Popups.Movies
                     else
                     {
                         MovieCategory result = connection.Get<MovieCategory>((int)Tag);
-                        _selectedMovieIds.Sort();
+                        if (DatabaseFunctions.MovieAllCategories.Contains(txtCategoryName.Text.ToUpper()))
+                        {
+                            lvMovieList.SelectAll();
+                        }
                         DatabaseFunctions.UpdateCategoryInMovies(result.Name, txtCategoryName.Text.ToUpper(), _selectedMovieIds);
                         result.Name = txtCategoryName.Text.ToUpper();
                         result.MovieIds = JsonConvert.SerializeObject(_selectedMovieIds);
@@ -151,18 +154,6 @@ namespace VideoCollection.Popups.Movies
                     Close();
                 }
             }
-        }
-
-        // Add movie to selected
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _selectedMovieIds.Add((int)(sender as CheckBox).Tag);
-        }
-
-        // Remove movie from selected
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _selectedMovieIds.Remove((int)(sender as CheckBox).Tag);
         }
 
         // Scale based on the size of the window
@@ -217,6 +208,15 @@ namespace VideoCollection.Popups.Movies
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvMovieList.UnselectAll();
+        }
+
+        private void lvMovieList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedMovieIds.Clear();
+            foreach (MovieDeserialized show in lvMovieList.SelectedItems)
+            {
+                _selectedMovieIds.Add(show.Id);
+            }
         }
     }
 }

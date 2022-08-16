@@ -8,9 +8,7 @@ namespace VideoCollection.Movies
         public int Id { get; set; }
         public int Position { get; set; }
         public string Name { get; set; }
-        // JSON encoded List<int>
+        // JSON encoded SortedSet<int>
         public string MovieIds { get; set; }
-        // Used for updating movies
-        public bool IsChecked { get; set; }
     }
 }

@@ -40,7 +40,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Position).ToList();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().OrderBy(c => c.Position).ToList();
                 _categories = new List<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
@@ -66,6 +66,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup add movie window
@@ -81,6 +82,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup add bulk movies window
@@ -93,6 +95,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the category from the database and from all movie category lists
@@ -121,6 +124,19 @@ namespace VideoCollection.Views
                         movie.Categories = JsonConvert.SerializeObject(categories);
                         connection.Update(movie);
                     }
+
+                    int categoryPosition = category.Position;
+                    List<MovieCategory> movieCategories = connection.Table<MovieCategory>().OrderByDescending(c => c.Position).ToList();
+                    foreach (MovieCategory cat in movieCategories)
+                    {
+                        if (cat.Position == categoryPosition)
+                        {
+                            break;
+                        }
+                        cat.Position -= 1;
+                        connection.Update(cat);
+                    }
+
                     connection.Delete<MovieCategory>(categoryId);
                     deleted = true;
                 }
@@ -146,6 +162,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Remove the movie from the category list and the category from the list for the movie
@@ -184,6 +201,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Shift a category up by one
@@ -193,7 +211,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Position).ToList();
+                List<MovieCategory> categories = connection.Table<MovieCategory>().OrderBy(c => c.Position).ToList();
 
                 MovieCategory previousCategory = categories[0];
                 foreach(MovieCategory category in categories)
@@ -223,7 +241,7 @@ namespace VideoCollection.Views
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderByDescending(c => c.Position).ToList();
+                List<MovieCategory> categories = connection.Table<MovieCategory>().OrderByDescending(c => c.Position).ToList();
 
                 MovieCategory previousCategory = categories[0];
                 foreach (MovieCategory category in categories)
@@ -310,6 +328,7 @@ namespace VideoCollection.Views
                 parentWindow.addChild(popup);
                 parentWindow.Splash.Visibility = Visibility.Visible;
                 popup.Show();
+                popup.Activate();
             }
         }
 
@@ -440,6 +459,7 @@ namespace VideoCollection.Views
                         popup.Left = popup.LeftMultiplier = parentWindow.Left;
                         popup.Top = popup.TopMultiplier = parentWindow.Top;
                         popup.Show();
+                        popup.Activate();
                     }
                     catch (Exception ex)
                     {
@@ -478,6 +498,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Delete the movie from the database
@@ -521,6 +542,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
 
         // Popup a window showing all movies in the cateogry
@@ -536,6 +558,7 @@ namespace VideoCollection.Views
             popup.Owner = parentWindow;
             parentWindow.Splash.Visibility = Visibility.Visible;
             popup.Show();
+            popup.Activate();
         }
     }
 }

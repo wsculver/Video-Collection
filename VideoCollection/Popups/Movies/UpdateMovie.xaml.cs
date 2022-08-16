@@ -72,8 +72,8 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<MovieCategory>();
-                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
-                List<MovieCategoryDeserialized> categories = new List<MovieCategoryDeserialized>();
+                List<MovieCategory> rawCategories = connection.Table<MovieCategory>().OrderBy(c => c.Name).ToList();
+                SortedSet<MovieCategoryDeserialized> categories = new SortedSet<MovieCategoryDeserialized>();
                 foreach (MovieCategory category in rawCategories)
                 {
                     categories.Add(new MovieCategoryDeserialized(category));
@@ -88,7 +88,7 @@ namespace VideoCollection.Popups.Movies
             using (SQLiteConnection connection = new SQLiteConnection(App.databasePath))
             {
                 connection.CreateTable<Movie>();
-                List<Movie> rawMovies = connection.Table<Movie>().ToList().OrderBy(c => c.Title).ToList();
+                List<Movie> rawMovies = connection.Table<Movie>().OrderBy(c => c.Title).ToList();
                 List<MovieDeserialized> movies = new List<MovieDeserialized>();
                 foreach (Movie movie in rawMovies)
                 {
@@ -366,7 +366,7 @@ namespace VideoCollection.Popups.Movies
 
                                 // Update the MovieCateogry table
                                 connection.CreateTable<MovieCategory>();
-                                List<MovieCategory> categories = connection.Table<MovieCategory>().ToList().OrderBy(c => c.Name).ToList();
+                                List<MovieCategory> categories = connection.Table<MovieCategory>().OrderBy(c => c.Name).ToList();
                                 foreach (MovieCategory category in categories)
                                 {
                                     if (!_selectedCategories.Contains(category.Name))
@@ -374,7 +374,7 @@ namespace VideoCollection.Popups.Movies
                                         // Remove movie from categories in the MovieCategory table
                                         DatabaseFunctions.RemoveMovieFromCategory(_movie.Id, category);
                                     } else {
-                                        DatabaseFunctions.AddMovieToCategory(_movie.Id, category);
+                                        DatabaseFunctions.AddMovieToCategory(_movie.Id, category, connection);
                                     }
                                 }
 

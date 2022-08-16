@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Windows.Data;
 using System.Windows.Media;
+using VideoCollection.Database;
 
 namespace VideoCollection.Popups.Movies
 {
@@ -22,7 +23,7 @@ namespace VideoCollection.Popups.Movies
     public partial class AddBulkMovies : Window, ScaleableWindow
     {
         private ConcurrentDictionary<string, Movie> _movies;
-        private List<string> _selectedMovieTitles;
+        private HashSet<string> _selectedMovieTitles;
         private Border _splash;
         private CancellationTokenSource _tokenSource;
 
@@ -41,7 +42,7 @@ namespace VideoCollection.Popups.Movies
 
             _splash = splash;
             _movies = new ConcurrentDictionary<string, Movie>();
-            _selectedMovieTitles = new List<string>();
+            _selectedMovieTitles = new HashSet<string>();
             _tokenSource = new CancellationTokenSource();
 
             WidthScale = 0.43;
@@ -77,6 +78,7 @@ namespace VideoCollection.Popups.Movies
                         if (_selectedMovieTitles.Contains(entry.Key))
                         {
                             connection.Insert(entry.Value);
+                            DatabaseFunctions.AddMovieToAllCategory(entry.Value.Id, connection);
                             ImageSource thumbnail = StaticHelpers.Base64ToImageSource(entry.Value.Thumbnail);
                             thumbnail.Freeze();
                             App.movieThumbnails[entry.Value.Id] = thumbnail;
@@ -154,18 +156,6 @@ namespace VideoCollection.Popups.Movies
             }
         }
 
-        // Select a movie
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _selectedMovieTitles.Add((sender as CheckBox).Tag.ToString()); 
-        }
-
-        // Unselect a movie
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _selectedMovieTitles.Remove((sender as CheckBox).Tag.ToString());
-        }
-
         // Scale based on the size of the window
         #region ScaleValue Depdency Property
         public static readonly DependencyProperty ScaleValueProperty = ScaleValueHelper.SetScaleValueProperty<AddBulkMovies>();
@@ -218,6 +208,15 @@ namespace VideoCollection.Popups.Movies
         private void btnUnselectAll_Click(object sender, RoutedEventArgs e)
         {
             lvMovieList.UnselectAll();
+        }
+
+        private void lvMovieList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _selectedMovieTitles.Clear();
+            foreach (MovieDeserialized movie in lvMovieList.SelectedItems)
+            {
+                _selectedMovieTitles.Add(movie.Title);
+            }
         }
     }
 }

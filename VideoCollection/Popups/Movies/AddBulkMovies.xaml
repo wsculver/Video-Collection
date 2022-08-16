@@ -37,13 +37,13 @@
                 <Label Foreground="White" VerticalAlignment="Center">Add Movies:</Label>
                 <TextBox x:Name="txtFilter" Width="414" FontSize="12" Foreground="White" VerticalAlignment="Center" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Multiple" Margin="0,8,0,4" Visibility="Hidden">
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Multiple" Margin="0,8,0,4" Visibility="Hidden" SelectionChanged="lvMovieList_SelectionChanged">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Tag="{Binding Title}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked">
+                        <CheckBox IsChecked="{Binding IsChecked}">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="59" Height="33" Source="{Binding Thumbnail}"/>
-                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                <TextBlock Text="{Binding Title}" Width="395" TextWrapping="WrapWithOverflow" VerticalAlignment="Center" Margin="10,0,0,0"/>
                             </StackPanel>
                         </CheckBox>
                     </DataTemplate>

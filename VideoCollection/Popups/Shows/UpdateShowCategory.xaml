@@ -37,13 +37,13 @@
                 <Label Foreground="White" VerticalAlignment="Center">Shows:</Label>
                 <TextBox Width="316" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
-            <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Multiple" Margin="0,8,0,4">
+            <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Multiple" Margin="0,8,0,4" SelectionChanged="lvShowList_SelectionChanged">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Tag="{Binding Id}" IsChecked="{Binding IsChecked}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked">
+                        <CheckBox IsChecked="{Binding IsChecked}">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="59" Height="33" Source="{Binding Thumbnail}"/>
-                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                <TextBlock Text="{Binding Title}" Width="280" TextWrapping="WrapWithOverflow" VerticalAlignment="Center" Margin="10,0,0,0"/>
                             </StackPanel>
                         </CheckBox>
                     </DataTemplate>

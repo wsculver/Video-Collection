@@ -65,9 +65,9 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid x:Name="movieTile" Width="152" Height="85" Margin="1,2,1,2" Cursor="Hand" Background="Black" MouseDown="movieTile_MouseDown" MouseEnter="movieTile_MouseEnter" MouseLeave="movieTile_MouseLeave" Tag="{Binding Id}">
-                            <TextBlock x:Name="movieTitle" Text="{Binding Title}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                            <TextBlock x:Name="movieTitle" Text="{Binding Title}" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
                             <Image x:Name="imageThumbnail" Source="{Binding Thumbnail}" Visibility="{Binding ThumbnailVisibility}"/>
-                            <Border x:Name="movieSplash" Background="Black" Opacity="0.25" Width="152" Height="85" IsHitTestVisible="False" Visibility="Collapsed"/>
+                            <Border x:Name="movieSplash" Background="Black" Opacity="0.25" IsHitTestVisible="False" Visibility="Collapsed"/>
                             <Rectangle Width="16" Height="16" Fill="{StaticResource BackgroundBrush}" IsHitTestVisible="False" Visibility="Collapsed"/>
                             <Border x:Name="iconPlayMovie" IsHitTestVisible="False" Visibility="Collapsed">
                                 <materialDesign:PackIcon Kind="Information" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="32" Height="32"/>
