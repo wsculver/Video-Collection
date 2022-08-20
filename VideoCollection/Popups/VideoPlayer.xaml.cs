@@ -515,11 +515,11 @@ namespace VideoCollection.Popups
             if (_expanded)
             {
                 _expanded = false;
-                // Shift overlay to look good with widescreen videos
                 if (WindowState == WindowState.Maximized && parentWindow.WindowState == WindowState.Normal)
                 {
-                    ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1800f, 3200f);
+                    ScaleValue = ScaleValueHelper.CalculateScale(videoPlayerWindow, 1350f, 2400f);
                 }
+                // Shift overlay to look good with widescreen videos
                 gridOverlay.Margin = new Thickness(ScaleValue * -30, ScaleValue * -15, ScaleValue * -30, ScaleValue * -20);
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowExpand;
                 WindowState = WindowState.Normal;

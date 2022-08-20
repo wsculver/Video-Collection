@@ -36,7 +36,7 @@
                 <Label Foreground="White" VerticalAlignment="Center">Add Shows:</Label>
                 <TextBox x:Name="txtFilter" Width="414" FontSize="12" Foreground="White" VerticalAlignment="Center" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
-            <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Multiple" Margin="0,8,0,4" Visibility="Hidden" SelectionChanged="lvShowList_SelectionChanged">
+            <ListView Grid.Row="1" x:Name="lvShowList" SelectionMode="Multiple" Margin="0,8,0,4" Visibility="Hidden" SelectionChanged="lvShowList_SelectionChanged" ScrollViewer.CanContentScroll="False">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <CheckBox IsChecked="{Binding IsChecked}">

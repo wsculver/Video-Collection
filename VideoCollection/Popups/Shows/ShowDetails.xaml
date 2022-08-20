@@ -9,14 +9,102 @@
         mc:Ignorable="d"
         WindowStyle="None" Height="400" Width="780" WindowStartupLocation="CenterOwner" 
         Background="{StaticResource BackgroundBrush}" ShowInTaskbar="False" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" StrokeDashArray="1 2" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" SnapsToDevicePixels="true" StrokeThickness="1"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="ComboBoxItem.ItemsviewHover.Background" Color="White" Opacity="0.16"/>
+        <SolidColorBrush x:Key="ComboBoxItem.ItemsviewSelected.Background" Color="#FF4B4B4B"/>
+        <SolidColorBrush x:Key="ComboBoxItem.ItemsviewSelectedHover.Background" Color="White" Opacity="0.16"/>
+        <SolidColorBrush x:Key="ComboBoxItem.ItemsviewSelectedNoFocus.Background" Color="#FF4B4B4B"/>
+        <SolidColorBrush x:Key="ComboBoxItem.ItemsviewHoverFocus.Background" Color="White" Opacity="0.16"/>
+        <Style x:Key="SeasonsComboBoxItemContainerStyle" TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Padding" Value="12,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="TextElement.Foreground" TargetName="Bd" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsKeyboardFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource ComboBoxItem.ItemsviewHover.Background}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="False"/>
+                                    <Condition Property="IsKeyboardFocused" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource ComboBoxItem.ItemsviewSelected.Background}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource ComboBoxItem.ItemsviewSelectedHover.Background}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="False"/>
+                                    <Condition Property="IsKeyboardFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource ComboBoxItem.ItemsviewSelectedNoFocus.Background}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="False"/>
+                                    <Condition Property="IsKeyboardFocused" Value="True"/>
+                                </MultiTrigger.Conditions>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsKeyboardFocused" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource ComboBoxItem.ItemsviewHoverFocus.Background}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="214"/>
+            <RowDefinition Height="190"/>
+            <RowDefinition Height="24"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
+
         <Grid.LayoutTransform>
             <ScaleTransform x:Name="ApplicationScaleTransform"
                         CenterX="0"
@@ -38,48 +126,52 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
-                <Image x:Name="imageShowThumbnail" Width="359" Height="201" Cursor="Hand" MouseDown="imageShowThumbnail_MouseDown" MouseEnter="imageShowThumbnail_MouseEnter" MouseLeave="imageShowThumbnail_MouseLeave"/>
-                <Border x:Name="showSplash" Background="Black" Opacity="0.25" Width="359" Height="201" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <Image x:Name="imageShowThumbnail" Width="329" Height="185" Cursor="Hand" MouseDown="imageShowThumbnail_MouseDown" MouseEnter="imageShowThumbnail_MouseEnter" MouseLeave="imageShowThumbnail_MouseLeave" HorizontalAlignment="Left" Margin="25,0,0,0"/>
+                <Border x:Name="showSplash" Background="Black" Opacity="0.25" Width="329" Height="185" IsHitTestVisible="False" Visibility="Collapsed" HorizontalAlignment="Left" Margin="25,0,0,0"/>
                 <Rectangle x:Name="playShowIconBackground" Fill="{StaticResource BackgroundBrush}" Width="32" Height="32" IsHitTestVisible="False" Visibility="Collapsed"/>
                 <materialDesign:PackIcon x:Name="iconPlayShow" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
             </Grid>
 
-            <StackPanel Grid.Column="1" Margin="22,-2,0,0">
+            <StackPanel Grid.Column="1" Margin="48,-2,0,0" Width="317" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Label x:Name="labelRating" FontWeight="Bold">Rating:</Label>
-                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0" Width="269" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Categories:</Label>
-                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0" Width="246" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Next Episode:</Label>
-                    <TextBlock x:Name="txtNextEpisode" Foreground="White" Text="{Binding Title}" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtNextEpisode" Foreground="White" Text="{Binding Title}" Margin="0,4,0,0" Width="231" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
 
-        <Separator x:Name="separatorVideosTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1"/>
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <ComboBox x:Name="cmbSeasons" Grid.Column="0"
+            <ComboBox ItemContainerStyle="{DynamicResource SeasonsComboBoxItemContainerStyle}" x:Name="cmbSeasons"
                   SelectionChanged="cmbSeasons_SelectionChanged"
+                  Height="20"
                   FontSize="10"    
                   FontWeight="Bold"
                   HorizontalAlignment="Left"   
                   BorderThickness="0"  
                   VerticalContentAlignment="Center"  
-                  Background="Transparent"
+                  Background="{StaticResource SeasonsBackgroundColor}"
                   Foreground="White"  
                   IsEditable="False"
                   IsReadOnly="True"
-                  Margin="25,0,0,0" MaxDropDownHeight="118" Padding="0,4,0,4"/>
-            <ScrollViewer x:Name="scrollCategories" Grid.Column="1" PreviewMouseWheel="scrollCategories_PreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" SnapsToDevicePixels="True">
+                  Margin="25,0,0,0" MaxDropDownHeight="125" Padding="12,3,12,4"/>
+        </Grid>
+        <Separator x:Name="separatorVideosTop" Grid.Row="3" VerticalAlignment="Top" MinHeight="1"/>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="770"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <customtypes:AnimatedScrollViewer x:Name="scrollSections" Grid.Column="1" ScrollChanged="scrollSections_ScrollChanged" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
                 <ItemsControl x:Name="icSectionButtons">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -88,15 +180,22 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button x:Name="btnSection" Content="{Binding Name}" Click="btnSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
+                            <Button x:Name="btnSection" Content="{Binding Name}" Click="btnSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Foreground="White" Padding="12,0,12,0"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
-        </Grid>
-        <Separator x:Name="separatorVideosBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1"/>
+            </customtypes:AnimatedScrollViewer>
 
-        <Grid Grid.Row="3">
+            <Button x:Name="btnSectionsPrevious" Grid.Column="0" Style="{StaticResource ViewAllButtonStyle}" Click="btnPrevious_Click" materialDesign:RippleAssist.RippleSizeMultiplier="0" Width="14" Height="14" HorizontalAlignment="Center" Visibility="Hidden">
+                <materialDesign:PackIcon Kind="ChevronLeft" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+            </Button>
+            <Button x:Name="btnSectionsNext" Grid.Column="2" Style="{StaticResource ViewAllButtonStyle}" Click="btnNext_Click" materialDesign:RippleAssist.RippleSizeMultiplier="0" Width="14" Height="14" HorizontalAlignment="Center" Visibility="Hidden">
+                <materialDesign:PackIcon Kind="ChevronRight" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+            </Button>
+        </Grid>
+        <Separator x:Name="separatorVideosBottom" Grid.Row="3" VerticalAlignment="Bottom" MinHeight="1"/>
+
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition x:Name="colMiddle" Width="794"/>
@@ -165,6 +264,6 @@
             </Button>
         </Grid>
 
-        <Border x:Name="Splash" Grid.RowSpan="4" Style="{StaticResource SplashStyle}"/>
+        <Border x:Name="Splash" Grid.RowSpan="5" Style="{StaticResource SplashStyle}"/>
     </Grid>
 </Window>

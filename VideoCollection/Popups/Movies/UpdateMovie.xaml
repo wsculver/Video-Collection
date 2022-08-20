@@ -65,7 +65,7 @@
                 <Label Foreground="White" VerticalAlignment="Center">Movies:</Label>
                 <TextBox Width="240" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single" Margin="0,0,0,3">
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionChanged="lvMovieList_SelectionChanged" Tag="{Binding Text, ElementName=hiddenText}" SelectionMode="Single" Margin="0,0,0,3" ScrollViewer.CanContentScroll="False">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="270">
@@ -126,18 +126,20 @@
             </StackPanel>
 
             <Label Foreground="White">Categories:</Label>
-            <ItemsControl x:Name="icCategories" Height="100">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsEnabled}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Height="70">
+                <ItemsControl x:Name="icCategories">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsEnabled}" Style="{StaticResource MaterialDesignDarkCheckBox}" Checked="CheckBoxChecked" Unchecked="CheckBoxUnchecked" Foreground="White" Margin="5,0,15,0" VerticalAlignment="Top"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
         </StackPanel>
 
         <ContentControl x:Name="loadingControl" Grid.Row="0" Grid.Column="1" Visibility="Collapsed"/>

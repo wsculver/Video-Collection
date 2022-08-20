@@ -88,13 +88,18 @@ namespace VideoCollection.Popups.Movies
             if (e.ChangedButton == MouseButton.Left)
             {
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                MovieDetails popup = new MovieDetails((int)(sender as Grid).Tag, ref Splash, () => { });
+                MovieDetails popup = new MovieDetails((int)(sender as Grid).Tag, ref Splash, () => 
+                {
+                    this.Show();
+                    this.Activate();
+                });
                 popup.scaleWindow(parentWindow);
                 parentWindow.addChild(popup);
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 popup.Show();
                 popup.Activate();
+                this.Hide();
             }
         }
 
@@ -161,13 +166,18 @@ namespace VideoCollection.Popups.Movies
         private void btnDetails_Click(object sender, RoutedEventArgs e)
         {
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            MovieDetails popup = new MovieDetails((int)(sender as Button).Tag, ref Splash, () => { });
+            MovieDetails popup = new MovieDetails((int)(sender as Button).Tag, ref Splash, () => 
+            {
+                this.Show();
+                this.Activate();
+            });
             popup.scaleWindow(parentWindow);
             parentWindow.addChild(popup);
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
             popup.Activate();
+            this.Hide();
         }
 
         // Delete the movie from the database

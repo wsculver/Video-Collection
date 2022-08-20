@@ -95,6 +95,7 @@ namespace VideoCollection.Popups.Movies
             }
 
             UpdateBonusScrollButtons();
+            UpdateSectionsScrollButtons();
         }
 
         // Scale based on the size of the window
@@ -380,18 +381,44 @@ namespace VideoCollection.Popups.Movies
             return sectionVideosList;
         }
 
-        private void scrollCategories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        // Make the sections scroll buttons visable if they are needed
+        private void UpdateSectionsScrollButtons()
         {
-            ScrollViewer scrollviewer = sender as ScrollViewer;
-            if (e.Delta > 0)
+            double totalWidth = 0.0;
+            int numSections = icBonusSectionButtons.Items.Count;
+            for (int i = 0; i < numSections; i++)
             {
-                scrollviewer.LineLeft();
+                ContentPresenter c = (ContentPresenter)icBonusSectionButtons.ItemContainerGenerator.ContainerFromIndex(i);
+                if (c != null)
+                {
+                    c.ApplyTemplate();
+                    Button button = c.ContentTemplate.FindName("btnBonusSection", c) as Button;
+                    totalWidth += button.ActualWidth + button.Margin.Left + button.Margin.Right;
+                }
+            }
+
+            if (totalWidth > Math.Round(scrollBonusSections.ActualWidth) && scrollBonusSections.HorizontalOffset < scrollBonusSections.ScrollableWidth)
+            {
+                btnSectionsNext.Visibility = Visibility.Visible;
             }
             else
             {
-                scrollviewer.LineRight();
+                btnSectionsNext.Visibility = Visibility.Hidden;
             }
-            e.Handled = true;
+
+            if (scrollBonusSections.HorizontalOffset > 0)
+            {
+                btnSectionsPrevious.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                btnSectionsPrevious.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void scrollSections_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            UpdateSectionsScrollButtons();
         }
     }
 }

@@ -88,13 +88,18 @@ namespace VideoCollection.Popups.Shows
             if (e.ChangedButton == MouseButton.Left)
             {
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-                ShowDetails popup = new ShowDetails((int)(sender as Grid).Tag, ref Splash, () => { });
+                ShowDetails popup = new ShowDetails((int)(sender as Grid).Tag, ref Splash, () => 
+                {
+                    this.Show();
+                    this.Activate();
+                });
                 popup.scaleWindow(parentWindow);
                 parentWindow.addChild(popup);
                 popup.Owner = parentWindow;
                 Splash.Visibility = Visibility.Visible;
                 popup.Show();
                 popup.Activate();
+                this.Hide();
             }
         }
 
@@ -161,13 +166,18 @@ namespace VideoCollection.Popups.Shows
         private void btnDetails_Click(object sender, RoutedEventArgs e)
         {
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            ShowDetails popup = new ShowDetails((int)(sender as Button).Tag, ref Splash, () => { });
+            ShowDetails popup = new ShowDetails((int)(sender as Button).Tag, ref Splash, () => 
+            {
+                this.Show();
+                this.Activate();
+            });
             popup.scaleWindow(parentWindow);
             parentWindow.addChild(popup);
             popup.Owner = parentWindow;
             Splash.Visibility = Visibility.Visible;
             popup.Show();
             popup.Activate();
+            this.Hide();
         }
 
         // Delete the show from the database

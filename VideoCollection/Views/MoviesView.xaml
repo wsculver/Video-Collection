@@ -17,7 +17,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="MainGrid" SizeChanged="MainGrid_SizeChanged">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False">
             <ItemsControl x:Name="icCategoryDisplay">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

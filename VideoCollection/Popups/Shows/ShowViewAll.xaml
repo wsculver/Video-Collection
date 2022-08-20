@@ -55,7 +55,7 @@
             </Border>
         </Button>
 
-        <ScrollViewer x:Name="scrollVideos" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+        <ScrollViewer x:Name="scrollVideos" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14" ScrollViewer.CanContentScroll="False">
             <ItemsControl x:Name="icVideos" HorizontalAlignment="Center" SizeChanged="icVideos_SizeChanged">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

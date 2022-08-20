@@ -16,7 +16,7 @@
             <SolidColorBrush x:Key="BackgroundBrush" Color="#1e2126"/>
             <SolidColorBrush x:Key="SelectedButtonBackgroundBrush" Color="#FF4B4B4B"/>
             <SolidColorBrush x:Key="PopupStackPanelBackgroundColor" Color="#263238"/>
-            <SolidColorBrush x:Key="SeasonsBackgroundColor" Color="#FF303F9F"/>
+            <SolidColorBrush x:Key="SeasonsBackgroundColor" Color="#FF4B4B4B"/>
             <Style x:Key="SplashStyle" TargetType="{x:Type Border}">
                 <Setter Property="Background" Value="Black"/>
                 <Setter Property="Opacity" Value="0.75"/>

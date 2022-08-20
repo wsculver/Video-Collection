@@ -43,37 +43,52 @@
                 <materialDesign:PackIcon x:Name="iconPlayMovie" Kind="PlayCircle" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="64" Height="64" IsHitTestVisible="False" Visibility="Collapsed"/>
             </Grid>
                 
-            <StackPanel Grid.Column="1" Margin="22,-2,0,0">
+            <StackPanel Grid.Column="1" Margin="22,-2,0,0" Width="342" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Runtime:</Label>
-                    <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtRuntime" Foreground="White" Margin="0,4,0,0" Width="283" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label x:Name="labelRating" FontWeight="Bold">Rating:</Label>
-                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtRating" Foreground="White" Margin="0,4,0,0" Width="294" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label FontWeight="Bold">Categories:</Label>
-                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="txtCategories" Foreground="White" Margin="0,4,0,0" Width="271" TextWrapping="WrapWithOverflow"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
-        
+
         <Separator x:Name="separatorBonusTop" Grid.Row="2" VerticalAlignment="Top" MinHeight="1" Visibility="Collapsed"/>
-        <ScrollViewer x:Name="scrollCategories" Grid.Row="2" PreviewMouseWheel="scrollCategories_PreviewMouseWheel" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" SnapsToDevicePixels="True">
-            <ItemsControl x:Name="icBonusSectionButtons">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Margin="8,0,0,0" Foreground="White"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="770"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <customtypes:AnimatedScrollViewer x:Name="scrollBonusSections" Grid.Column="1" ScrollChanged="scrollSections_ScrollChanged" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="icBonusSectionButtons">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnBonusSection" Content="{Binding Name}" Click="btnBonusSection_Click" Style="{StaticResource MaterialDesignOutlinedDarkButton}" Cursor="Hand" FontWeight="Bold" Height="20" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{Binding Background}" FontSize="10" Foreground="White" Padding="12,0,12,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </customtypes:AnimatedScrollViewer>
+
+            <Button x:Name="btnSectionsPrevious" Grid.Column="0" Style="{StaticResource ViewAllButtonStyle}" Click="btnPrevious_Click" materialDesign:RippleAssist.RippleSizeMultiplier="0" Width="14" Height="14" HorizontalAlignment="Center" Visibility="Hidden">
+                <materialDesign:PackIcon Kind="ChevronLeft" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+            </Button>
+            <Button x:Name="btnSectionsNext" Grid.Column="2" Style="{StaticResource ViewAllButtonStyle}" Click="btnNext_Click" materialDesign:RippleAssist.RippleSizeMultiplier="0" Width="14" Height="14" HorizontalAlignment="Center" Visibility="Hidden">
+                <materialDesign:PackIcon Kind="ChevronRight" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+            </Button>
+        </Grid>
         <Separator x:Name="separatorBonusBottom" Grid.Row="2" VerticalAlignment="Bottom" MinHeight="1" Visibility="Collapsed"/>
 
         <Grid Grid.Row="3">

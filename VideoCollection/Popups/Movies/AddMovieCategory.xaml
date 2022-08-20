@@ -37,7 +37,7 @@
                 <TextBox Width="287" FontSize="12" Foreground="White" VerticalAlignment="Center" Name="txtFilter" IsReadOnly="true" Focusable="False" IsHitTestVisible="False" TextChanged="txtFilter_TextChanged" />
             </StackPanel>
 
-            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Multiple" Margin="0,8,0,4" SelectionChanged="lvMovieList_SelectionChanged">
+            <ListView Grid.Row="1" x:Name="lvMovieList" SelectionMode="Multiple" Margin="0,8,0,4" SelectionChanged="lvMovieList_SelectionChanged" ScrollViewer.CanContentScroll="False">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <CheckBox IsChecked="{Binding IsChecked}">
