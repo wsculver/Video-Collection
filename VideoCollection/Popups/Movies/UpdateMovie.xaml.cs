@@ -269,7 +269,7 @@ namespace VideoCollection.Popups.Movies
                 || (movie.BonusVideos != _movie.BonusVideos)
                 || (movie.Rating != _rating)
                 || (movie.Categories != JsonConvert.SerializeObject(_selectedCategories))
-                || (movie.Subtitles != JsonConvert.SerializeObject(_movie.Subtitles));
+                || (movie.Subtitles != _movie.Subtitles);
         }
 
         // Save changes
@@ -331,8 +331,8 @@ namespace VideoCollection.Popups.Movies
                                 movie.ThumbnailVisibility = _thumbnailVisibility;
                                 movie.MovieFilePath = txtFile.Text;
                                 movie.Runtime = StaticHelpers.GetVideoDuration(txtFile.Text);
-                                ConcurrentBag<MovieBonusSection> bonusSections = new ConcurrentBag<MovieBonusSection>();
-                                Parallel.ForEach(_movieBonusSectionsDeserialized, section =>
+                                List<MovieBonusSection> bonusSections = new List<MovieBonusSection>();
+                                foreach (MovieBonusSectionDeserialized section in _movieBonusSectionsDeserialized)
                                 {
                                     MovieBonusSection sec = new MovieBonusSection()
                                     {
@@ -340,7 +340,9 @@ namespace VideoCollection.Popups.Movies
                                         Background = JsonConvert.SerializeObject(Color.FromArgb(0, 0, 0, 0))
                                     };
                                     bonusSections.Add(sec);
-                                });
+                                }
+                                // Sort bonus sections so they are consistent
+                                bonusSections.Sort();
                                 movie.BonusSections = JsonConvert.SerializeObject(bonusSections);
                                 ConcurrentBag<MovieBonusVideo> bonusVideos = new ConcurrentBag<MovieBonusVideo>();
                                 Parallel.ForEach(_movieBonusVideosDeserialized, video =>
@@ -361,7 +363,7 @@ namespace VideoCollection.Popups.Movies
                                 movie.Categories = JsonConvert.SerializeObject(_selectedCategories);
                                 // Parse the subtitle file
                                 SubtitleParser subParser = new SubtitleParser();
-                                movie.Subtitles = JsonConvert.SerializeObject(_movie.Subtitles);
+                                movie.Subtitles = _movie.Subtitles;
                                 connection.Update(movie);
 
                                 // Update the MovieCateogry table

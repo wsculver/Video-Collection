@@ -25,6 +25,7 @@ namespace VideoCollection.Popups.Shows
         private ConcurrentDictionary<string, Show> _shows;
         private HashSet<string> _selectedShowTitles;
         private Border _splash;
+        private Action _callback;
         private CancellationTokenSource _tokenSource;
 
         public double WidthScale { get; set; }
@@ -34,13 +35,14 @@ namespace VideoCollection.Popups.Shows
         /// <summary> Don't use this constructur. It is only here to make resizing work </summary>
         public AddBulkShows() { }
 
-        public AddBulkShows(ref Border splash)
+        public AddBulkShows(ref Border splash, Action callback)
         {
             InitializeComponent();
 
             Closed += (a, b) => { Owner.Activate(); };
 
             _splash = splash;
+            _callback = callback;
             _shows = new ConcurrentDictionary<string, Show>();
             _selectedShowTitles = new HashSet<string>();
             _tokenSource = new CancellationTokenSource();
@@ -87,6 +89,7 @@ namespace VideoCollection.Popups.Shows
                 }
 
                 _splash.Visibility = Visibility.Collapsed;
+                _callback();
                 MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
                 parentWindow.removeChild(this);
                 Close();

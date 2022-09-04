@@ -311,7 +311,6 @@ namespace VideoCollection.Popups.Shows
                             Show show = connection.Get<Show>(_showId);
                             if (ShowContentChanged(show))
                             {
-                                bool showContentChanged = ShowContentChanged(show);
                                 show.Title = txtShowName.Text.ToUpper();
                                 show.ShowFolderPath = txtShowFolder.Text;
                                 show.Thumbnail = StaticHelpers.ImageSourceToBase64(imgThumbnail.Source);

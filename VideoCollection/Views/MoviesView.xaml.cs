@@ -89,7 +89,10 @@ namespace VideoCollection.Views
         private void btnAddBulkMovies_Click(object sender, RoutedEventArgs e)
         {
             MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
-            AddBulkMovies popup = new AddBulkMovies(ref parentWindow.Splash);
+            AddBulkMovies popup = new AddBulkMovies(ref parentWindow.Splash, () =>
+            {
+                UpdateCategoryDisplay();
+            });
             popup.scaleWindow(parentWindow);
             parentWindow.addChild(popup);
             popup.Owner = parentWindow;
@@ -449,17 +452,7 @@ namespace VideoCollection.Views
                     try
                     {
                         VideoPlayer popup = new VideoPlayer(movie);
-                        App.videoPlayer = popup;
-                        popup.WidthScale = 1.0;
-                        popup.HeightScale = 1.0;
-                        popup.HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
-                        popup.scaleWindow(parentWindow);
-                        parentWindow.addChild(popup);
-                        popup.Owner = parentWindow;
-                        popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                        popup.Top = popup.TopMultiplier = parentWindow.Top;
-                        popup.Show();
-                        popup.Activate();
+                        StaticHelpers.ShowVideoPlayer(popup);
                     }
                     catch (Exception ex)
                     {

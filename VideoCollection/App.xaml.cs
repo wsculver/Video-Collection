@@ -27,6 +27,7 @@ namespace VideoCollection
         public static double dpiHeightFactor = 1.0;
         public static ConcurrentDictionary<int, ImageSource> movieThumbnails = new ConcurrentDictionary<int, ImageSource>();
         public static ConcurrentDictionary<int, ImageSource> showThumbnails = new ConcurrentDictionary<int, ImageSource>();
+        private bool initialLoad = false;
 
         public static bool ForceSoftwareRendering
         {
@@ -44,25 +45,29 @@ namespace VideoCollection
                 videoPlayer.Topmost = true;
             }
 
-            using (SQLiteConnection connection = new SQLiteConnection(databasePath))
+            if (!initialLoad)
             {
-                connection.CreateTable<Movie>();
-                List<Movie> movies = connection.Table<Movie>().ToList();
-                Parallel.ForEach(movies, movie =>
+                using (SQLiteConnection connection = new SQLiteConnection(databasePath))
                 {
-                    var thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
-                    thumbnail.Freeze();
-                    movieThumbnails[movie.Id] = thumbnail;
-                });
+                    connection.CreateTable<Movie>();
+                    List<Movie> movies = connection.Table<Movie>().ToList();
+                    Parallel.ForEach(movies, movie =>
+                    {
+                        var thumbnail = StaticHelpers.Base64ToImageSource(movie.Thumbnail);
+                        thumbnail.Freeze();
+                        movieThumbnails[movie.Id] = thumbnail;
+                    });
 
-                connection.CreateTable<Show>();
-                List<Show> shows = connection.Table<Show>().ToList();
-                Parallel.ForEach(shows, show =>
-                {
-                    var thumbnail = StaticHelpers.Base64ToImageSource(show.Thumbnail);
-                    thumbnail.Freeze();
-                    showThumbnails[show.Id] = thumbnail;
-                });
+                    connection.CreateTable<Show>();
+                    List<Show> shows = connection.Table<Show>().ToList();
+                    Parallel.ForEach(shows, show =>
+                    {
+                        var thumbnail = StaticHelpers.Base64ToImageSource(show.Thumbnail);
+                        thumbnail.Freeze();
+                        showThumbnails[show.Id] = thumbnail;
+                    });
+                }
+                initialLoad = true;
             }
         }
 

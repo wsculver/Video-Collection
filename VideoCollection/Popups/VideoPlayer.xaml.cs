@@ -562,7 +562,6 @@ namespace VideoCollection.Popups
                     TopMultiplier = (Top - parentRect.Top) / parentRect.Height;
                 }
                 borderSubtitles.Margin = new Thickness(0, 0, 0, 280);
-                Topmost = true;
                 popupExpand.HorizontalOffset = _expandHorizontalOffset;
                 txtExpand.Text = _expandLabel;
                 popupFullScreen.HorizontalOffset = _fullScreenHorizontalOffset;
@@ -573,11 +572,11 @@ namespace VideoCollection.Popups
             else
             {
                 _expanded = true;
-                Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                WidthScale = 1.0;
-                HeightScale = 1.0;
-                HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                Rect bounds = VisualTreeHelper.GetDescendantBounds(parentWindow);
+                WidthScale = bounds.Width / parentWindow.ActualWidth;
+                HeightScale = bounds.Height / parentWindow.ActualHeight;
+                HeightToWidthRatio = bounds.Height / bounds.Width;
                 scaleWindow(parentWindow);
                 Rect parentRect = parentWindow.GetAbsoluteRect();
                 if (parentWindow.WindowState == WindowState.Maximized)
@@ -588,8 +587,8 @@ namespace VideoCollection.Popups
                 }
                 else
                 {
-                    Left = parentRect.Left;
-                    Top = parentRect.Top;
+                    Left = parentRect.Left + 6;
+                    Top = parentRect.Top + 6;
                 }
                 LeftMultiplier = 0;
                 TopMultiplier = 0;
@@ -627,8 +626,8 @@ namespace VideoCollection.Popups
                 } 
                 else
                 {
-                    Left = parentRect.Left;
-                    Top = parentRect.Top;
+                    Left = parentRect.Left + 6;
+                    Top = parentRect.Top + 6;
                 }
             }
             else
@@ -646,13 +645,12 @@ namespace VideoCollection.Popups
                     gridTitle.ColumnDefinitions.Add(colDef);
                 }
                 _expanded = true;
-                Topmost = false;
                 iconExpand.Kind = MaterialDesignThemes.Wpf.PackIconKind.ArrowCollapse;
-                WidthScale = 1.0;
-                HeightScale = 1.0;
-                HeightToWidthRatio = parentWindow.ActualHeight / parentWindow.ActualWidth;
+                Rect bounds = VisualTreeHelper.GetDescendantBounds(parentWindow);
+                WidthScale = bounds.Width / parentWindow.ActualWidth;
+                HeightScale = bounds.Height / parentWindow.ActualHeight;
+                HeightToWidthRatio = bounds.Height / bounds.Width;
                 scaleWindow(parentWindow);
-                Rect parentRect = parentWindow.GetAbsoluteRect();
                 CalculateDpiFactors();
                 LeftMultiplier = 0;
                 TopMultiplier = 0;

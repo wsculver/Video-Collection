@@ -8,7 +8,10 @@
         xmlns:customtypes="clr-namespace:VideoCollection.CustomTypes"
         xmlns:helpers="clr-namespace:VideoCollection.Helpers"
         mc:Ignorable="d"
-        WindowStyle="None" Height="900" Width="1600" Background="Black" WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" MouseDown="videoPlayerWindow_MouseDown" MouseUp="videoPlayerWindow_MouseUp" LocationChanged="videoPlayerWindow_LocationChanged" MouseLeave="videoPlayerWindow_MouseLeave">
+        WindowStyle="None" Height="900" Width="1600" Background="Black" Topmost="True"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" 
+        MouseDown="videoPlayerWindow_MouseDown" MouseUp="videoPlayerWindow_MouseUp" 
+        LocationChanged="videoPlayerWindow_LocationChanged" MouseLeave="videoPlayerWindow_MouseLeave">
     <Window.Resources>
         <ResourceDictionary>
             <Style x:Key="SliderRepeatButton" TargetType="RepeatButton">

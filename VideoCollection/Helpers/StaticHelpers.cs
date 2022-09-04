@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 using SQLite;
 using System.Collections.Concurrent;
 using System.Threading;
+using VideoCollection.Popups;
 
 namespace VideoCollection.Helpers
 {
@@ -154,7 +155,7 @@ namespace VideoCollection.Helpers
             {
                 Title = bonusTitle.ToUpper(),
                 Thumbnail = bonusThumbnail,
-                FilePath = videoFile,
+                FilePath = GetRelativePathStringFromCurrent(videoFile),
                 Section = bonusSection,
                 Runtime = GetVideoDuration(videoFile),
                 Subtitles = JsonConvert.SerializeObject(bonusSubtitles)
@@ -248,7 +249,7 @@ namespace VideoCollection.Helpers
             Movie movie = new Movie()
             {
                 Title = movieTitle.ToUpper(),
-                MovieFolderPath = movieFolderPath,
+                MovieFolderPath = GetRelativePathStringFromCurrent(movieFolderPath),
                 Thumbnail = movieThumbnail,
                 ThumbnailVisibility = thumbnailVisibility,
                 MovieFilePath = movieFilePath,
@@ -725,7 +726,7 @@ namespace VideoCollection.Helpers
             Show show = new Show()
             {
                 Title = showTitle.ToUpper(),
-                ShowFolderPath = showFolderPath,
+                ShowFolderPath = GetRelativePathStringFromCurrent(showFolderPath),
                 Thumbnail = showThumbnail,
                 ThumbnailVisibility = thumbnailVisibility,
                 Seasons = JsonConvert.SerializeObject(seasons),
@@ -988,6 +989,24 @@ namespace VideoCollection.Helpers
                 return videoDuration;
             }
             return TimeSpan.FromSeconds(0);
+        }
+
+        // Set up and show the video player
+        public static void ShowVideoPlayer(VideoPlayer player)
+        {
+            MainWindow parentWindow = (MainWindow)Application.Current.MainWindow;
+            App.videoPlayer = player;
+            Rect bounds = VisualTreeHelper.GetDescendantBounds(parentWindow);
+            player.WidthScale = bounds.Width / parentWindow.ActualWidth;
+            player.HeightScale = bounds.Height / parentWindow.ActualHeight;
+            player.HeightToWidthRatio = bounds.Height / bounds.Width;
+            player.scaleWindow(parentWindow);
+            parentWindow.addChild(player);
+            player.Owner = parentWindow;
+            player.Left = player.LeftMultiplier = bounds.Left;
+            player.Top = player.TopMultiplier = bounds.Top;
+            player.Show();
+            player.Activate();
         }
     }
 }

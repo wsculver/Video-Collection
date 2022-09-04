@@ -132,14 +132,7 @@ namespace VideoCollection.Popups.Shows
                     try
                     {
                         VideoPlayer popup = new VideoPlayer(show);
-                        App.videoPlayer = popup;
-                        popup.Width = parentWindow.ActualWidth;
-                        popup.Height = parentWindow.ActualHeight;
-                        popup.Owner = parentWindow;
-                        popup.Left = popup.LeftMultiplier = parentWindow.Left;
-                        popup.Top = popup.TopMultiplier = parentWindow.Top;
-                        popup.Show();
-                        popup.Activate();
+                        StaticHelpers.ShowVideoPlayer(popup);
                     }
                     catch (Exception ex)
                     {

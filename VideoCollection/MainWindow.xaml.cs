@@ -83,9 +83,6 @@ namespace VideoCollection
         private void btnMinimize_Click(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Minimized;
-            if (App.videoPlayer != null) {
-                App.videoPlayer.Topmost = false;
-            }
         }
 
         private void btnMaximize_Click(object sender, RoutedEventArgs e)
